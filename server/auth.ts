@@ -21,16 +21,12 @@ declare global {
   }
 }
 
-const MemoryStore = createMemoryStore(session);
-
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "techlearn-session-secret",
     resave: false,
     saveUninitialized: false,
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    store: storage.sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
@@ -114,7 +110,7 @@ export function setupAuth(app: Express) {
 
   // Login user
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) return next(err);
       if (!user) return res.status(400).json({ message: "Invalid username or password" });
       

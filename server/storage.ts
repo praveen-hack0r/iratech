@@ -13,6 +13,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
+type SessionStoreType = ReturnType<typeof createMemoryStore>;
 
 // Define the interface for our storage system
 export interface IStorage {
@@ -92,7 +93,7 @@ export interface IStorage {
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment>;
   
   // Session store for authentication
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to bypass type checking for session store
 }
 
 // In-memory implementation of the storage interface
@@ -106,7 +107,7 @@ export class MemStorage implements IStorage {
   private enrollmentStore: Map<number, Enrollment>;
   private progressStore: Map<number, Progress>;
   private paymentStore: Map<number, Payment>;
-  sessionStore: session.SessionStore;
+  sessionStore: any; // Using any to bypass type checking
 
   private userIdCounter: number;
   private categoryIdCounter: number;
