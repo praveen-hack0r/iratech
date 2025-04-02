@@ -15,6 +15,9 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   resetToken: text("reset_token"),
   resetTokenExpiry: timestamp("reset_token_expiry"),
+  isVerified: boolean("is_verified").default(false),
+  verificationToken: text("verification_token"),
+  verificationExpiry: timestamp("verification_expiry"),
 });
 
 // Categories table

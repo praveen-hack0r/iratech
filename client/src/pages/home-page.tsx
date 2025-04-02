@@ -12,11 +12,29 @@ import {
   CreditCard, 
   AlertCircle, 
   RotateCcw, 
-  MessageSquare 
+  MessageSquare,
+  AlertTriangle,
+  MailCheck
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { 
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 
 export default function HomePage() {
+  const { user, resendVerificationMutation } = useAuth();
+  
+  // Check if user is logged in but not verified
+  const needsVerification = user && !user.isVerified;
+  
+  // Handle resending verification email
+  const handleResendVerification = () => {
+    resendVerificationMutation.mutate();
+  };
+  
   // Fetch categories
   const {
     data: categories,
@@ -83,6 +101,34 @@ export default function HomePage() {
 
   return (
     <MainLayout>
+      {/* Verification Alert */}
+      {needsVerification && (
+        <div className="pt-6 px-4">
+          <Alert variant="warning" className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <AlertTitle className="text-amber-600 dark:text-amber-400">
+              Email verification required
+            </AlertTitle>
+            <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span>Please verify your email address to access all features.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-amber-500 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 ml-0 sm:ml-2 w-fit"
+                onClick={handleResendVerification}
+                disabled={resendVerificationMutation.isPending}
+              >
+                {resendVerificationMutation.isPending ? (
+                  "Sending..."
+                ) : (
+                  <><MailCheck className="mr-2 h-4 w-4" /> Resend verification email</>
+                )}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+      
       {/* Hero Section */}
       <header className="pt-24 md:pt-32 pb-16 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

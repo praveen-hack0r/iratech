@@ -6,7 +6,14 @@ import { randomBytes } from "crypto";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
 import createMemoryStore from "memorystore";
-import { hashPassword, comparePasswords } from "./auth-utils";
+import { 
+  hashPassword, 
+  comparePasswords, 
+  generateVerificationToken, 
+  getVerificationTokenExpiry, 
+  sendVerificationEmail,
+  isTokenExpired
+} from "./auth-utils";
 
 declare global {
   namespace Express {
@@ -73,14 +80,32 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: "Email already in use" });
       }
 
+      // Create the user with hashed password
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
+        isVerified: false,
       });
+
+      // Generate and set verification token
+      const verificationToken = generateVerificationToken();
+      const tokenExpiry = getVerificationTokenExpiry();
+      
+      await storage.setVerificationToken(user.id, verificationToken, tokenExpiry);
+
+      // Send verification email
+      const emailSent = await sendVerificationEmail(
+        user.email,
+        user.username,
+        verificationToken
+      );
 
       req.login(user, (err) => {
         if (err) return next(err);
-        res.status(201).json(user);
+        res.status(201).json({
+          ...user,
+          verificationEmailSent: emailSent
+        });
       });
     } catch (error) {
       next(error);
@@ -162,6 +187,78 @@ export function setupAuth(app: Express) {
       await storage.clearResetToken(user.id);
 
       res.status(200).json({ message: "Password has been reset" });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Email Verification
+  app.get("/api/verify-email", async (req, res, next) => {
+    try {
+      const { token } = req.query;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Verification token is required" });
+      }
+
+      const user = await storage.getUserByVerificationToken(token as string);
+      
+      if (!user) {
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+
+      if (!user.verificationExpiry || isTokenExpired(new Date(user.verificationExpiry))) {
+        return res.status(400).json({ message: "Verification token has expired" });
+      }
+
+      await storage.verifyUser(user.id);
+      
+      // If user is logged in, update their session
+      if (req.isAuthenticated() && req.user.id === user.id) {
+        const updatedUser = await storage.getUser(user.id);
+        if (updatedUser) {
+          req.user = updatedUser;
+        }
+      }
+
+      // Redirect to the frontend verification success page
+      res.redirect('/verification-success');
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Resend verification email
+  app.post("/api/resend-verification", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = req.user;
+      
+      if (user.isVerified) {
+        return res.status(400).json({ message: "Email is already verified" });
+      }
+
+      // Generate and set new verification token
+      const verificationToken = generateVerificationToken();
+      const tokenExpiry = getVerificationTokenExpiry();
+      
+      await storage.setVerificationToken(user.id, verificationToken, tokenExpiry);
+
+      // Send verification email
+      const emailSent = await sendVerificationEmail(
+        user.email,
+        user.username,
+        verificationToken
+      );
+
+      if (emailSent) {
+        res.status(200).json({ message: "Verification email sent successfully" });
+      } else {
+        res.status(500).json({ message: "Failed to send verification email" });
+      }
     } catch (error) {
       next(error);
     }

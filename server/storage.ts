@@ -21,12 +21,15 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByResetToken(token: string): Promise<User | undefined>;
+  getUserByVerificationToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User>;
   updatePassword(id: number, hashedPassword: string): Promise<User>;
   updateResetToken(id: number, token: string, expiry: Date): Promise<User>;
   clearResetToken(id: number): Promise<User>;
   updateStripeInfo(id: number, customerId: string, subscriptionId?: string): Promise<User>;
+  setVerificationToken(id: number, token: string, expiry: Date): Promise<User>;
+  verifyUser(id: number): Promise<User>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -258,6 +261,27 @@ export class MemStorage implements IStorage {
     return this.updateUser(id, { 
       stripeCustomerId: customerId,
       stripeSubscriptionId: subscriptionId 
+    });
+  }
+
+  async getUserByVerificationToken(token: string): Promise<User | undefined> {
+    return Array.from(this.userStore.values()).find(
+      (user) => user.verificationToken === token
+    );
+  }
+
+  async setVerificationToken(id: number, token: string, expiry: Date): Promise<User> {
+    return this.updateUser(id, { 
+      verificationToken: token, 
+      verificationExpiry: expiry 
+    });
+  }
+
+  async verifyUser(id: number): Promise<User> {
+    return this.updateUser(id, { 
+      isVerified: true, 
+      verificationToken: null, 
+      verificationExpiry: null 
     });
   }
 
