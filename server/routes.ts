@@ -546,18 +546,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
-      const lessonId = parseInt(req.body.lessonId);
-      const lesson = await storage.getLesson(lessonId);
+      const lessonId = parseInt(req.body.lessonId || '0');
       
-      if (!lesson) {
-        return res.status(404).json({ message: "Lesson not found" });
-      }
+      // Extract duration from the request if provided
+      // In a production app, you would determine video duration programmatically
+      // using a library like ffmpeg or browser-calculated value passed in the request
+      const duration = req.body.duration ? parseInt(req.body.duration) : null;
       
       const videoUrl = `/uploads/videos/${req.file.filename}`;
-      const updatedLesson = await storage.updateLesson(lessonId, { videoUrl });
       
-      res.json(updatedLesson);
+      let updatedLesson;
+      if (lessonId > 0) {
+        const lesson = await storage.getLesson(lessonId);
+        
+        if (!lesson) {
+          return res.status(404).json({ message: "Lesson not found" });
+        }
+        
+        updatedLesson = await storage.updateLesson(lessonId, { 
+          videoUrl,
+          duration: duration
+        });
+      }
+      
+      res.json({
+        videoUrl,
+        duration,
+        ...(updatedLesson || {})
+      });
     } catch (error) {
+      console.error("Video upload error:", error);
       res.status(500).json({ message: "Failed to upload video" });
     }
   });

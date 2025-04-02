@@ -134,40 +134,43 @@ export default function AdminEditCourse() {
       formData.append("title", file.name);
       formData.append("courseId", courseId.toString());
       
-      // Simulate upload progress for demo
+      // Set up progress tracking
       const interval = setInterval(() => {
-        setResourceProgress(prev => {
-          const newProgress = prev + 5;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return newProgress;
-        });
+        setResourceProgress(prev => Math.min(prev + 5, 95)); // Only go up to 95% until we get confirmation
       }, 300);
       
-      // In a real app, you would make an actual upload request here
-      // const response = await apiRequest("POST", "/api/admin/upload-resource", formData);
+      // Make the actual upload request
+      const response = await fetch("/api/admin/upload-resource", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
       
-      // For demo, we'll just simulate the upload completion
-      setTimeout(() => {
-        clearInterval(interval);
-        setResourceProgress(100);
-        setResourceUploading(false);
-        
-        // Refresh the resources list
-        queryClient.invalidateQueries({ queryKey: [`/api/admin/courses/${courseId}`] });
-        
-        toast({
-          title: "Resource uploaded",
-          description: "The resource has been uploaded successfully.",
-        });
-      }, 5000);
-    } catch (error) {
+      clearInterval(interval);
+      
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      setResourceProgress(100);
       setResourceUploading(false);
+      
+      // Refresh the resources list
+      queryClient.invalidateQueries({ queryKey: [`/api/admin/courses/${courseId}`] });
+      
+      toast({
+        title: "Resource uploaded",
+        description: "The resource has been uploaded successfully.",
+      });
+    } catch (error) {
+      console.error("Resource upload error:", error);
+      setResourceUploading(false);
+      setResourceProgress(0);
       toast({
         title: "Upload failed",
-        description: "The resource could not be uploaded. Please try again.",
+        description: error instanceof Error ? error.message : "The resource could not be uploaded. Please try again.",
         variant: "destructive",
       });
     }

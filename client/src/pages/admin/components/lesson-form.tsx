@@ -77,49 +77,66 @@ export function LessonForm({
     try {
       setVideoUploading(true);
       
+      // Get video duration before uploading
+      const durationPromise = new Promise<number>((resolve) => {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        
+        video.onloadedmetadata = function() {
+          window.URL.revokeObjectURL(video.src);
+          resolve(Math.round(video.duration));
+        };
+        
+        video.src = URL.createObjectURL(file);
+      });
+      
+      // Start progress tracking
+      const interval = setInterval(() => {
+        setVideoProgress(prev => Math.min(prev + 3, 95)); // Go slower to account for duration detection
+      }, 500);
+      
+      // Wait for duration to be detected
+      const duration = await durationPromise;
+      
       // Create FormData
       const formData = new FormData();
       formData.append("video", file);
       formData.append("lessonId", lessonId ? lessonId.toString() : "");
+      formData.append("duration", duration.toString());
       
-      // Simulate upload progress for demo
-      const interval = setInterval(() => {
-        setVideoProgress(prev => {
-          const newProgress = prev + 5;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 500);
+      // Make the actual upload request
+      const response = await fetch("/api/admin/upload-video", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
       
-      // In a real app, you would make an actual upload request here
-      // const response = await apiRequest("POST", "/api/admin/upload-video", formData);
+      clearInterval(interval);
       
-      // For demo, we'll just create a fake URL after "uploading" is done
-      setTimeout(() => {
-        clearInterval(interval);
-        setVideoProgress(100);
-        setVideoUploading(false);
-        
-        // Set a fake URL for demonstration
-        const videoUrl = URL.createObjectURL(file);
-        form.setValue("videoUrl", videoUrl);
-        
-        // Set an estimated duration (for demo purposes)
-        form.setValue("duration", Math.floor(Math.random() * 600) + 300); // Random duration between 5-15 minutes
-        
-        toast({
-          title: "Video uploaded",
-          description: "The video has been uploaded successfully.",
-        });
-      }, 10000);
-    } catch (error) {
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      setVideoProgress(100);
       setVideoUploading(false);
+      
+      // Update form with the returned video URL and duration
+      form.setValue("videoUrl", data.videoUrl);
+      form.setValue("duration", duration);
+      
+      toast({
+        title: "Video uploaded",
+        description: `Video (${formatDuration(duration)}) has been uploaded successfully.`,
+      });
+    } catch (error) {
+      console.error("Video upload error:", error);
+      setVideoUploading(false);
+      setVideoProgress(0);
       toast({
         title: "Upload failed",
-        description: "The video could not be uploaded. Please try again.",
+        description: error instanceof Error ? error.message : "The video could not be uploaded. Please try again.",
         variant: "destructive",
       });
     }
