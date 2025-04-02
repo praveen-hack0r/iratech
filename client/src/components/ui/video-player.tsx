@@ -361,7 +361,13 @@ export function VideoPlayer({
       {/* Video Element */}
       <video 
         ref={videoRef}
-        src={videoUrl.startsWith('/api') ? videoUrl : `/api/video/${videoUrl.split('/').pop()}`}
+        src={
+          videoUrl.startsWith('/api') 
+            ? videoUrl 
+            : videoUrl.startsWith('/direct-videos') || videoUrl.startsWith('/static-videos')
+              ? videoUrl
+              : `/direct-videos/${videoUrl.split('/').pop()}`
+        }
         className="w-full h-full"
         onClick={togglePlay}
         controlsList="nodownload nofullscreen noremoteplayback"
@@ -369,6 +375,17 @@ export function VideoPlayer({
         onContextMenu={(e) => e.preventDefault()}
         // Additional security attributes to prevent download
         playsInline
+        onError={(e) => {
+          console.error("Video error:", e);
+          console.log("Video URL:", videoUrl);
+          console.log("Processed URL:", 
+            videoUrl.startsWith('/api') 
+              ? videoUrl 
+              : videoUrl.startsWith('/direct-videos') || videoUrl.startsWith('/static-videos')
+                ? videoUrl
+                : `/direct-videos/${videoUrl.split('/').pop()}`
+          );
+        }}
       />
       
       {/* Loading Progress */}

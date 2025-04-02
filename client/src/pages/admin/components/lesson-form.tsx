@@ -115,13 +115,16 @@ export function LessonForm({
       }
       
       const data = await response.json();
+      console.log("Video upload response:", data);
       
       setVideoProgress(100);
       setVideoUploading(false);
       
       // Update form with the returned video URL and duration
       form.setValue("videoUrl", data.videoUrl);
-      form.setValue("duration", duration);
+      form.setValue("duration", data.duration || duration);
+      
+      console.log("Setting video URL to:", data.videoUrl);
       
       toast({
         title: "Video uploaded",
@@ -369,6 +372,10 @@ export function LessonForm({
                               controlsList="nodownload"
                               disablePictureInPicture
                               onContextMenu={(e) => e.preventDefault()}
+                              onError={(e) => {
+                                console.error("Preview video error:", e);
+                                console.log("Video URL:", form.getValues("videoUrl"));
+                              }}
                             />
                           </div>
                         </div>

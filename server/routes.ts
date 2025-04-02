@@ -68,6 +68,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve non-video files - resources like PDFs, DOCs etc.
   app.use('/uploads/resources', isAuthenticated, express.static(path.join(uploadsDir, 'resources')));
   
+  // Direct video access pathway with minimal middleware
+  app.get('/direct-videos/:filename', (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const videoPath = path.join(videosDir, filename);
+      const absolutePath = path.resolve(videoPath);
+      
+      console.log("Direct video request for:", filename);
+      console.log("Full path:", absolutePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(videoPath)) {
+        console.error("Video not found at path:", videoPath);
+        return res.status(404).send("Video not found");
+      }
+      
+      // Simple direct file serving
+      res.contentType('video/mp4');
+      res.sendFile(absolutePath);
+    } catch (error) {
+      console.error("Error serving video:", error);
+      res.status(500).send("Error serving video file");
+    }
+  });
+  
   // Video file access endpoint - protect videos with access control
   app.get('/api/video/:filename', async (req, res) => {
     try {
@@ -730,7 +755,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // using a library like ffmpeg or browser-calculated value passed in the request
       const duration = req.body.duration ? parseInt(req.body.duration) : null;
       
-      const videoUrl = `/uploads/videos/${req.file.filename}`;
+      // Store both paths for backward compatibility
+      const videoUrl = `/direct-videos/${req.file.filename}`;
+      const staticUrl = `/direct-videos/${req.file.filename}`;
+      
+      console.log("Video uploaded to:", videoUrl);
+      console.log("Direct URL:", staticUrl);
+      console.log("Lesson ID:", lessonId);
+      console.log("Duration:", duration);
       
       let updatedLesson;
       if (lessonId > 0) {
@@ -740,14 +772,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Lesson not found" });
         }
         
+        console.log("Updating lesson with video URL:", videoUrl);
         updatedLesson = await storage.updateLesson(lessonId, { 
           videoUrl,
           duration: duration
         });
+        console.log("Updated lesson:", updatedLesson);
       }
       
       res.json({
-        videoUrl,
+        videoUrl: videoUrl, // Return the direct URL for immediate use
         duration,
         ...(updatedLesson || {})
       });
