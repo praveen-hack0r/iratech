@@ -41,8 +41,19 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
   const getCategoryStyles = () => {
     if (!category) return {};
     
+    const bg = category.bgColor || "bg-primary/10";
+    let darkBg = "";
+    
+    // Add dark mode variants
+    if (bg.includes('blue')) darkBg = "dark:bg-blue-900/20";
+    else if (bg.includes('green')) darkBg = "dark:bg-green-900/20";
+    else if (bg.includes('indigo')) darkBg = "dark:bg-indigo-900/20";
+    else if (bg.includes('yellow')) darkBg = "dark:bg-yellow-900/20";
+    else if (bg.includes('red')) darkBg = "dark:bg-red-900/20";
+    else if (bg.includes('pink')) darkBg = "dark:bg-pink-900/20";
+    
     return {
-      bg: category.bgColor || "bg-blue-100",
+      bg: `${bg} ${darkBg}`,
       text: category.textColor || "text-primary"
     };
   };
@@ -50,10 +61,10 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
   const categoryStyles = getCategoryStyles();
 
   return (
-    <Card className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+    <Card className="bg-card rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow border border-border">
       <div className="relative">
         {thumbnailUrl ? (
-          <div className="w-full h-48 bg-gray-200">
+          <div className="w-full h-48 bg-muted">
             <div 
               className="w-full h-full bg-center bg-cover"
               style={{ backgroundImage: `url(${thumbnailUrl})` }}
@@ -61,12 +72,12 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
             />
           </div>
         ) : (
-          <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-            <span className="text-gray-400">No thumbnail available</span>
+          <div className="w-full h-48 bg-muted flex items-center justify-center">
+            <span className="text-muted-foreground">No thumbnail available</span>
           </div>
         )}
         {isFeatured && (
-          <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 m-2 rounded">
+          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 m-2 rounded">
             BESTSELLER
           </div>
         )}
@@ -79,13 +90,13 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
             </span>
           )}
           <div className="flex items-center ml-auto">
-            <Star className="w-4 h-4 text-yellow-400 fill-current" />
-            <span className="text-gray-600 text-sm ml-1">4.8 (320)</span>
+            <Star className="w-4 h-4 text-yellow-400 dark:text-yellow-300 fill-current" />
+            <span className="text-muted-foreground text-sm ml-1">4.8 (320)</span>
           </div>
         </div>
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{description}</p>
-        <div className="flex items-center text-sm text-gray-500 mb-4">
+        <h3 className="text-xl font-bold mb-2 text-foreground">{title}</h3>
+        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{description}</p>
+        <div className="flex items-center text-sm text-muted-foreground mb-4">
           <Clock className="w-4 h-4 mr-1" />
           <span>{duration || 0} hours of content</span>
           <span className="mx-2">•</span>
@@ -94,20 +105,20 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-2xl font-bold text-dark">
+            <span className="text-2xl font-bold text-foreground">
               {formattedSalePrice || formattedPrice}
             </span>
             {formattedSalePrice && (
-              <span className="text-sm text-gray-500 line-through ml-2">{formattedPrice}</span>
+              <span className="text-sm text-muted-foreground line-through ml-2">{formattedPrice}</span>
             )}
           </div>
           {showEnrollButton && (
             <Button 
               asChild
-              className={`${category?.textColor === 'text-primary' ? 'bg-primary hover:bg-blue-600' : 
-                category?.textColor === 'text-secondary' ? 'bg-secondary hover:bg-green-600' : 
-                category?.textColor === 'text-accent' ? 'bg-accent hover:bg-indigo-600' : 
-                'bg-primary hover:bg-blue-600'} text-white px-4 py-2 rounded-md text-sm font-medium`}
+              className={`${category?.textColor === 'text-primary' ? 'bg-primary hover:bg-primary/90' : 
+                category?.textColor === 'text-secondary' ? 'bg-secondary hover:bg-secondary/90' : 
+                category?.textColor === 'text-accent' ? 'bg-accent hover:bg-accent/90' : 
+                'bg-primary hover:bg-primary/90'} text-primary-foreground px-4 py-2 rounded-md text-sm font-medium`}
             >
               <Link href={`/courses/${slug}`}>
                 Enroll Now

@@ -17,13 +17,13 @@ export function FeatureCard({
   bgColor 
 }: FeatureCardProps) {
   return (
-    <Card className="bg-gray-50 p-6 rounded-lg">
+    <Card className="bg-card p-6 rounded-lg border border-border">
       <CardContent className="p-0">
-        <div className={`w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center mb-4`}>
+        <div className={`w-12 h-12 ${bgColor} dark:bg-accent/10 rounded-lg flex items-center justify-center mb-4`}>
           <Icon className={`w-6 h-6 ${iconColor}`} />
         </div>
-        <h3 className="text-xl font-bold mb-2">{title}</h3>
-        <p className="text-gray-600">{description}</p>
+        <h3 className="text-xl font-bold mb-2 text-foreground">{title}</h3>
+        <p className="text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
   );

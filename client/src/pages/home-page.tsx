@@ -42,56 +42,56 @@ export default function HomePage() {
       description: "Our video player prevents screen recording, ensuring your learning materials remain protected and exclusive.",
       icon: Shield,
       iconColor: "text-primary",
-      bgColor: "bg-blue-100"
+      bgColor: "bg-primary/10"
     },
     {
       title: "Downloadable Resources",
       description: "Access and download comprehensive notes and practice materials for each course to enhance your learning.",
       icon: FileText,
       iconColor: "text-secondary",
-      bgColor: "bg-green-100"
+      bgColor: "bg-secondary/10"
     },
     {
       title: "Secure Payment",
       description: "Our integrated payment gateway ensures secure transactions when enrolling in courses.",
       icon: CreditCard,
       iconColor: "text-accent",
-      bgColor: "bg-indigo-100"
+      bgColor: "bg-accent/10"
     },
     {
       title: "Expert Instructors",
       description: "Learn from industry professionals with years of experience in their respective fields.",
       icon: AlertCircle,
-      iconColor: "text-yellow-500",
-      bgColor: "bg-yellow-100"
+      iconColor: "text-yellow-500 dark:text-yellow-400",
+      bgColor: "bg-yellow-100 dark:bg-yellow-900/20"
     },
     {
       title: "Regular Updates",
       description: "Courses are regularly updated to ensure the content stays relevant with the latest industry trends.",
       icon: RotateCcw,
-      iconColor: "text-red-500",
-      bgColor: "bg-red-100"
+      iconColor: "text-red-500 dark:text-red-400",
+      bgColor: "bg-red-100 dark:bg-red-900/20"
     },
     {
       title: "Community Support",
       description: "Join our community of learners and instructors to get support and share knowledge.",
       icon: MessageSquare,
-      iconColor: "text-pink-500",
-      bgColor: "bg-pink-100"
+      iconColor: "text-pink-500 dark:text-pink-400",
+      bgColor: "bg-pink-100 dark:bg-pink-900/20"
     },
   ];
 
   return (
     <MainLayout>
       {/* Hero Section */}
-      <header className="pt-24 md:pt-32 pb-16 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <header className="pt-24 md:pt-32 pb-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="md:flex md:items-center md:justify-between">
             <div className="md:w-1/2 mb-8 md:mb-0">
-              <h1 className="text-4xl font-bold text-dark sm:text-5xl">
+              <h1 className="text-4xl font-bold text-foreground sm:text-5xl">
                 Master Tech Skills with Expert-Led Courses
               </h1>
-              <p className="mt-4 text-xl text-gray-600 max-w-3xl">
+              <p className="mt-4 text-xl text-muted-foreground max-w-3xl">
                 Learn hacking, coding, Excel with AI, and digital marketing from industry professionals.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
@@ -121,14 +121,14 @@ export default function HomePage() {
       </header>
 
       {/* Categories Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12">Our Course Categories</h2>
+          <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Our Course Categories</h2>
           
           {categoriesLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-6 shadow-sm">
+                <div key={i} className="bg-card rounded-xl p-6 shadow-sm">
                   <Skeleton className="w-14 h-14 rounded-lg mb-4" />
                   <Skeleton className="h-6 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full mb-2" />
@@ -153,12 +153,12 @@ export default function HomePage() {
       </section>
 
       {/* Featured Courses Section */}
-      <section className="py-12 bg-gray-50">
+      <section className="py-12 bg-secondary">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold">Featured Courses</h2>
+            <h2 className="text-3xl font-bold text-foreground">Featured Courses</h2>
             <Link href="/courses">
-              <a className="text-primary hover:text-blue-700 font-medium flex items-center">
+              <a className="text-primary hover:text-primary/90 font-medium flex items-center">
                 View All
                 <svg className="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -170,7 +170,7 @@ export default function HomePage() {
           {coursesLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md">
+                <div key={i} className="bg-card rounded-lg overflow-hidden shadow-md">
                   <Skeleton className="w-full h-48" />
                   <div className="p-6">
                     <div className="flex items-center mb-2">
@@ -191,11 +191,11 @@ export default function HomePage() {
               ))}
             </div>
           ) : coursesError ? (
-            <div className="text-center text-red-500">
+            <div className="text-center text-destructive">
               Failed to load courses. Please try again later.
             </div>
           ) : featuredCourses?.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
+            <div className="text-center text-muted-foreground py-12">
               No featured courses available at the moment. Check back soon!
             </div>
           ) : (
@@ -209,11 +209,11 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Why Choose TechLearn</h2>
-            <p className="text-gray-600 max-w-3xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4 text-foreground">Why Choose TechLearn</h2>
+            <p className="text-muted-foreground max-w-3xl mx-auto">
               We provide high-quality, industry-relevant tech courses with features designed to enhance your learning experience.
             </p>
           </div>
@@ -234,14 +234,14 @@ export default function HomePage() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-12 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+      <section className="py-12 bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Learning Journey?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
             Join thousands of students already learning with TechLearn and take your skills to the next level.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-gray-100 font-medium px-8 py-3 rounded-md transition-colors">
+            <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 font-medium px-8 py-3 rounded-md transition-colors">
               <Link href="/auth?tab=register">
                 Get Started
               </Link>

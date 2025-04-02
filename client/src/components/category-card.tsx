@@ -26,20 +26,34 @@ export function CategoryCard({ category }: CategoryCardProps) {
       case 'FileSpreadsheet':
         return <FileSpreadsheet className={`w-8 h-8 ${iconColor || 'text-accent'}`} />;
       case 'Megaphone':
-        return <Megaphone className={`w-8 h-8 ${iconColor || 'text-yellow-500'}`} />;
+        return <Megaphone className={`w-8 h-8 ${iconColor || 'text-yellow-500 dark:text-yellow-400'}`} />;
       default:
         return <Code className={`w-8 h-8 ${iconColor || 'text-primary'}`} />;
     }
   };
 
+  // Map color classes for dark mode compatibility
+  const getBgColor = () => {
+    if (!bgColor) return 'bg-primary/10';
+    
+    if (bgColor.includes('blue')) return bgColor + ' dark:bg-blue-900/20';
+    if (bgColor.includes('green')) return bgColor + ' dark:bg-green-900/20';
+    if (bgColor.includes('indigo')) return bgColor + ' dark:bg-indigo-900/20';
+    if (bgColor.includes('yellow')) return bgColor + ' dark:bg-yellow-900/20';
+    if (bgColor.includes('red')) return bgColor + ' dark:bg-red-900/20';
+    if (bgColor.includes('pink')) return bgColor + ' dark:bg-pink-900/20';
+    
+    return bgColor;
+  };
+
   return (
-    <Card className="bg-gray-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+    <Card className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow border border-border">
       <CardContent className="p-0">
-        <div className={`w-14 h-14 ${bgColor || 'bg-blue-100'} rounded-lg flex items-center justify-center mb-4`}>
+        <div className={`w-14 h-14 ${getBgColor()} rounded-lg flex items-center justify-center mb-4`}>
           {getIcon()}
         </div>
-        <h3 className="text-xl font-semibold mb-2">{name}</h3>
-        <p className="text-gray-600 mb-4 line-clamp-3">{description}</p>
+        <h3 className="text-xl font-semibold mb-2 text-foreground">{name}</h3>
+        <p className="text-muted-foreground mb-4 line-clamp-3">{description}</p>
         <Link href={`/courses?category=${slug}`}>
           <a className={`${textColor || 'text-primary'} font-medium hover:underline flex items-center`}>
             Explore Courses
