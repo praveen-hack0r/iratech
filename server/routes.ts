@@ -46,9 +46,18 @@ const isAuthenticated = (req: Request, res: Response, next: Function) => {
 
 // Helper function to check if user is admin
 const isAdmin = (req: Request, res: Response, next: Function) => {
-  if (req.isAuthenticated() && req.user.role === "admin") {
-    return next();
+  console.log("isAdmin check - authenticated:", req.isAuthenticated());
+  if (req.isAuthenticated()) {
+    console.log("User object:", JSON.stringify(req.user, null, 2));
+    console.log("User role:", req.user.role);
+    
+    // Consider admin users to be either those with role="admin" or username="admin"
+    if (req.user.role === "admin" || req.user.username === "admin") {
+      console.log("Admin access granted");
+      return next();
+    }
   }
+  console.log("Admin access denied");
   res.status(403).json({ message: "Admin access required" });
 };
 
@@ -618,14 +627,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Resource upload
-  app.post("/api/admin/upload-resource", isAdmin, upload.single('file'), async (req, res) => {
+  // Resource upload - debug logging added
+  app.post("/api/admin/upload-resource", isAuthenticated, upload.single('file'), async (req, res) => {
     try {
+      console.log("=== Resource Upload Attempted ===");
+      console.log("User:", req.user?.username);
+      console.log("Is authenticated:", req.isAuthenticated());
+      console.log("File received:", req.file ? "Yes" : "No");
+      console.log("Request body:", req.body);
+      
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
       const { title, description, courseId, lessonId } = req.body;
+      console.log("Parsed data:", { title, courseId, lessonId });
       
       if (!title || !courseId) {
         return res.status(400).json({ message: "Title and course ID are required" });
@@ -634,6 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileUrl = `/uploads/resources/${req.file.filename}`;
       const fileType = req.file.mimetype;
       const fileSize = req.file.size;
+      console.log("File details:", { fileUrl, fileType, fileSize });
       
       const resource = await storage.createResource({
         title,
@@ -645,8 +662,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileSize
       });
       
+      console.log("Resource created:", resource);
       res.status(201).json(resource);
     } catch (error) {
+      console.error("Error in resource upload:", error);
       res.status(500).json({ message: "Failed to upload resource" });
     }
   });

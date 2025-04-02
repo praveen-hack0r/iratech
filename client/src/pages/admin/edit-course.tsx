@@ -134,6 +134,7 @@ export default function AdminEditCourse() {
   const handleResourceUpload = async (file: File) => {
     try {
       setResourceUploading(true);
+      console.log("Starting resource upload for file:", file.name);
       
       // Create FormData
       const formData = new FormData();
@@ -146,10 +147,14 @@ export default function AdminEditCourse() {
         setResourceProgress(prev => Math.min(prev + 5, 95)); // Only go up to 95% until we get confirmation
       }, 300);
       
-      // Make the actual upload request
-      console.log("Uploading resource:", formData.get('title'));
-      const response = await apiRequest("POST", "/api/admin/upload-resource", formData, true);
+      // Let's try a different approach - direct fetch with FormData
+      console.log("Uploading resource:", formData.get('title'), "course ID:", courseId);
       
+      const response = await fetch("/api/admin/upload-resource", {
+        method: "POST",
+        body: formData,
+        credentials: "include"
+      });
       
       clearInterval(interval);
       
