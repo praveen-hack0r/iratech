@@ -143,12 +143,13 @@ export class MemStorage implements IStorage {
       checkPeriod: 86400000 // Prune expired entries every 24h
     });
 
-    // Initialize with default admin user
-    // We set a placeholder password for now, but it should be properly
-    // hashed before any login attempts
+    // Initialize with default admin user with pre-hashed password
+    // This is equivalent to the password "admin123"
+    const hashedPassword = "6266223133d902d9fe7fc9209f715974a0a8cebbd2d7cdad1753d2e4f57f11f61f53fb59be93e5b3d8a1e20b05c77f8b50e58dd04ef9b14efebbdcf1811b0124.38a95e5d57bcb9e7ac0732b4ecb21f18";
+    
     this.createUser({
       username: "admin",
-      password: "placeholder-will-be-hashed-on-first-login",
+      password: hashedPassword,
       email: "admin@techlearn.com",
       firstName: "Admin",
       lastName: "User",
@@ -156,7 +157,8 @@ export class MemStorage implements IStorage {
       stripeCustomerId: null,
       stripeSubscriptionId: null,
       resetToken: null,
-      resetTokenExpiry: null
+      resetTokenExpiry: null,
+      isVerified: true
     }).then(() => {
       console.log("Default admin user created");
     });
