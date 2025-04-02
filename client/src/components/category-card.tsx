@@ -54,11 +54,12 @@ export function CategoryCard({ category }: CategoryCardProps) {
         </div>
         <h3 className="text-xl font-semibold mb-2 text-foreground">{name}</h3>
         <p className="text-muted-foreground mb-4 line-clamp-3">{description}</p>
-        <Link href={`/courses?category=${slug}`}>
-          <a className={`${textColor || 'text-primary'} font-medium hover:underline flex items-center`}>
-            Explore Courses
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </a>
+        <Link 
+          href={`/courses?category=${slug}`}
+          className={`${textColor || 'text-primary'} font-medium hover:underline flex items-center`}
+        >
+          Explore Courses
+          <ChevronRight className="w-4 h-4 ml-1" />
         </Link>
       </CardContent>
     </Card>
