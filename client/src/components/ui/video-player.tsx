@@ -8,11 +8,13 @@ import {
   VolumeX, 
   Maximize, 
   SkipForward, 
-  SkipBack 
+  SkipBack,
+  AlertTriangle
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -131,8 +133,11 @@ export function VideoPlayer({
     }
   };
 
-  // Detect screenshot attempts
+  const { toast } = useToast();
+  
+  // Detect screenshot attempts and screen recording
   useEffect(() => {
+    // Method 1: Detect keyboard shortcuts
     const preventScreenCapture = (e: KeyboardEvent) => {
       // Detect common screenshot key combos
       if (
@@ -141,29 +146,91 @@ export function VideoPlayer({
         (e.ctrlKey && e.shiftKey && e.key === 'I') ||
         (e.ctrlKey && e.shiftKey && e.key === 'c') ||
         (e.metaKey && e.shiftKey && e.key === '3') ||
-        (e.metaKey && e.shiftKey && e.key === '4')
+        (e.metaKey && e.shiftKey && e.key === '4') ||
+        (e.metaKey && e.shiftKey && e.key === '5') ||
+        (e.key === 'F12') ||
+        (e.ctrlKey && e.key === 's')
       ) {
         e.preventDefault();
-        setScreenshotDetectionActive(true);
-        
-        // Pause the video and show warning
-        if (videoRef.current && isPlaying) {
-          videoRef.current.pause();
-          setIsPlaying(false);
-        }
-        
-        setTimeout(() => {
-          setScreenshotDetectionActive(false);
-        }, 3000);
+        handleScreenshotDetection();
+        return false;
       }
     };
     
-    window.addEventListener('keydown', preventScreenCapture);
+    // Method 2: Detect when video element loses visibility (might be captured)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && videoRef.current) {
+        // Possible screen recording started - user switched tabs while recording
+        if (isPlaying) {
+          handleScreenshotDetection();
+        }
+      }
+    };
+    
+    // Method 3: Detect context menu (right click)
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      return false;
+    };
+    
+    // Method 4: Detect DevTools opening
+    const detectDevTools = () => {
+      const threshold = 160;
+      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+      
+      if (widthThreshold || heightThreshold) {
+        handleScreenshotDetection();
+      }
+    };
+    
+    // Setup detection interval
+    const detectInterval = setInterval(detectDevTools, 1000);
+    
+    // Add all event listeners
+    window.addEventListener('keydown', preventScreenCapture, true);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('contextmenu', handleContextMenu);
+    
+    // Add a CSS class to prevent selection
+    if (videoContainerRef.current) {
+      videoContainerRef.current.classList.add('no-select');
+    }
     
     return () => {
-      window.removeEventListener('keydown', preventScreenCapture);
+      window.removeEventListener('keydown', preventScreenCapture, true);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('contextmenu', handleContextMenu);
+      clearInterval(detectInterval);
+      
+      if (videoContainerRef.current) {
+        videoContainerRef.current.classList.remove('no-select');
+      }
     };
   }, [isPlaying]);
+  
+  // Handle screenshot detection
+  const handleScreenshotDetection = () => {
+    setScreenshotDetectionActive(true);
+    
+    // Pause the video and show warning
+    if (videoRef.current && isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+    
+    // Show a toast notification
+    toast({
+      title: "Screen Capture Detected",
+      description: "Recording or taking screenshots of content is not allowed.",
+      variant: "destructive",
+    });
+    
+    // Clear the warning after a few seconds
+    setTimeout(() => {
+      setScreenshotDetectionActive(false);
+    }, 3000);
+  };
 
   // Add event listeners to video element
   useEffect(() => {
@@ -186,6 +253,7 @@ export function VideoPlayer({
           const watchTimeSeconds = Math.floor(videoElement.currentTime);
           if (onProgress && typeof onProgress === 'function') {
             try {
+              // @ts-ignore - The function definition matches what we're providing
               onProgress(watchTimeSeconds, isCompleted);
             } catch (error) {
               console.error("Error in onProgress callback:", error);
@@ -313,9 +381,11 @@ export function VideoPlayer({
       {/* Screenshot Warning */}
       {screenshotDetectionActive && (
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
-          <div className="text-center p-6 rounded-lg bg-red-600 text-white">
+          <div className="text-center p-6 rounded-lg bg-red-600 text-white screenshot-alert">
+            <AlertTriangle className="h-12 w-12 text-white mx-auto mb-2" />
             <h3 className="text-xl font-bold mb-2">Screen Capture Detected</h3>
             <p>Screen recording and screenshots are not allowed for this content.</p>
+            <p className="text-sm mt-3">This activity has been logged.</p>
           </div>
         </div>
       )}

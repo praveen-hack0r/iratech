@@ -58,6 +58,7 @@ export interface IStorage {
   // Lesson operations
   getLessonsBySection(sectionId: number): Promise<Lesson[]>;
   getLesson(id: number): Promise<Lesson | undefined>;
+  getLessonByVideoFilename(filename: string): Promise<Lesson[]>;
   createLesson(lesson: InsertLesson): Promise<Lesson>;
   updateLesson(id: number, lesson: Partial<Lesson>): Promise<Lesson>;
   deleteLesson(id: number): Promise<void>;
@@ -409,6 +410,20 @@ export class MemStorage implements IStorage {
 
   async getLesson(id: number): Promise<Lesson | undefined> {
     return this.lessonStore.get(id);
+  }
+  
+  async getLessonByVideoFilename(filename: string): Promise<Lesson[]> {
+    // Extract just the filename without path
+    const justFilename = filename.split('/').pop() || filename;
+    
+    // Search for lessons with videoUrl containing this filename
+    return Array.from(this.lessonStore.values())
+      .filter(lesson => {
+        if (!lesson.videoUrl) return false;
+        // Extract just the filename from videoUrl
+        const lessonVideoFilename = lesson.videoUrl.split('/').pop() || '';
+        return lessonVideoFilename === justFilename;
+      });
   }
 
   async createLesson(lesson: InsertLesson): Promise<Lesson> {

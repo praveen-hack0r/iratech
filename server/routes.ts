@@ -38,7 +38,7 @@ const upload = multer({
 
 // Helper function to check if user is authenticated
 const isAuthenticated = (req: Request, res: Response, next: Function) => {
-  if (req.isAuthenticated()) {
+  if (req.isAuthenticated() && req.user) {
     return next();
   }
   res.status(401).json({ message: "Authentication required" });
@@ -47,7 +47,7 @@ const isAuthenticated = (req: Request, res: Response, next: Function) => {
 // Helper function to check if user is admin
 const isAdmin = (req: Request, res: Response, next: Function) => {
   console.log("isAdmin check - authenticated:", req.isAuthenticated());
-  if (req.isAuthenticated()) {
+  if (req.isAuthenticated() && req.user) {
     console.log("User object:", JSON.stringify(req.user, null, 2));
     console.log("User role:", req.user.role);
     
@@ -65,8 +65,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Set up authentication routes
   setupAuth(app);
 
-  // Serve uploaded files
-  app.use('/uploads', isAuthenticated, express.static(uploadsDir));
+  // Serve non-video files - resources like PDFs, DOCs etc.
+  app.use('/uploads/resources', isAuthenticated, express.static(path.join(uploadsDir, 'resources')));
+  
+  // Video file access endpoint - protect videos with access control
+  app.get('/api/video/:filename', async (req, res) => {
+    try {
+      const filename = req.params.filename;
+      const videoPath = path.join(videosDir, filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(videoPath)) {
+        return res.status(404).json({ message: "Video not found" });
+      }
+      
+      // Find which lesson this video belongs to
+      const lessons = await storage.getLessonByVideoFilename(filename);
+      
+      if (!lessons || lessons.length === 0) {
+        return res.status(404).json({ message: "No lesson found with this video" });
+      }
+      
+      const lesson = lessons[0]; // Assume there's only one lesson with this video
+      
+      // If it's a preview, allow access to all users
+      if (lesson.isPreview) {
+        return res.sendFile(videoPath);
+      }
+      
+      // Otherwise, check if user is authenticated and enrolled
+      if (!req.isAuthenticated() || !req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Get course info to check enrollment
+      const section = await storage.getSection(lesson.sectionId);
+      if (!section) {
+        return res.status(404).json({ message: "Section not found" });
+      }
+      
+      const course = await storage.getCourse(section.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // If user is admin, allow access
+      if (req.user.role === 'admin') {
+        return res.sendFile(videoPath);
+      }
+      
+      // Check if user is enrolled in this course
+      const enrollment = await storage.getEnrollment(req.user.id, course.id);
+      if (!enrollment) {
+        return res.status(403).json({ message: "You are not enrolled in this course" });
+      }
+      
+      // User is enrolled, serve the video
+      res.sendFile(videoPath);
+    } catch (error) {
+      console.error("Error serving video:", error);
+      res.status(500).json({ message: "Error serving video" });
+    }
+  });
 
   // Category routes
   app.get("/api/categories", async (req, res) => {
@@ -124,7 +184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Course preview requested for slug:", req.params.slug);
       console.log("User authenticated:", req.isAuthenticated());
-      if (req.isAuthenticated()) {
+      if (req.isAuthenticated() && req.user) {
         console.log("User:", req.user.username);
       }
       
@@ -156,7 +216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let isEnrolled = false;
       let enrollment = null;
       
-      if (req.isAuthenticated()) {
+      if (req.isAuthenticated() && req.user) {
         enrollment = await storage.getEnrollment(req.user.id, course.id);
         isEnrolled = !!enrollment;
         
@@ -179,6 +239,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
+  // Video preview route - allows access to preview videos without authentication
+  app.get("/api/preview-video/:lessonId", async (req, res) => {
+    try {
+      const lessonId = parseInt(req.params.lessonId);
+      const lesson = await storage.getLesson(lessonId);
+      
+      if (!lesson) {
+        return res.status(404).json({ message: "Lesson not found" });
+      }
+      
+      // Only return video URL if this is actually a preview lesson
+      if (!lesson.isPreview) {
+        return res.status(403).json({ message: "This lesson is not available for preview" });
+      }
+      
+      // Return only the necessary data for preview
+      res.json({
+        id: lesson.id,
+        title: lesson.title,
+        videoUrl: lesson.videoUrl,
+        duration: lesson.duration,
+        isPreview: lesson.isPreview
+      });
+    } catch (error) {
+      console.error("Error fetching preview video:", error);
+      res.status(500).json({ message: "Failed to fetch preview video" });
     }
   });
 

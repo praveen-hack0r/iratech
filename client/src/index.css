@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom styles for the educational platform */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+video {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  pointer-events: auto !important;
+}
+
+/* Prevent selection of video content */
+::selection {
+  background: transparent;
+}
+
+::-moz-selection {
+  background: transparent;
+}
+
+/* Animation for screenshot detection warning */
+@keyframes screenshot-alert {
+  0% { opacity: 0; transform: scale(0.9); }
+  20% { opacity: 1; transform: scale(1.05); }
+  40% { transform: scale(0.98); }
+  60% { transform: scale(1.02); }
+  80% { transform: scale(0.99); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.screenshot-alert {
+  animation: screenshot-alert 0.5s ease forwards;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
