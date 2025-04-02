@@ -28,15 +28,15 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
   } = course;
 
   // Format price as currency
-  const formattedPrice = new Intl.NumberFormat('en-US', {
+  const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'INR'
   }).format(price);
 
   // Format sale price if available
-  const formattedSalePrice = salePrice ? new Intl.NumberFormat('en-US', {
+  const formattedSalePrice = salePrice ? new Intl.NumberFormat('en-IN', {
     style: 'currency',
-    currency: 'USD'
+    currency: 'INR'
   }).format(salePrice) : null;
 
   // Function to determine category color

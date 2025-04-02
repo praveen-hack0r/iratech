@@ -598,15 +598,15 @@ export default function AdminEditCourse() {
                   <div>
                     <h3 className="text-sm font-medium text-muted-foreground mb-1">Price</h3>
                     <p className="text-lg font-semibold">
-                      {new Intl.NumberFormat('en-US', {
+                      {new Intl.NumberFormat('en-IN', {
                         style: 'currency',
-                        currency: 'USD'
+                        currency: 'INR'
                       }).format(courseData.salePrice || courseData.price)}
                       {courseData.salePrice && (
                         <span className="text-sm text-muted-foreground line-through ml-2">
-                          {new Intl.NumberFormat('en-US', {
+                          {new Intl.NumberFormat('en-IN', {
                             style: 'currency',
-                            currency: 'USD'
+                            currency: 'INR'
                           }).format(courseData.price)}
                         </span>
                       )}
