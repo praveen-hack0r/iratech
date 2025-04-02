@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logoutMutation,
         registerMutation,
         resetPasswordMutation,
-        isAdmin: user?.role === "admin" ?? false,
+        isAdmin: user ? user.role === "admin" : false,
       }}
     >
       {children}
