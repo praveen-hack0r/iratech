@@ -376,7 +376,7 @@ export default function CheckoutPage() {
                     <Separator className="my-2" />
                     <div className="flex justify-between font-semibold">
                       <span>Price</span>
-                      <span className="text-green-600">₹{course.price || 0}</span>
+                      <span className="text-green-600">{formatCurrency(course.price || 0)}</span>
                     </div>
                   </div>
                   

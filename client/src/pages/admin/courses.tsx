@@ -221,9 +221,9 @@ export default function AdminCourses() {
 
   // Format price
   const formatPrice = (price: number, salePrice?: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD",
+      currency: "INR",
     }).format(salePrice || price);
   };
 
