@@ -361,7 +361,7 @@ export function VideoPlayer({
       {/* Video Element */}
       <video 
         ref={videoRef}
-        src={videoUrl}
+        src={videoUrl.startsWith('/api') ? videoUrl : `/api/video/${videoUrl.split('/').pop()}`}
         className="w-full h-full"
         onClick={togglePlay}
         controlsList="nodownload nofullscreen noremoteplayback"
