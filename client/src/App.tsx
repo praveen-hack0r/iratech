@@ -28,12 +28,12 @@ function Router() {
       <Route path="/courses/:slug" component={CourseDetailPage} />
       <ProtectedRoute path="/my-learning" component={MyLearningPage} />
       <ProtectedRoute path="/checkout/:courseId" component={CheckoutPage} />
-      <ProtectedRoute path="/admin" component={AdminDashboard} adminOnly />
-      <ProtectedRoute path="/admin/courses" component={AdminCourses} adminOnly />
-      <ProtectedRoute path="/admin/users" component={AdminUsers} adminOnly />
-      <ProtectedRoute path="/admin/courses/new" component={AdminNewCourse} adminOnly />
-      <ProtectedRoute path="/admin/courses/:id/edit" component={AdminEditCourse} adminOnly />
-      <ProtectedRoute path="/admin/pending-enrollments" component={PendingEnrollmentsPage} adminOnly />
+      <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/courses" component={AdminCourses} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/users" component={AdminUsers} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/courses/new" component={AdminNewCourse} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/courses/:id/edit" component={AdminEditCourse} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/pending-enrollments" component={PendingEnrollmentsPage} allowedRoles={["admin"]} />
       <Route component={NotFound} />
     </Switch>
   );

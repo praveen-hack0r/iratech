@@ -141,13 +141,19 @@ export class MemStorage implements IStorage {
     });
 
     // Initialize with default admin user
+    // We set a placeholder password for now, but it should be properly
+    // hashed before any login attempts
     this.createUser({
       username: "admin",
-      password: "admin123", // In real app, this would be properly hashed
+      password: "placeholder-will-be-hashed-on-first-login",
       email: "admin@techlearn.com",
       firstName: "Admin",
       lastName: "User",
-      role: "admin"
+      role: "admin",
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      resetToken: null,
+      resetTokenExpiry: null
     }).then(() => {
       console.log("Default admin user created");
     });

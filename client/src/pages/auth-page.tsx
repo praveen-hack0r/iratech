@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { useLocation, useRoute } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
   CardContent,
@@ -10,52 +11,187 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/hooks/use-auth";
 import { loginSchema, registerSchema, resetPasswordSchema } from "@shared/schema";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle, ArrowLeft } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { LockKeyhole, Mail, User } from "lucide-react";
 
 export default function AuthPage() {
-  const [location, navigate] = useLocation();
-  const [, params] = useRoute("/auth");
+  const [authType, setAuthType] = useState<"login" | "register" | "reset">("login");
+  const [, setLocation] = useLocation();
   const { user, loginMutation, registerMutation, resetPasswordMutation } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>("login");
-  const [showResetForm, setShowResetForm] = useState(false);
-  
-  // Get the tab from URL query parameter (if any)
-  useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tabParam = searchParams.get("tab");
-    if (tabParam && (tabParam === "login" || tabParam === "register")) {
-      setActiveTab(tabParam);
-    }
-  }, []);
 
-  // Redirect if user is already logged in
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
+  // Redirect if already logged in
+  if (user) {
+    setLocation("/");
+    return null;
+  }
 
-  // Login form
-  const loginForm = useForm({
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen">
+      {/* Auth Form Side */}
+      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center">
+              Welcome to TechLearn
+            </CardTitle>
+            <CardDescription className="text-center">
+              Your gateway to advanced tech education
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Login</TabsTrigger>
+                <TabsTrigger value="register">Register</TabsTrigger>
+              </TabsList>
+              <TabsContent value="login">
+                <LoginForm />
+              </TabsContent>
+              <TabsContent value="register">
+                <RegisterForm />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          <CardFooter className="flex justify-center">
+            {authType !== "reset" ? (
+              <Button
+                variant="link"
+                onClick={() => setAuthType("reset")}
+                className="px-0"
+              >
+                Forgot password?
+              </Button>
+            ) : (
+              <Button
+                variant="link"
+                onClick={() => setAuthType("login")}
+                className="px-0"
+              >
+                Back to login
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Hero Section Side */}
+      <div className="flex-1 bg-gradient-to-br from-primary/50 to-primary p-6 hidden lg:flex flex-col justify-center">
+        <div className="max-w-xl mx-auto">
+          <h1 className="text-4xl font-bold text-white mb-6">
+            Elevate Your Technical Skills
+          </h1>
+          <p className="text-white/90 text-lg mb-8">
+            Access premium courses in ethical hacking, programming, Excel with AI, and digital marketing. 
+            Learn from industry experts and advance your career with practical, hands-on training.
+          </p>
+          <div className="space-y-4">
+            <FeatureItem text="Comprehensive courses in cutting-edge technologies" />
+            <FeatureItem text="Expert instructors with industry experience" />
+            <FeatureItem text="Hands-on projects and practical exercises" />
+            <FeatureItem text="Flexible learning paths to fit your goals" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FeatureItem({ text }: { text: string }) {
+  return (
+    <div className="flex items-center">
+      <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mr-3">
+        <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+      </div>
+      <p className="text-white/80">{text}</p>
+    </div>
+  );
+}
+
+function LoginForm() {
+  const { loginMutation } = useAuth();
+  const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
-      password: ""
-    }
+      password: "",
+    },
   });
 
-  // Register form
-  const registerForm = useForm({
+  function onSubmit(values: z.infer<typeof loginSchema>) {
+    loginMutation.mutate(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="johnsmith"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loginMutation.isPending}
+        >
+          {loginMutation.isPending ? "Signing in..." : "Sign In"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+function RegisterForm() {
+  const { registerMutation } = useAuth();
+  const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
@@ -63,348 +199,188 @@ export default function AuthPage() {
       password: "",
       confirmPassword: "",
       firstName: "",
-      lastName: ""
-    }
+      lastName: "",
+      role: "user",
+    },
   });
 
-  // Reset password form
-  const resetPasswordForm = useForm({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      email: ""
-    }
-  });
-
-  // Handle login form submission
-  const onLoginSubmit = (data: any) => {
-    loginMutation.mutate(data);
-  };
-
-  // Handle register form submission
-  const onRegisterSubmit = (data: any) => {
-    registerMutation.mutate(data);
-  };
-
-  // Handle reset password form submission
-  const onResetPasswordSubmit = (data: any) => {
-    resetPasswordMutation.mutate(data);
-  };
+  function onSubmit(values: z.infer<typeof registerSchema>) {
+    registerMutation.mutate(values);
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl w-full space-y-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left Column - Form */}
-        <div className="bg-white dark:bg-[#111111] p-8 rounded-lg shadow-md">
-          {showResetForm ? (
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <Button 
-                  variant="ghost" 
-                  className="mr-2 p-0 h-8 w-8" 
-                  onClick={() => setShowResetForm(false)}
-                  aria-label="Back to sign in"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Reset Your Password</h2>
-              </div>
-              <p className="text-gray-600 dark:text-gray-300">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
-
-              <Form {...resetPasswordForm}>
-                <form onSubmit={resetPasswordForm.handleSubmit(onResetPasswordSubmit)} className="space-y-6">
-                  <FormField
-                    control={resetPasswordForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input type="email" placeholder="Enter your email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="John" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input placeholder="Smith" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="johnsmith"
+                    className="pl-9"
+                    {...field}
                   />
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={resetPasswordMutation.isPending}
-                  >
-                    {resetPasswordMutation.isPending ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : null}
-                    Send Reset Link
-                  </Button>
-                </form>
-              </Form>
-            </div>
-          ) : (
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2 mb-8">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Sign Up</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sign in to your account</h2>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                      Welcome back! Please sign in to access your courses.
-                    </p>
-                  </div>
-
-                  {loginMutation.error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>
-                        {loginMutation.error.message}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-6">
-                      <FormField
-                        control={loginForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Enter your username" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Enter your password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <Checkbox id="remember" />
-                          <Label htmlFor="remember" className="ml-2 text-sm cursor-pointer">
-                            Remember me
-                          </Label>
-                        </div>
-                        <Button 
-                          variant="link" 
-                          className="text-sm text-primary p-0"
-                          onClick={() => setShowResetForm(true)}
-                          type="button"
-                        >
-                          Forgot password?
-                        </Button>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={loginMutation.isPending}
-                      >
-                        {loginMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        Sign In
-                      </Button>
-                    </form>
-                  </Form>
                 </div>
-              </TabsContent>
-              <TabsContent value="register">
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create an account</h2>
-                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                      Sign up to start your learning journey with TechLearn.
-                    </p>
-                  </div>
-
-                  {registerMutation.error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>
-                        {registerMutation.error.message}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>First Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="First name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={registerForm.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Last Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Last name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Choose a username" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input type="email" placeholder="Your email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Create a password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="Confirm your password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="flex items-center">
-                        <Checkbox id="terms" required />
-                        <Label htmlFor="terms" className="ml-2 text-sm cursor-pointer">
-                          I agree to the{" "}
-                          <a href="#" className="text-primary hover:text-blue-700">
-                            Terms of Service
-                          </a>{" "}
-                          and{" "}
-                          <a href="#" className="text-primary hover:text-blue-700">
-                            Privacy Policy
-                          </a>
-                        </Label>
-                      </div>
-
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={registerMutation.isPending}
-                      >
-                        {registerMutation.isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : null}
-                        Create Account
-                      </Button>
-                    </form>
-                  </Form>
-                </div>
-              </TabsContent>
-            </Tabs>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="john.smith@example.com"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="confirmPassword"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Confirm Password</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <LockKeyhole className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={registerMutation.isPending}
+        >
+          {registerMutation.isPending ? "Creating account..." : "Create Account"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
 
-        {/* Right Column - Hero Section */}
-        <div className="hidden lg:flex lg:flex-col lg:justify-center bg-gradient-to-r from-blue-600 to-indigo-600 dark:bg-gradient-to-r dark:from-[#000000] dark:to-[#111111] text-white p-8 rounded-lg">
-          <div className="mb-6">
-            <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold mb-4">Unlock Your Full Potential with TechLearn</h1>
-          <p className="text-xl mb-6">
-            Join our platform to learn the most in-demand tech skills from industry professionals.
-          </p>
-          <ul className="space-y-3">
-            <li className="flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Access to premium courses in hacking, coding, Excel with AI, and digital marketing
-            </li>
-            <li className="flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Secure video playback with content protection
-            </li>
-            <li className="flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Downloadable resources and notes for each lesson
-            </li>
-            <li className="flex items-center">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Learn at your own pace with lifetime access to purchased courses
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
+function ResetPasswordForm() {
+  const { resetPasswordMutation } = useAuth();
+  const form = useForm({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof resetPasswordSchema>) {
+    resetPasswordMutation.mutate(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="john.smith@example.com"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={resetPasswordMutation.isPending}
+        >
+          {resetPasswordMutation.isPending
+            ? "Sending reset link..."
+            : "Send Reset Link"}
+        </Button>
+      </form>
+    </Form>
   );
 }
