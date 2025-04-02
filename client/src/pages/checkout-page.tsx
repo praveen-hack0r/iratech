@@ -7,9 +7,52 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, AlertCircle, CheckCircle, CreditCard } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle, CreditCard, QrCode, Copy, CheckCheck, IndianRupee, Smartphone } from 'lucide-react';
 import { CourseWithCategory } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Copy Button Component
+function CopyButton({ textToCopy }: { textToCopy: string }) {
+  const [copied, setCopied] = useState(false);
+  const { toast } = useToast();
+  
+  const handleCopy = () => {
+    navigator.clipboard.writeText(textToCopy)
+      .then(() => {
+        setCopied(true);
+        toast({
+          title: "Copied to clipboard",
+          description: "UPI ID has been copied",
+          variant: "default",
+        });
+        
+        setTimeout(() => setCopied(false), 2000);
+      })
+      .catch(err => {
+        toast({
+          title: "Failed to copy",
+          description: "Please try again",
+          variant: "destructive",
+        });
+      });
+  };
+  
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={handleCopy}
+      className="text-gray-500 hover:text-gray-800"
+    >
+      {copied ? (
+        <CheckCheck className="h-4 w-4" />
+      ) : (
+        <Copy className="h-4 w-4" />
+      )}
+    </Button>
+  );
+}
 
 export default function CheckoutPage() {
   const [match, params] = useRoute("/checkout/:courseId");
@@ -134,6 +177,70 @@ export default function CheckoutPage() {
                         </ul>
                       </div>
                       
+                      <div className="mb-6">
+                        <h3 className="text-lg font-semibold mb-4 flex items-center">
+                          <IndianRupee className="h-5 w-5 mr-2" />
+                          Payment Options
+                        </h3>
+                        
+                        <Tabs defaultValue="upi-qr" className="w-full">
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="upi-qr" className="flex items-center">
+                              <QrCode className="h-4 w-4 mr-2" />
+                              UPI QR
+                            </TabsTrigger>
+                            <TabsTrigger value="upi-id" className="flex items-center">
+                              <Smartphone className="h-4 w-4 mr-2" />
+                              UPI ID
+                            </TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="upi-qr" className="mt-4">
+                            <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="h-48 w-48 bg-white p-2 rounded-lg border mb-4 flex items-center justify-center">
+                                {/* Using QR code SVG embedded - this represents the UPI payment QR code */}
+                                <img 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=9015090976@upi&pn=EduPlatform&am=${course.price || 999}&cu=INR&tn=Course:${encodeURIComponent(course.title || 'Course Payment')}`} 
+                                  alt="UPI QR Code"
+                                  className="h-full w-full object-contain"
+                                />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-gray-600 mb-2">Scan with any UPI app to pay</p>
+                                <p className="text-xs text-gray-500">GPay, PhonePe, Paytm, or any UPI app</p>
+                                <p className="text-xs font-medium text-orange-600 mt-2">Amount: ₹{course.price || 999}</p>
+                              </div>
+                            </div>
+                          </TabsContent>
+                          
+                          <TabsContent value="upi-id" className="mt-4">
+                            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <p className="text-sm text-gray-600 mb-4">Pay to this UPI ID using your preferred UPI app:</p>
+                              
+                              <div className="flex items-center justify-between bg-white p-3 rounded border">
+                                <div className="font-medium">9015090976@upi</div>
+                                <CopyButton textToCopy="9015090976@upi" />
+                              </div>
+                              
+                              <div className="mt-4 text-xs text-gray-500">
+                                <p>1. Open your UPI app (GPay, PhonePe, Paytm, etc.)</p>
+                                <p>2. Select "Pay to UPI ID" option</p>
+                                <p>3. Enter the UPI ID shown above</p>
+                                <p>4. Enter the exact amount: ₹{course.price || 999}</p>
+                                <p>5. Complete the payment</p>
+                              </div>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+                      
+                      <div className="mb-6">
+                        <div className="flex items-center text-sm text-orange-600 mb-3">
+                          <AlertCircle className="h-4 w-4 mr-2" />
+                          <p>After payment, click the button below to complete enrollment</p>
+                        </div>
+                      </div>
+                      
                       <Button 
                         onClick={handleEnroll}
                         className="w-full font-semibold" 
@@ -150,7 +257,7 @@ export default function CheckoutPage() {
                             Enrollment Complete
                           </>
                         ) : (
-                          `Enroll Now`
+                          `Confirm Payment & Enroll`
                         )}
                       </Button>
                     </>
@@ -223,20 +330,20 @@ export default function CheckoutPage() {
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Course Duration</span>
-                      <span>{course.durationHours || 0} hours</span>
+                      <span>{course.duration ? `${Math.round(course.duration/60)} hours` : 'Self-paced'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Difficulty Level</span>
-                      <span>{course.level || 'All Levels'}</span>
+                      <span className="text-gray-600">Resources</span>
+                      <span>{course.resourceCount || 0} files</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Instructor</span>
-                      <span>{course.instructorName || 'Staff'}</span>
+                      <span className="text-gray-600">Category</span>
+                      <span>{course.category?.name || 'Uncategorized'}</span>
                     </div>
                     <Separator className="my-2" />
                     <div className="flex justify-between font-semibold">
-                      <span>Enrollment</span>
-                      <span className="text-green-600">Free</span>
+                      <span>Price</span>
+                      <span className="text-green-600">₹{course.price || 0}</span>
                     </div>
                   </div>
                   
