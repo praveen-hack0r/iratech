@@ -79,6 +79,13 @@ export default function AdminEditCourse() {
   } = useQuery<CourseData>({
     queryKey: [`/api/admin/courses/${courseId}`],
     enabled: !!courseId,
+    queryFn: async ({ queryKey }) => {
+      const response = await apiRequest("GET", queryKey[0] as string);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch course: ${response.statusText}`);
+      }
+      return await response.json();
+    }
   });
 
   // Delete section mutation
