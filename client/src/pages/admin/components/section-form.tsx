@@ -162,7 +162,11 @@ export function SectionForm({
                     <Textarea 
                       placeholder="Enter section description" 
                       className="h-24"
-                      {...field} 
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
                     />
                   </FormControl>
                   <FormMessage />

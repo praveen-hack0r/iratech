@@ -257,7 +257,11 @@ export function LessonForm({
                         <Textarea 
                           placeholder="Enter lesson description" 
                           className="h-24"
-                          {...field} 
+                          value={field.value || ''}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormMessage />
@@ -278,7 +282,7 @@ export function LessonForm({
                       </div>
                       <FormControl>
                         <Switch
-                          checked={field.value}
+                          checked={field.value || false}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
@@ -315,12 +319,15 @@ export function LessonForm({
                         <Input 
                           type="number" 
                           placeholder="Lesson duration in seconds" 
-                          {...field}
+                          value={field.value || 0}
                           onChange={e => field.onChange(parseInt(e.target.value))}
+                          onBlur={field.onBlur}
+                          name={field.name}
+                          ref={field.ref}
                         />
                       </FormControl>
                       <FormDescription>
-                        {field.value > 0 && `This is equivalent to ${formatDuration(field.value)}`}
+                        {field.value && field.value > 0 ? `This is equivalent to ${formatDuration(field.value)}` : ''}
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -336,7 +343,7 @@ export function LessonForm({
                     <FormItem>
                       <FormLabel>Video</FormLabel>
                       <FormDescription>
-                        Upload a video file for this lesson (MP4, WebM, MOV).
+                        Upload a video file for this lesson (MP4, WebM, MOV). Videos cannot be downloaded by students.
                       </FormDescription>
                       <FormControl>
                         <FileUpload
@@ -359,9 +366,12 @@ export function LessonForm({
                           <p className="text-sm text-muted-foreground mb-2">Current video:</p>
                           <div className="w-full rounded-md border overflow-hidden bg-black aspect-video">
                             <video 
-                              src={form.getValues("videoUrl")} 
+                              src={form.getValues("videoUrl") || ''} 
                               className="w-full h-full" 
                               controls
+                              controlsList="nodownload"
+                              disablePictureInPicture
+                              onContextMenu={(e) => e.preventDefault()}
                             />
                           </div>
                         </div>

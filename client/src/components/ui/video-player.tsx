@@ -182,8 +182,10 @@ export function VideoPlayer({
           isCompleted || 
           videoElement.currentTime === videoElement.duration
         ) {
+          // Call onProgress callback if provided
           if (onProgress) {
-            onProgress(Math.floor(videoElement.currentTime), isCompleted);
+            const watchTimeSeconds = Math.floor(videoElement.currentTime);
+            onProgress(watchTimeSeconds, isCompleted);
           }
           
           updateProgressMutation.mutate({
@@ -290,9 +292,11 @@ export function VideoPlayer({
         src={videoUrl}
         className="w-full h-full"
         onClick={togglePlay}
-        controlsList="nodownload"
+        controlsList="nodownload nofullscreen noremoteplayback"
         disablePictureInPicture
         onContextMenu={(e) => e.preventDefault()}
+        // Additional security attributes to prevent download
+        playsInline
       />
       
       {/* Loading Progress */}
