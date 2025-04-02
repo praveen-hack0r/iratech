@@ -200,6 +200,13 @@ export default function CheckoutPage() {
                           Payment Options
                         </h3>
                         
+                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <p className="text-sm font-medium text-yellow-800 flex items-center">
+                            <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
+                            Please pay exactly <span className="font-bold mx-1">₹{course.price || 999}</span> to UPI ID: <span className="font-bold mx-1">9015090976@upi</span>
+                          </p>
+                        </div>
+                        
                         <Tabs defaultValue="upi-qr" className="w-full">
                           <TabsList className="grid w-full grid-cols-2">
                             <TabsTrigger value="upi-qr" className="flex items-center">
@@ -214,18 +221,22 @@ export default function CheckoutPage() {
                           
                           <TabsContent value="upi-qr" className="mt-4">
                             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-                              <div className="h-48 w-48 bg-white p-2 rounded-lg border mb-4 flex items-center justify-center">
+                              <div className="h-64 w-64 bg-white p-2 rounded-lg border mb-4 flex items-center justify-center">
                                 {/* Using QR code SVG embedded - this represents the UPI payment QR code */}
                                 <img 
-                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=9015090976@upi&pn=EduPlatform&am=${course.price || 999}&cu=INR&tn=Course:${encodeURIComponent(course.title || 'Course Payment')}`} 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=upi://pay?pa=9015090976@upi&pn=EduPlatform&am=${course.price || 999}&cu=INR&tn=Course:${encodeURIComponent(course.title || 'Course Payment')}`} 
                                   alt="UPI QR Code"
                                   className="h-full w-full object-contain"
                                 />
                               </div>
                               <div className="text-center">
-                                <p className="text-sm text-gray-600 mb-2">Scan with any UPI app to pay</p>
+                                <p className="text-sm font-medium mb-2">UPI ID: 9015090976@upi</p>
+                                <div className="flex items-center justify-center">
+                                  <p className="text-sm text-gray-600 mr-2">Scan with any UPI app to pay</p>
+                                  <CopyButton textToCopy="9015090976@upi" />
+                                </div>
                                 <p className="text-xs text-gray-500">GPay, PhonePe, Paytm, or any UPI app</p>
-                                <p className="text-xs font-medium text-orange-600 mt-2">Amount: ₹{course.price || 999}</p>
+                                <p className="text-sm font-medium text-orange-600 mt-2">Amount: ₹{course.price || 999}</p>
                               </div>
                             </div>
                           </TabsContent>
@@ -234,17 +245,25 @@ export default function CheckoutPage() {
                             <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <p className="text-sm text-gray-600 mb-4">Pay to this UPI ID using your preferred UPI app:</p>
                               
-                              <div className="flex items-center justify-between bg-white p-3 rounded border">
-                                <div className="font-medium">9015090976@upi</div>
+                              <div className="flex items-center justify-between bg-white p-4 rounded border mb-3">
+                                <div className="font-medium text-lg">9015090976@upi</div>
                                 <CopyButton textToCopy="9015090976@upi" />
                               </div>
                               
-                              <div className="mt-4 text-xs text-gray-500">
-                                <p>1. Open your UPI app (GPay, PhonePe, Paytm, etc.)</p>
-                                <p>2. Select "Pay to UPI ID" option</p>
-                                <p>3. Enter the UPI ID shown above</p>
-                                <p>4. Enter the exact amount: ₹{course.price || 999}</p>
-                                <p>5. Complete the payment</p>
+                              <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-100 mb-4">
+                                <span className="text-blue-700 font-medium">Payment Amount:</span>
+                                <span className="text-blue-900 font-bold text-lg">₹{course.price || 999}</span>
+                              </div>
+                              
+                              <div className="mt-4 text-sm text-gray-600">
+                                <p className="font-medium mb-2">Follow these steps:</p>
+                                <ol className="list-decimal pl-5 space-y-1">
+                                  <li>Open your UPI app (GPay, PhonePe, Paytm, etc.)</li>
+                                  <li>Select "Pay to UPI ID" option</li>
+                                  <li>Enter the UPI ID: <span className="font-medium">9015090976@upi</span></li>
+                                  <li>Enter the exact amount: <span className="font-medium">₹{course.price || 999}</span></li>
+                                  <li>Complete the payment</li>
+                                </ol>
                               </div>
                             </div>
                           </TabsContent>
@@ -252,47 +271,65 @@ export default function CheckoutPage() {
                       </div>
                       
                       <div className="mb-6">
-                        <div className="flex items-center text-sm text-orange-600 mb-3">
-                          <AlertCircle className="h-4 w-4 mr-2" />
-                          <p>After payment, enter your transaction reference below and click the button to complete enrollment</p>
+                        <div className="p-4 border border-orange-200 bg-orange-50 rounded-lg mb-4">
+                          <h4 className="font-medium text-orange-800 flex items-center mb-2">
+                            <AlertCircle className="h-5 w-5 mr-2 text-orange-600" />
+                            Important: Payment Verification
+                          </h4>
+                          <p className="text-sm text-orange-700 mb-2">
+                            After completing your payment, you must enter your UPI transaction ID or reference number below. This information is crucial for us to verify your payment and approve your enrollment.
+                          </p>
+                          <p className="text-sm font-medium text-orange-800">
+                            You can find the transaction ID in your UPI app payment history.
+                          </p>
                         </div>
                         
                         <div className="mt-4">
-                          <label htmlFor="paymentReference" className="block text-sm font-medium mb-1">
-                            Payment Reference / Transaction ID
+                          <label htmlFor="paymentReference" className="block text-base font-medium mb-2">
+                            UPI Transaction ID / Reference Number
                           </label>
                           <input
                             id="paymentReference"
                             type="text"
                             value={paymentReference}
                             onChange={(e) => setPaymentReference(e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                            placeholder="Enter UPI transaction ID or reference"
+                            className="w-full p-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="Enter your UPI transaction ID/reference"
                             required
                           />
-                          <p className="mt-1 text-xs text-gray-500">This helps us verify your payment</p>
+                          <p className="mt-2 text-sm text-gray-600">The transaction ID will help us verify your payment quickly.</p>
                         </div>
                       </div>
                       
-                      <Button 
-                        onClick={handleEnroll}
-                        className="w-full font-semibold" 
-                        disabled={loading || success}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
-                          </>
-                        ) : success ? (
-                          <>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Enrollment Complete
-                          </>
-                        ) : (
-                          `Confirm Payment & Enroll`
-                        )}
-                      </Button>
+                      <div className="mt-6">
+                        <Button 
+                          onClick={handleEnroll}
+                          className="w-full py-6 text-lg font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary" 
+                          size="lg"
+                          disabled={loading || success}
+                        >
+                          {loading ? (
+                            <>
+                              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                              Processing Payment Verification...
+                            </>
+                          ) : success ? (
+                            <>
+                              <CheckCircle className="mr-2 h-5 w-5" />
+                              Enrollment Request Submitted
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle className="mr-2 h-5 w-5" />
+                              Verify Payment & Complete Enrollment
+                            </>
+                          )}
+                        </Button>
+                        
+                        <p className="text-xs text-center mt-3 text-gray-500">
+                          Your course enrollment will be approved by an admin after payment verification
+                        </p>
+                      </div>
                     </>
                   )}
                 </div>
