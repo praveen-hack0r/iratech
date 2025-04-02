@@ -35,6 +35,10 @@ export async function hashPassword(password: string) {
 }
 
 export async function comparePasswords(supplied: string, stored: string) {
+  console.log("-------- comparePasswords debug --------");
+  console.log("Supplied password length:", supplied.length);
+  console.log("Stored password format:", stored);
+  
   // Check if stored password has the expected format
   if (!stored || !stored.includes(".")) {
     console.error("Invalid stored password format, missing salt separator");
@@ -49,9 +53,21 @@ export async function comparePasswords(supplied: string, stored: string) {
     return false;
   }
   
+  console.log("Hash length:", hashed.length);
+  console.log("Salt:", salt);
+  
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-  return timingSafeEqual(hashedBuf, suppliedBuf);
+  
+  // For debugging, show the supplied password hash
+  console.log("Calculated hash from supplied password:", suppliedBuf.toString("hex"));
+  console.log("Stored hash:", hashed);
+  
+  const result = timingSafeEqual(hashedBuf, suppliedBuf);
+  console.log("Password comparison result:", result);
+  console.log("--------------------------------------");
+  
+  return result;
 }
 
 /**

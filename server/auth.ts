@@ -41,13 +41,25 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
+        console.log(`Attempting login for username: ${username}`);
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        
+        if (!user) {
+          console.log(`User not found for username: ${username}`);
+          return done(null, false);
+        }
+        
+        console.log(`Found user: ${user.username}, checking password...`);
+        const isValidPassword = await comparePasswords(password, user.password);
+        console.log(`Password comparison result: ${isValidPassword}`);
+        
+        if (!isValidPassword) {
           return done(null, false);
         } else {
           return done(null, user);
         }
       } catch (error) {
+        console.error("Login error:", error);
         return done(error);
       }
     }),
