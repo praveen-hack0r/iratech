@@ -147,11 +147,9 @@ export default function AdminEditCourse() {
       }, 300);
       
       // Make the actual upload request
-      const response = await fetch("/api/admin/upload-resource", {
-        method: "POST",
-        body: formData,
-        credentials: "include"
-      });
+      console.log("Uploading resource:", formData.get('title'));
+      const response = await apiRequest("POST", "/api/admin/upload-resource", formData, true);
+      
       
       clearInterval(interval);
       

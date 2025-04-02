@@ -105,11 +105,8 @@ export function LessonForm({
       formData.append("duration", duration.toString());
       
       // Make the actual upload request
-      const response = await fetch("/api/admin/upload-video", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
+      console.log("Uploading video with duration:", duration);
+      const response = await apiRequest("POST", "/api/admin/upload-video", formData, true);
       
       clearInterval(interval);
       
