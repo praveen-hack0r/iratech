@@ -110,13 +110,13 @@ export default function CoursesPage() {
 
   return (
     <MainLayout>
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 py-12">
+      <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-purple-950/40 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
               {selectedCategoryName ? `${selectedCategoryName} Courses` : "Browse Our Courses"}
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-gray-300">
               {selectedCategoryName 
                 ? `Explore our ${selectedCategoryName.toLowerCase()} courses taught by industry experts.`
                 : "Discover the perfect course to boost your skills and advance your career."}
@@ -128,11 +128,11 @@ export default function CoursesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Categories Scroller */}
         {!categoriesLoading && categories && (
-          <div className="mb-8 overflow-x-auto pb-4">
+          <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
             <div className="flex space-x-4 min-w-max">
               <Button
                 variant={selectedCategory === "" ? "default" : "outline"}
-                className="rounded-full"
+                className="rounded-full shadow-sm hover:shadow transition-all"
                 onClick={() => setSelectedCategory("")}
               >
                 All Categories
@@ -141,7 +141,7 @@ export default function CoursesPage() {
                 <Button
                   key={category.id}
                   variant={selectedCategory === category.slug ? "default" : "outline"}
-                  className={`rounded-full ${
+                  className={`rounded-full shadow-sm hover:shadow transition-all ${
                     selectedCategory === category.slug
                       ? `bg-primary text-white`
                       : ""
@@ -156,23 +156,23 @@ export default function CoursesPage() {
         )}
 
         {/* Search and Filters */}
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-8">
+        <div className="bg-white dark:bg-gray-800/50 p-5 rounded-xl shadow-md backdrop-blur-sm mb-8 border border-gray-100 dark:border-gray-700">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
                 <Input
                   type="text"
                   placeholder="Search courses..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 rounded-lg border-gray-200 dark:border-gray-700 focus:border-primary"
                 />
               </div>
             </div>
             <div>
               <Select value={selectedTab} onValueChange={setSelectedTab}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-lg">
                   <SelectValue placeholder="All Courses" />
                 </SelectTrigger>
                 <SelectContent>
@@ -183,7 +183,7 @@ export default function CoursesPage() {
             </div>
             <div>
               <Select value={sortOption} onValueChange={setSortOption}>
-                <SelectTrigger>
+                <SelectTrigger className="rounded-lg">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -198,7 +198,7 @@ export default function CoursesPage() {
             <div className="flex justify-end">
               <Button 
                 variant="outline" 
-                className="flex items-center"
+                className="flex items-center rounded-lg"
                 onClick={clearFilters}
                 disabled={!searchQuery && !selectedCategory && selectedTab === "all" && sortOption === "default"}
               >
@@ -211,9 +211,9 @@ export default function CoursesPage() {
           {/* Active filters */}
           {(searchQuery || selectedCategory || selectedTab !== "all" || sortOption !== "default") && (
             <div className="mt-4 flex flex-wrap gap-2">
-              <div className="text-sm text-gray-500 mr-2 my-auto">Active filters:</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 mr-2 my-auto">Active filters:</div>
               {searchQuery && (
-                <Badge variant="secondary" className="px-2 py-1">
+                <Badge variant="secondary" className="px-3 py-1.5 rounded-full">
                   Search: {searchQuery}
                   <button onClick={() => setSearchQuery("")} className="ml-2 focus:outline-none" aria-label="Remove filter">
                     <X size={12} />
@@ -221,7 +221,7 @@ export default function CoursesPage() {
                 </Badge>
               )}
               {selectedCategory && (
-                <Badge variant="secondary" className="px-2 py-1">
+                <Badge variant="secondary" className="px-3 py-1.5 rounded-full">
                   Category: {selectedCategoryName}
                   <button onClick={() => setSelectedCategory("")} className="ml-2 focus:outline-none" aria-label="Remove filter">
                     <X size={12} />
@@ -229,7 +229,7 @@ export default function CoursesPage() {
                 </Badge>
               )}
               {selectedTab !== "all" && (
-                <Badge variant="secondary" className="px-2 py-1">
+                <Badge variant="secondary" className="px-3 py-1.5 rounded-full">
                   {selectedTab === "featured" ? "Featured Only" : selectedTab}
                   <button onClick={() => setSelectedTab("all")} className="ml-2 focus:outline-none" aria-label="Remove filter">
                     <X size={12} />
@@ -237,7 +237,7 @@ export default function CoursesPage() {
                 </Badge>
               )}
               {sortOption !== "default" && (
-                <Badge variant="secondary" className="px-2 py-1">
+                <Badge variant="secondary" className="px-3 py-1.5 rounded-full">
                   Sorted by: {
                     sortOption === "price-low" ? "Price: Low to High" :
                     sortOption === "price-high" ? "Price: High to Low" :
@@ -258,39 +258,62 @@ export default function CoursesPage() {
         {coursesLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg overflow-hidden shadow-md">
-                <Skeleton className="w-full h-48" />
+              <div key={i} className="bg-card rounded-xl overflow-hidden shadow-lg border border-border">
+                <Skeleton className="w-full h-52" />
                 <div className="p-6">
-                  <div className="flex items-center mb-2">
-                    <Skeleton className="h-5 w-20" />
+                  <div className="flex items-center mb-3">
+                    <Skeleton className="h-6 w-24 rounded-full" />
                     <div className="flex items-center ml-auto">
-                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-24" />
                     </div>
                   </div>
-                  <Skeleton className="h-6 w-full mb-2" />
-                  <Skeleton className="h-4 w-full mb-4" />
-                  <Skeleton className="h-4 w-full mb-4" />
+                  <Skeleton className="h-7 w-full mb-2" />
+                  <Skeleton className="h-4 w-full mb-1" />
+                  <Skeleton className="h-4 w-3/4 mb-4" />
+                  <div className="flex flex-wrap gap-4 mb-4">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  <Skeleton className="h-px w-full mb-4" /> {/* Divider */}
                   <div className="flex items-center justify-between">
                     <Skeleton className="h-8 w-24" />
-                    <Skeleton className="h-10 w-28" />
+                    <Skeleton className="h-10 w-32 rounded-full" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : coursesError ? (
-          <div className="text-center p-12 bg-red-50 rounded-lg">
-            <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Courses</h3>
-            <p className="text-red-600">There was a problem loading the courses. Please try again later.</p>
+          <div className="text-center p-12 bg-red-50 dark:bg-red-950/30 rounded-xl border border-red-100 dark:border-red-900/50">
+            <div className="bg-red-500/10 dark:bg-red-500/5 p-6 rounded-full inline-flex mb-4">
+              <X className="h-12 w-12 text-red-500" />
+            </div>
+            <h3 className="text-xl font-bold text-red-800 dark:text-red-400 mb-2">Error Loading Courses</h3>
+            <p className="text-red-600 dark:text-red-300 mb-6 max-w-md mx-auto">There was a problem loading the courses. Please try again later.</p>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="destructive"
+              className="rounded-full px-6"
+            >
+              Try Again
+            </Button>
           </div>
         ) : sortedCourses?.length === 0 ? (
-          <div className="text-center p-12 bg-gray-50 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-800 mb-2">No Courses Found</h3>
-            <p className="text-gray-600 mb-4">We couldn't find any courses matching your criteria.</p>
-            <Button onClick={clearFilters}>Clear Filters</Button>
+          <div className="text-center p-12 bg-gray-50 dark:bg-gray-900/30 rounded-xl border border-gray-100 dark:border-gray-800">
+            <div className="bg-primary/10 p-6 rounded-full inline-flex mb-4">
+              <Filter className="h-12 w-12 text-primary" />
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">No Courses Found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">We couldn't find any courses matching your search criteria. Try adjusting your filters or browse all courses.</p>
+            <Button 
+              onClick={clearFilters} 
+              className="rounded-full px-6"
+            >
+              Clear All Filters
+            </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {sortedCourses?.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
