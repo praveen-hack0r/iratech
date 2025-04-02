@@ -79,7 +79,11 @@ export async function sendVerificationEmail(
   token: string
 ): Promise<boolean> {
   // Generate the verification link
-  const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+  // Use Replit domain in development if available
+  const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+    : null;
+  const baseUrl = process.env.BASE_URL || replitDomain || "http://localhost:5000";
   const verificationLink = `${baseUrl}/api/verify-email?token=${token}`;
   
   // Create email content
@@ -133,7 +137,11 @@ export async function sendPasswordResetEmail(
   token: string
 ): Promise<boolean> {
   // Generate the reset link
-  const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+  // Use Replit domain in development if available
+  const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER 
+    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+    : null;
+  const baseUrl = process.env.BASE_URL || replitDomain || "http://localhost:5000";
   const resetLink = `${baseUrl}/reset-password?token=${token}`;
   
   // Create email content

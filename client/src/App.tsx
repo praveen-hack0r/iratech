@@ -19,6 +19,7 @@ import AdminNewCourse from "@/pages/admin/new-course";
 import AdminEditCourse from "@/pages/admin/edit-course";
 import PendingEnrollmentsPage from "@/pages/admin/pending-enrollments";
 import VerificationSuccessPage from "@/pages/verification-success";
+import DevVerificationPage from "@/pages/dev-verification-page";
 
 function Router() {
   return (
@@ -28,6 +29,7 @@ function Router() {
       <Route path="/courses" component={CoursesPage} />
       <Route path="/courses/:slug" component={CourseDetailPage} />
       <Route path="/verification-success" component={VerificationSuccessPage} />
+      <Route path="/dev-verify" component={DevVerificationPage} />
       <ProtectedRoute path="/my-learning" component={MyLearningPage} />
       <ProtectedRoute path="/checkout/:courseId" component={CheckoutPage} />
       <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["admin"]} />

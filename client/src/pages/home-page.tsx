@@ -109,21 +109,33 @@ export default function HomePage() {
             <AlertTitle className="text-amber-600 dark:text-amber-400">
               Email verification required
             </AlertTitle>
-            <AlertDescription className="flex flex-col sm:flex-row sm:items-center gap-2">
-              <span>Please verify your email address to access all features.</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-amber-500 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 ml-0 sm:ml-2 w-fit"
-                onClick={handleResendVerification}
-                disabled={resendVerificationMutation.isPending}
-              >
-                {resendVerificationMutation.isPending ? (
-                  "Sending..."
-                ) : (
-                  <><MailCheck className="mr-2 h-4 w-4" /> Resend verification email</>
-                )}
-              </Button>
+            <AlertDescription className="flex flex-col gap-2">
+              <span>Please verify your email address to access all features. The verification token is available in the server logs.</span>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-amber-500 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 w-fit"
+                  onClick={handleResendVerification}
+                  disabled={resendVerificationMutation.isPending}
+                >
+                  {resendVerificationMutation.isPending ? (
+                    "Sending..."
+                  ) : (
+                    <><MailCheck className="mr-2 h-4 w-4" /> Resend verification email</>
+                  )}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  asChild
+                  className="border-amber-500 text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30 w-fit"
+                >
+                  <Link href="/dev-verify">
+                    Go to development verification
+                  </Link>
+                </Button>
+              </div>
             </AlertDescription>
           </Alert>
         </div>
