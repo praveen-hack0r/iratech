@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  X
+  X,
+  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -51,6 +52,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: <Users className="h-5 w-5" />,
       href: "/admin/users",
       active: location.startsWith("/admin/users")
+    },
+    {
+      title: "Pending Enrollments",
+      icon: <CreditCard className="h-5 w-5" />,
+      href: "/admin/pending-enrollments",
+      active: location.startsWith("/admin/pending-enrollments"),
+      badge: "Important"
     },
     {
       title: "Resources",
@@ -109,7 +117,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}>
                 {item.icon}
-                {!collapsed && <span className="ml-3">{item.title}</span>}
+                {!collapsed && (
+                  <div className="flex items-center justify-between w-full">
+                    <span className="ml-3">{item.title}</span>
+                    {item.badge && (
+                      <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
               </a>
             </Link>
           ))}

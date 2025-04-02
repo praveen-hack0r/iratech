@@ -72,17 +72,24 @@ export default function CheckoutPage() {
     enabled: !!courseId,
   });
   
-  // Create enrollment without payment
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('upi');
+  
+  // Create enrollment with payment reference
   const enrollMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/enroll", { courseId });
+      const res = await apiRequest("POST", "/api/enroll", { 
+        courseId,
+        paymentMethod,
+        paymentReference
+      });
       return await res.json();
     },
     onSuccess: () => {
       setSuccess(true);
       toast({
-        title: "Enrollment Successful",
-        description: `You have successfully enrolled in ${course?.title}`,
+        title: "Enrollment Request Submitted",
+        description: `Your enrollment request for ${course?.title} has been submitted. Admin will approve it soon.`,
         variant: "default",
       });
       
@@ -95,6 +102,7 @@ export default function CheckoutPage() {
       }, 2000);
     },
     onError: (error: Error) => {
+      setLoading(false);
       toast({
         title: "Enrollment Failed",
         description: error.message,
@@ -104,6 +112,15 @@ export default function CheckoutPage() {
   });
   
   const handleEnroll = () => {
+    if (!paymentReference.trim()) {
+      toast({
+        title: "Payment Reference Required",
+        description: "Please enter your payment reference or transaction ID",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
     enrollMutation.mutate();
   };
@@ -152,9 +169,9 @@ export default function CheckoutPage() {
                   {success ? (
                     <Alert className="mb-4 bg-green-50 border-green-500">
                       <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertTitle className="text-green-700">Enrollment Successful!</AlertTitle>
+                      <AlertTitle className="text-green-700">Enrollment Request Submitted!</AlertTitle>
                       <AlertDescription className="text-green-600">
-                        Your enrollment has been processed successfully. Redirecting to your courses...
+                        Your enrollment request has been submitted successfully. An admin will verify your payment and approve your enrollment soon. Redirecting to your courses...
                       </AlertDescription>
                     </Alert>
                   ) : (
@@ -237,7 +254,23 @@ export default function CheckoutPage() {
                       <div className="mb-6">
                         <div className="flex items-center text-sm text-orange-600 mb-3">
                           <AlertCircle className="h-4 w-4 mr-2" />
-                          <p>After payment, click the button below to complete enrollment</p>
+                          <p>After payment, enter your transaction reference below and click the button to complete enrollment</p>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <label htmlFor="paymentReference" className="block text-sm font-medium mb-1">
+                            Payment Reference / Transaction ID
+                          </label>
+                          <input
+                            id="paymentReference"
+                            type="text"
+                            value={paymentReference}
+                            onChange={(e) => setPaymentReference(e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="Enter UPI transaction ID or reference"
+                            required
+                          />
+                          <p className="mt-1 text-xs text-gray-500">This helps us verify your payment</p>
                         </div>
                       </div>
                       

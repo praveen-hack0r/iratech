@@ -300,9 +300,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Direct enrollment route without payment
+  // Request enrollment with UPI payment reference
   app.post("/api/enroll", isAuthenticated, async (req, res) => {
     try {
-      const { courseId } = req.body;
+      const { courseId, paymentReference, paymentMethod } = req.body;
       
       if (!courseId) {
         return res.status(400).json({ message: "Course ID is required" });
@@ -320,17 +321,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You are already enrolled in this course" });
       }
       
-      // Create enrollment directly
+      // Create pending enrollment with payment reference
       const enrollment = await storage.createEnrollment({
         userId: req.user.id,
         courseId: courseId,
-        status: 'active',
+        status: 'pending',
+        paymentReference: paymentReference || null,
+        paymentMethod: paymentMethod || 'upi',
         enrollmentDate: new Date().toISOString()
       });
       
-      res.status(201).json(enrollment);
+      res.status(201).json({
+        ...enrollment,
+        message: "Your enrollment request has been submitted and will be approved after payment verification."
+      });
     } catch (error) {
       res.status(500).json({ message: "Error enrolling in course" });
+    }
+  });
+  
+  // Admin routes for enrollment management
+  app.get("/api/admin/enrollments", isAdmin, async (req, res) => {
+    try {
+      const enrollments = await storage.getAllEnrollments();
+      
+      // Get user and course details for each enrollment
+      const enrichedEnrollments = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const user = await storage.getUser(enrollment.userId);
+          const course = await storage.getCourse(enrollment.courseId);
+          return {
+            ...enrollment,
+            user: user ? { 
+              id: user.id, 
+              username: user.username, 
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName
+            } : null,
+            course: course ? { 
+              id: course.id, 
+              title: course.title,
+              price: course.price
+            } : null
+          };
+        })
+      );
+      
+      res.json(enrichedEnrollments.filter(item => item.user !== null && item.course !== null));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+  
+  app.get("/api/admin/enrollments/pending", isAdmin, async (req, res) => {
+    try {
+      const pendingEnrollments = await storage.getPendingEnrollments();
+      
+      // Get user and course details for each enrollment
+      const enrichedEnrollments = await Promise.all(
+        pendingEnrollments.map(async (enrollment) => {
+          const user = await storage.getUser(enrollment.userId);
+          const course = await storage.getCourse(enrollment.courseId);
+          return {
+            ...enrollment,
+            user: user ? { 
+              id: user.id, 
+              username: user.username, 
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName
+            } : null,
+            course: course ? { 
+              id: course.id, 
+              title: course.title,
+              price: course.price
+            } : null
+          };
+        })
+      );
+      
+      res.json(enrichedEnrollments.filter(item => item.user !== null && item.course !== null));
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch pending enrollments" });
+    }
+  });
+  
+  app.post("/api/admin/enrollments/:id/approve", isAdmin, async (req, res) => {
+    try {
+      const enrollmentId = parseInt(req.params.id);
+      const approvedEnrollment = await storage.approveEnrollment(enrollmentId, req.user.id);
+      
+      const user = await storage.getUser(approvedEnrollment.userId);
+      const course = await storage.getCourse(approvedEnrollment.courseId);
+      
+      res.json({
+        ...approvedEnrollment,
+        user: user ? { 
+          id: user.id, 
+          username: user.username, 
+          email: user.email 
+        } : null,
+        course: course ? { 
+          id: course.id, 
+          title: course.title 
+        } : null,
+        message: "Enrollment successfully approved"
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve enrollment" });
     }
   });
 

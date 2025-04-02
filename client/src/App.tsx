@@ -16,6 +16,7 @@ import AdminCourses from "@/pages/admin/courses";
 import AdminUsers from "@/pages/admin/users";
 import AdminNewCourse from "@/pages/admin/new-course";
 import AdminEditCourse from "@/pages/admin/edit-course";
+import PendingEnrollmentsPage from "@/pages/admin/pending-enrollments";
 
 function Router() {
   return (
@@ -31,6 +32,7 @@ function Router() {
       <ProtectedRoute path="/admin/users" component={AdminUsers} adminOnly />
       <ProtectedRoute path="/admin/courses/new" component={AdminNewCourse} adminOnly />
       <ProtectedRoute path="/admin/courses/:id/edit" component={AdminEditCourse} adminOnly />
+      <ProtectedRoute path="/admin/pending-enrollments" component={PendingEnrollmentsPage} adminOnly />
       <Route component={NotFound} />
     </Switch>
   );

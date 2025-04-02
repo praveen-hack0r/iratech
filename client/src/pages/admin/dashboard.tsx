@@ -12,7 +12,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table,
   TableHeader,
@@ -203,8 +203,8 @@ export default function AdminDashboard() {
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Recent Enrollments</CardTitle>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/admin/enrollments">
-                  View All
+                <Link href="/admin/pending-enrollments">
+                  View Pending
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -308,10 +308,44 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-gray-500 mb-4">
-                This section will be implemented with more detailed enrollment analytics and management tools.
+                Manage student enrollments and payment approvals.
               </p>
-              <div className="flex justify-center py-12">
-                <p className="text-muted-foreground">Coming soon...</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">Pending Enrollments</CardTitle>
+                      <div className="bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">
+                        Needs Approval
+                      </div>
+                    </div>
+                    <CardDescription>
+                      Review and approve enrollment requests
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-2">
+                    <Button asChild className="w-full">
+                      <Link href="/admin/pending-enrollments">
+                        Manage Pending Enrollments
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">All Enrollments</CardTitle>
+                    <CardDescription>
+                      View and manage all student enrollments
+                    </CardDescription>
+                  </CardHeader>
+                  <CardFooter className="pt-2">
+                    <Button variant="outline" disabled className="w-full">
+                      Coming Soon
+                    </Button>
+                  </CardFooter>
+                </Card>
               </div>
             </CardContent>
           </Card>

@@ -84,8 +84,12 @@ export const enrollments = pgTable("enrollments", {
   userId: integer("user_id").notNull(),
   courseId: integer("course_id").notNull(),
   enrollmentDate: timestamp("enrollment_date").notNull().defaultNow(),
-  status: text("status").notNull().default("active"),
+  status: text("status").notNull().default("pending"), // Changed default from "active" to "pending"
   paymentId: text("payment_id"),
+  paymentMethod: text("payment_method"), // Added payment method (upi, etc)
+  paymentReference: text("payment_reference"), // For transaction ID or reference
+  approvedBy: integer("approved_by"), // Admin user ID who approved
+  approvedAt: timestamp("approved_at"), // When it was approved
 });
 
 // Progress table to track user's progress
@@ -175,6 +179,10 @@ export const insertEnrollmentSchema = createInsertSchema(enrollments).pick({
   courseId: true,
   status: true,
   paymentId: true,
+  paymentMethod: true,
+  paymentReference: true,
+  approvedBy: true,
+  approvedAt: true,
 });
 
 export const insertProgressSchema = createInsertSchema(progress).pick({
@@ -250,6 +258,12 @@ export type CourseWithCategory = Course & {
 // LessonWithProgress with user-specific information
 export type LessonWithProgress = Lesson & {
   progress?: Progress;
+};
+
+// EnrollmentWithUserAndCourse with extended information
+export type EnrollmentWithUserAndCourse = Enrollment & {
+  user: User;
+  course: Course;
 };
 
 // Admin dashboard schemas

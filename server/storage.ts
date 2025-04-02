@@ -70,6 +70,9 @@ export interface IStorage {
   getEnrollmentsByUser(userId: number): Promise<Enrollment[]>;
   getEnrollmentsByCourse(courseId: number): Promise<Enrollment[]>;
   getEnrollment(userId: number, courseId: number): Promise<Enrollment | undefined>;
+  getAllEnrollments(): Promise<Enrollment[]>;
+  getPendingEnrollments(): Promise<Enrollment[]>;
+  approveEnrollment(id: number, adminId: number): Promise<Enrollment>;
   createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment>;
   updateEnrollment(id: number, enrollment: Partial<Enrollment>): Promise<Enrollment>;
   
@@ -470,6 +473,29 @@ export class MemStorage implements IStorage {
     return Array.from(this.enrollmentStore.values()).find(
       enrollment => enrollment.userId === userId && enrollment.courseId === courseId
     );
+  }
+  
+  async getAllEnrollments(): Promise<Enrollment[]> {
+    return Array.from(this.enrollmentStore.values());
+  }
+  
+  async getPendingEnrollments(): Promise<Enrollment[]> {
+    return Array.from(this.enrollmentStore.values())
+      .filter(enrollment => enrollment.status === "pending");
+  }
+  
+  async approveEnrollment(id: number, adminId: number): Promise<Enrollment> {
+    const enrollment = this.enrollmentStore.get(id);
+    if (!enrollment) throw new Error(`Enrollment with id ${id} not found`);
+    
+    const updatedEnrollment = { 
+      ...enrollment,
+      status: "active",
+      approvedBy: adminId,
+      approvedAt: new Date()
+    };
+    this.enrollmentStore.set(id, updatedEnrollment);
+    return updatedEnrollment;
   }
 
   async createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment> {
