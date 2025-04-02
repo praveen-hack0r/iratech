@@ -146,7 +146,7 @@ export class MemStorage implements IStorage {
 
     // Initialize with default admin user with pre-hashed password
     // This is equivalent to the password "admin123"
-    const hashedPassword = "6266223133d902d9fe7fc9209f715974a0a8cebbd2d7cdad1753d2e4f57f11f61f53fb59be93e5b3d8a1e20b05c77f8b50e58dd04ef9b14efebbdcf1811b0124.38a95e5d57bcb9e7ac0732b4ecb21f18";
+    const hashedPassword = "953e599285204eda9dcb2139eeb8273d8f0c125bbd0d8c63ddda6b9f6d6cbe95b4b93d32b8a75668b0046678f23696fd7874212a78e357ca17201eedfca62248.38a95e5d57bcb9e7ac0732b4ecb21f18";
     
     this.createUser({
       username: "admin",

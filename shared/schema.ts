@@ -125,6 +125,13 @@ export const insertUserSchema = createInsertSchema(users).pick({
   firstName: true,
   lastName: true,
   role: true,
+  stripeCustomerId: true,
+  stripeSubscriptionId: true,
+  resetToken: true,
+  resetTokenExpiry: true,
+  isVerified: true,
+  verificationToken: true,
+  verificationExpiry: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).pick({
