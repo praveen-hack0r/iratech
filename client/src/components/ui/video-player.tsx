@@ -385,6 +385,12 @@ export function VideoPlayer({
                 ? videoUrl
                 : `/direct-videos/${videoUrl.split('/').pop()}`
           );
+          // Try direct path as fallback
+          if (videoRef.current) {
+            videoRef.current.src = `/direct-videos/${videoUrl.split('/').pop()}`;
+            videoRef.current.load();
+            videoRef.current.play().catch(err => console.error("Fallback video play error:", err));
+          }
         }}
       />
       

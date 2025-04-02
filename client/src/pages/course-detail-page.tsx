@@ -120,18 +120,42 @@ export default function CourseDetailPage() {
       if (response.ok) {
         const previewData = await response.json();
         console.log("Preview data:", previewData);
+        
+        // Ensure the videoUrl is properly formatted for the video player
+        if (previewData.videoUrl && !previewData.videoUrl.startsWith('/direct-videos') && 
+            !previewData.videoUrl.startsWith('/api') && !previewData.videoUrl.startsWith('/static-videos')) {
+          previewData.videoUrl = `/direct-videos/${previewData.videoUrl.split('/').pop()}`;
+        }
+        
         setPreviewLesson(previewData);
+        console.log("Set preview lesson with URL:", previewData.videoUrl);
       } else {
         console.error("Failed to fetch preview video:", await response.text());
         // Use the lesson as-is if we can't fetch more details
-        setPreviewLesson(lesson);
+        
+        // Ensure the videoUrl is properly formatted for the video player
+        if (lesson.videoUrl && !lesson.videoUrl.startsWith('/direct-videos') && 
+            !lesson.videoUrl.startsWith('/api') && !lesson.videoUrl.startsWith('/static-videos')) {
+          lesson.videoUrl = `/direct-videos/${lesson.videoUrl.split('/').pop()}`;
+        }
+        
+        setPreviewLesson({...lesson});
+        console.log("Set fallback preview lesson with URL:", lesson.videoUrl);
       }
       
       setSelectedTab("preview");
     } catch (error) {
       console.error("Error fetching preview:", error);
       // Fallback to using the lesson as-is
-      setPreviewLesson(lesson);
+      
+      // Ensure the videoUrl is properly formatted for the video player
+      if (lesson.videoUrl && !lesson.videoUrl.startsWith('/direct-videos') && 
+          !lesson.videoUrl.startsWith('/api') && !lesson.videoUrl.startsWith('/static-videos')) {
+        lesson.videoUrl = `/direct-videos/${lesson.videoUrl.split('/').pop()}`;
+      }
+      
+      setPreviewLesson({...lesson});
+      console.log("Set error fallback preview lesson with URL:", lesson.videoUrl);
       setSelectedTab("preview");
     }
   };
