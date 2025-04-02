@@ -452,6 +452,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get a single course with full details for admin
+  app.get("/api/admin/courses/:id", isAdmin, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.id);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Get category
+      const category = await storage.getCategory(course.categoryId);
+      
+      // Get sections with nested lessons
+      const sections = await storage.getSectionsByCourse(courseId);
+      const sectionsWithLessons = await Promise.all(
+        sections.map(async (section) => {
+          const lessons = await storage.getLessonsBySection(section.id);
+          return { ...section, lessons };
+        })
+      );
+      
+      // Get resources for this course
+      const resources = await storage.getResourcesByCourse(courseId);
+      
+      // Return the complete course data
+      res.json({
+        ...course,
+        category,
+        sections: sectionsWithLessons,
+        resources
+      });
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      res.status(500).json({ message: "Failed to fetch course details" });
+    }
+  });
+
   app.post("/api/admin/courses", isAdmin, async (req, res) => {
     try {
       const course = await storage.createCourse(req.body);
