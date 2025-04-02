@@ -84,7 +84,7 @@ export default function HomePage() {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <header className="pt-24 md:pt-32 pb-16 bg-background">
+      <header className="pt-24 md:pt-32 pb-16 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="md:flex md:items-center md:justify-between">
             <div className="md:w-1/2 mb-8 md:mb-0">
@@ -121,7 +121,7 @@ export default function HomePage() {
       </header>
 
       {/* Categories Section */}
-      <section className="py-12 bg-background">
+      <section className="py-12 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Our Course Categories</h2>
           
@@ -153,7 +153,7 @@ export default function HomePage() {
       </section>
 
       {/* Featured Courses Section */}
-      <section className="py-12 bg-secondary">
+      <section className="py-12 bg-secondary dark:bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-3xl font-bold text-foreground">Featured Courses</h2>
@@ -207,7 +207,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 bg-background">
+      <section className="py-12 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4 text-foreground">Why Choose TechLearn</h2>
@@ -232,7 +232,7 @@ export default function HomePage() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-12 bg-primary text-primary-foreground">
+      <section className="py-12 bg-primary dark:bg-[#000000] text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Learning Journey?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
