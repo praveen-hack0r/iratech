@@ -104,7 +104,7 @@ export default function HomePage() {
       {/* Verification Alert */}
       {needsVerification && (
         <div className="pt-6 px-4">
-          <Alert variant="warning" className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
+          <Alert className="border-amber-500 bg-amber-50 dark:bg-amber-950/20">
             <AlertTriangle className="h-4 w-4 text-amber-500" />
             <AlertTitle className="text-amber-600 dark:text-amber-400">
               Email verification required
