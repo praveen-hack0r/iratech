@@ -110,9 +110,30 @@ export default function CourseDetailPage() {
   };
 
   // Handle preview lesson click
-  const handlePreviewLesson = (lesson: Lesson) => {
-    setPreviewLesson(lesson);
-    setSelectedTab("preview");
+  const handlePreviewLesson = async (lesson: Lesson) => {
+    console.log("Getting preview for lesson:", lesson.id, lesson.title);
+    
+    try {
+      // Fetch the preview video details to ensure we have the correct URL
+      const response = await fetch(`/api/preview-video/${lesson.id}`);
+      
+      if (response.ok) {
+        const previewData = await response.json();
+        console.log("Preview data:", previewData);
+        setPreviewLesson(previewData);
+      } else {
+        console.error("Failed to fetch preview video:", await response.text());
+        // Use the lesson as-is if we can't fetch more details
+        setPreviewLesson(lesson);
+      }
+      
+      setSelectedTab("preview");
+    } catch (error) {
+      console.error("Error fetching preview:", error);
+      // Fallback to using the lesson as-is
+      setPreviewLesson(lesson);
+      setSelectedTab("preview");
+    }
   };
 
   // Get file icon based on type

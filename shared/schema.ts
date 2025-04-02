@@ -116,6 +116,42 @@ export const payments = pgTable("payments", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Forum Topics table
+export const forumTopics = pgTable("forum_topics", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  courseId: integer("course_id").notNull(),
+  userId: integer("user_id").notNull(),
+  isPinned: boolean("is_pinned").default(false),
+  isLocked: boolean("is_locked").default(false),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Forum Comments table
+export const forumComments = pgTable("forum_comments", {
+  id: serial("id").primaryKey(),
+  topicId: integer("topic_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  isInstructorResponse: boolean("is_instructor_response").default(false),
+  parentId: integer("parent_id"), // For nested replies, null for top-level comments
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Forum Reactions table for likes/upvotes
+export const forumReactions = pgTable("forum_reactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  topicId: integer("topic_id"), // NULL if reaction is for a comment
+  commentId: integer("comment_id"), // NULL if reaction is for a topic
+  reactionType: text("reaction_type").notNull().default("like"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Define insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -209,6 +245,31 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
   status: true,
 });
 
+// Forum insert schemas
+export const insertForumTopicSchema = createInsertSchema(forumTopics).pick({
+  title: true,
+  content: true,
+  courseId: true,
+  userId: true,
+  isPinned: true,
+  isLocked: true,
+});
+
+export const insertForumCommentSchema = createInsertSchema(forumComments).pick({
+  topicId: true,
+  userId: true,
+  content: true,
+  isInstructorResponse: true,
+  parentId: true,
+});
+
+export const insertForumReactionSchema = createInsertSchema(forumReactions).pick({
+  userId: true,
+  topicId: true,
+  commentId: true,
+  reactionType: true,
+});
+
 // Define types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -236,6 +297,16 @@ export type Progress = typeof progress.$inferSelect;
 
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
+
+// Forum types
+export type InsertForumTopic = z.infer<typeof insertForumTopicSchema>;
+export type ForumTopic = typeof forumTopics.$inferSelect;
+
+export type InsertForumComment = z.infer<typeof insertForumCommentSchema>;
+export type ForumComment = typeof forumComments.$inferSelect;
+
+export type InsertForumReaction = z.infer<typeof insertForumReactionSchema>;
+export type ForumReaction = typeof forumReactions.$inferSelect;
 
 // Add specific schemas for auth
 export const loginSchema = z.object({
@@ -290,3 +361,42 @@ export const uploadResourceSchema = z.object({
 
 export type UploadVideoData = z.infer<typeof uploadVideoSchema>;
 export type UploadResourceData = z.infer<typeof uploadResourceSchema>;
+
+// Forum extended types
+export type ForumTopicWithUser = ForumTopic & {
+  user: {
+    id: number;
+    username: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+  };
+  commentCount: number;
+  lastComment?: {
+    id: number;
+    createdAt: Date;
+    user: {
+      id: number;
+      username: string;
+    };
+  } | null;
+  reactions: {
+    likes: number;
+    userReaction: string | null;
+  };
+};
+
+export type ForumCommentWithUser = ForumComment & {
+  user: {
+    id: number;
+    username: string;
+    firstName: string | null;
+    lastName: string | null;
+    role: string;
+  };
+  replies?: ForumCommentWithUser[];
+  reactions: {
+    likes: number;
+    userReaction: string | null;
+  };
+};

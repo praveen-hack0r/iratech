@@ -7,7 +7,11 @@ import {
   resources, type Resource, type InsertResource,
   enrollments, type Enrollment, type InsertEnrollment,
   progress, type Progress, type InsertProgress,
-  payments, type Payment, type InsertPayment
+  payments, type Payment, type InsertPayment,
+  forumTopics, type ForumTopic, type InsertForumTopic,
+  forumComments, type ForumComment, type InsertForumComment,
+  forumReactions, type ForumReaction, type InsertForumReaction,
+  type ForumTopicWithUser, type ForumCommentWithUser
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
@@ -93,6 +97,29 @@ export interface IStorage {
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment>;
   
+  // Forum topic operations
+  getForumTopicsByCourse(courseId: number): Promise<ForumTopicWithUser[]>;
+  getForumTopic(id: number): Promise<ForumTopic | undefined>;
+  createForumTopic(topic: InsertForumTopic): Promise<ForumTopic>;
+  updateForumTopic(id: number, topic: Partial<ForumTopic>): Promise<ForumTopic>;
+  deleteForumTopic(id: number): Promise<void>;
+  getForumTopicWithDetails(id: number, userId?: number): Promise<ForumTopicWithUser | undefined>;
+  
+  // Forum comment operations
+  getForumCommentsByTopic(topicId: number): Promise<ForumCommentWithUser[]>;
+  getForumComment(id: number): Promise<ForumComment | undefined>;
+  createForumComment(comment: InsertForumComment): Promise<ForumComment>;
+  updateForumComment(id: number, comment: Partial<ForumComment>): Promise<ForumComment>;
+  deleteForumComment(id: number): Promise<void>;
+  getCommentReplies(commentId: number): Promise<ForumCommentWithUser[]>;
+  
+  // Forum reaction operations
+  createForumReaction(reaction: InsertForumReaction): Promise<ForumReaction>;
+  deleteForumReaction(userId: number, topicId?: number, commentId?: number): Promise<void>;
+  getReactionsByTopic(topicId: number): Promise<ForumReaction[]>;
+  getReactionsByComment(commentId: number): Promise<ForumReaction[]>;
+  getUserReaction(userId: number, topicId?: number, commentId?: number): Promise<ForumReaction | undefined>;
+  
   // Session store for authentication
   sessionStore: any; // Using any to bypass type checking for session store
 }
@@ -108,6 +135,9 @@ export class MemStorage implements IStorage {
   private enrollmentStore: Map<number, Enrollment>;
   private progressStore: Map<number, Progress>;
   private paymentStore: Map<number, Payment>;
+  private forumTopicStore: Map<number, ForumTopic>;
+  private forumCommentStore: Map<number, ForumComment>;
+  private forumReactionStore: Map<number, ForumReaction>;
   sessionStore: any; // Using any to bypass type checking
 
   private userIdCounter: number;
@@ -119,6 +149,9 @@ export class MemStorage implements IStorage {
   private enrollmentIdCounter: number;
   private progressIdCounter: number;
   private paymentIdCounter: number;
+  private forumTopicIdCounter: number;
+  private forumCommentIdCounter: number;
+  private forumReactionIdCounter: number;
 
   constructor() {
     this.userStore = new Map();
@@ -130,6 +163,9 @@ export class MemStorage implements IStorage {
     this.enrollmentStore = new Map();
     this.progressStore = new Map();
     this.paymentStore = new Map();
+    this.forumTopicStore = new Map();
+    this.forumCommentStore = new Map();
+    this.forumReactionStore = new Map();
     
     this.userIdCounter = 1;
     this.categoryIdCounter = 1;
@@ -140,6 +176,9 @@ export class MemStorage implements IStorage {
     this.enrollmentIdCounter = 1;
     this.progressIdCounter = 1;
     this.paymentIdCounter = 1;
+    this.forumTopicIdCounter = 1;
+    this.forumCommentIdCounter = 1;
+    this.forumReactionIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // Prune expired entries every 24h
@@ -622,6 +661,345 @@ export class MemStorage implements IStorage {
     const updatedPayment = { ...payment, ...paymentData };
     this.paymentStore.set(id, updatedPayment);
     return updatedPayment;
+  }
+
+  // Forum topic operations
+  async getForumTopicsByCourse(courseId: number): Promise<ForumTopicWithUser[]> {
+    const topics = Array.from(this.forumTopicStore.values())
+      .filter(topic => topic.courseId === courseId)
+      .sort((a, b) => {
+        // Sort by pinned first, then by most recent
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      });
+
+    return Promise.all(topics.map(async topic => {
+      const user = await this.getUser(topic.userId);
+      if (!user) throw new Error(`User with id ${topic.userId} not found`);
+
+      // Get comment count
+      const comments = Array.from(this.forumCommentStore.values())
+        .filter(comment => comment.topicId === topic.id);
+      
+      // Get last comment
+      const lastComment = comments.length > 0 
+        ? comments.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )[0]
+        : null;
+      
+      // Get reactions
+      const reactions = Array.from(this.forumReactionStore.values())
+        .filter(reaction => reaction.topicId === topic.id);
+      
+      const likes = reactions.filter(r => r.reactionType === "like").length;
+
+      return {
+        ...topic,
+        user: {
+          id: user.id,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role
+        },
+        commentCount: comments.length,
+        lastComment: lastComment ? {
+          id: lastComment.id,
+          createdAt: lastComment.createdAt,
+          user: {
+            id: lastComment.userId,
+            username: (await this.getUser(lastComment.userId))?.username || "Unknown"
+          }
+        } : null,
+        reactions: {
+          likes,
+          userReaction: null // This will be populated when a specific userId is provided
+        }
+      };
+    }));
+  }
+
+  async getForumTopic(id: number): Promise<ForumTopic | undefined> {
+    return this.forumTopicStore.get(id);
+  }
+
+  async createForumTopic(topic: InsertForumTopic): Promise<ForumTopic> {
+    const id = this.forumTopicIdCounter++;
+    const newTopic: ForumTopic = { 
+      ...topic, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isPinned: topic.isPinned || false
+    };
+    this.forumTopicStore.set(id, newTopic);
+    return newTopic;
+  }
+
+  async updateForumTopic(id: number, topicData: Partial<ForumTopic>): Promise<ForumTopic> {
+    const topic = this.forumTopicStore.get(id);
+    if (!topic) throw new Error(`Forum topic with id ${id} not found`);
+    
+    const updatedTopic = { 
+      ...topic, 
+      ...topicData,
+      updatedAt: new Date()
+    };
+    this.forumTopicStore.set(id, updatedTopic);
+    return updatedTopic;
+  }
+
+  async deleteForumTopic(id: number): Promise<void> {
+    // Delete all comments associated with the topic
+    const commentsToDelete = Array.from(this.forumCommentStore.values())
+      .filter(comment => comment.topicId === id);
+    
+    for (const comment of commentsToDelete) {
+      // Delete all reactions to this comment
+      const reactionsToDelete = Array.from(this.forumReactionStore.values())
+        .filter(reaction => reaction.commentId === comment.id);
+      
+      for (const reaction of reactionsToDelete) {
+        this.forumReactionStore.delete(reaction.id);
+      }
+      
+      this.forumCommentStore.delete(comment.id);
+    }
+    
+    // Delete all reactions to the topic
+    const reactionsToDelete = Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.topicId === id);
+    
+    for (const reaction of reactionsToDelete) {
+      this.forumReactionStore.delete(reaction.id);
+    }
+    
+    // Finally delete the topic
+    this.forumTopicStore.delete(id);
+  }
+
+  async getForumTopicWithDetails(id: number, userId?: number): Promise<ForumTopicWithUser | undefined> {
+    const topic = this.forumTopicStore.get(id);
+    if (!topic) return undefined;
+
+    const user = await this.getUser(topic.userId);
+    if (!user) throw new Error(`User with id ${topic.userId} not found`);
+
+    // Get comment count
+    const comments = Array.from(this.forumCommentStore.values())
+      .filter(comment => comment.topicId === topic.id);
+    
+    // Get last comment
+    const lastComment = comments.length > 0 
+      ? comments.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )[0]
+      : null;
+    
+    // Get reactions
+    const reactions = Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.topicId === topic.id);
+    
+    const likes = reactions.filter(r => r.reactionType === "like").length;
+    
+    // Get user's reaction if userId is provided
+    let userReaction = null;
+    if (userId) {
+      const reactionByUser = reactions.find(r => r.userId === userId);
+      if (reactionByUser) {
+        userReaction = reactionByUser.reactionType;
+      }
+    }
+
+    return {
+      ...topic,
+      user: {
+        id: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      },
+      commentCount: comments.length,
+      lastComment: lastComment ? {
+        id: lastComment.id,
+        createdAt: lastComment.createdAt,
+        user: {
+          id: lastComment.userId,
+          username: (await this.getUser(lastComment.userId))?.username || "Unknown"
+        }
+      } : null,
+      reactions: {
+        likes,
+        userReaction
+      }
+    };
+  }
+
+  // Forum comment operations
+  async getForumCommentsByTopic(topicId: number): Promise<ForumCommentWithUser[]> {
+    // Get all top-level comments (parentId is null)
+    const comments = Array.from(this.forumCommentStore.values())
+      .filter(comment => comment.topicId === topicId && !comment.parentId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return Promise.all(comments.map(async comment => this.enrichCommentWithUserAndReplies(comment)));
+  }
+
+  private async enrichCommentWithUserAndReplies(comment: ForumComment): Promise<ForumCommentWithUser> {
+    const user = await this.getUser(comment.userId);
+    if (!user) throw new Error(`User with id ${comment.userId} not found`);
+
+    // Get reactions
+    const reactions = Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.commentId === comment.id);
+    
+    const likes = reactions.filter(r => r.reactionType === "like").length;
+
+    // Get replies
+    const replies = Array.from(this.forumCommentStore.values())
+      .filter(c => c.parentId === comment.id)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    const repliesWithUser = await Promise.all(
+      replies.map(reply => this.enrichCommentWithUserAndReplies(reply))
+    );
+
+    return {
+      ...comment,
+      user: {
+        id: user.id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      },
+      replies: repliesWithUser,
+      reactions: {
+        likes,
+        userReaction: null // This will be populated when a specific userId is provided
+      }
+    };
+  }
+
+  async getForumComment(id: number): Promise<ForumComment | undefined> {
+    return this.forumCommentStore.get(id);
+  }
+
+  async createForumComment(comment: InsertForumComment): Promise<ForumComment> {
+    const id = this.forumCommentIdCounter++;
+    const newComment: ForumComment = { 
+      ...comment, 
+      id, 
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.forumCommentStore.set(id, newComment);
+    
+    // Update the topic's updatedAt timestamp
+    if (comment.topicId) {
+      const topic = this.forumTopicStore.get(comment.topicId);
+      if (topic) {
+        topic.updatedAt = new Date();
+        this.forumTopicStore.set(topic.id, topic);
+      }
+    }
+    
+    return newComment;
+  }
+
+  async updateForumComment(id: number, commentData: Partial<ForumComment>): Promise<ForumComment> {
+    const comment = this.forumCommentStore.get(id);
+    if (!comment) throw new Error(`Forum comment with id ${id} not found`);
+    
+    const updatedComment = { 
+      ...comment, 
+      ...commentData,
+      updatedAt: new Date()
+    };
+    this.forumCommentStore.set(id, updatedComment);
+    return updatedComment;
+  }
+
+  async deleteForumComment(id: number): Promise<void> {
+    const comment = this.forumCommentStore.get(id);
+    if (!comment) return;
+    
+    // First, delete all replies
+    const replies = Array.from(this.forumCommentStore.values())
+      .filter(c => c.parentId === id);
+    
+    for (const reply of replies) {
+      await this.deleteForumComment(reply.id);
+    }
+    
+    // Delete all reactions to this comment
+    const reactions = Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.commentId === id);
+    
+    for (const reaction of reactions) {
+      this.forumReactionStore.delete(reaction.id);
+    }
+    
+    // Finally, delete the comment
+    this.forumCommentStore.delete(id);
+  }
+
+  async getCommentReplies(commentId: number): Promise<ForumCommentWithUser[]> {
+    const replies = Array.from(this.forumCommentStore.values())
+      .filter(comment => comment.parentId === commentId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return Promise.all(replies.map(async reply => this.enrichCommentWithUserAndReplies(reply)));
+  }
+
+  // Forum reaction operations
+  async createForumReaction(reaction: InsertForumReaction): Promise<ForumReaction> {
+    // First, delete any existing reaction by this user to the same topic/comment
+    await this.deleteForumReaction(
+      reaction.userId, 
+      reaction.topicId, 
+      reaction.commentId
+    );
+    
+    const id = this.forumReactionIdCounter++;
+    const newReaction: ForumReaction = { ...reaction, id };
+    this.forumReactionStore.set(id, newReaction);
+    return newReaction;
+  }
+
+  async deleteForumReaction(userId: number, topicId?: number, commentId?: number): Promise<void> {
+    const reactions = Array.from(this.forumReactionStore.values())
+      .filter(reaction => 
+        reaction.userId === userId && 
+        (topicId ? reaction.topicId === topicId : true) &&
+        (commentId ? reaction.commentId === commentId : true)
+      );
+    
+    for (const reaction of reactions) {
+      this.forumReactionStore.delete(reaction.id);
+    }
+  }
+
+  async getReactionsByTopic(topicId: number): Promise<ForumReaction[]> {
+    return Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.topicId === topicId);
+  }
+
+  async getReactionsByComment(commentId: number): Promise<ForumReaction[]> {
+    return Array.from(this.forumReactionStore.values())
+      .filter(reaction => reaction.commentId === commentId);
+  }
+
+  async getUserReaction(userId: number, topicId?: number, commentId?: number): Promise<ForumReaction | undefined> {
+    return Array.from(this.forumReactionStore.values())
+      .find(reaction => 
+        reaction.userId === userId && 
+        (topicId ? reaction.topicId === topicId : true) &&
+        (commentId ? reaction.commentId === commentId : true)
+      );
   }
 }
 

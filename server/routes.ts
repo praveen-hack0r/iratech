@@ -6,6 +6,11 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
+import { 
+  ForumTopic, 
+  ForumComment, 
+  ForumCommentWithUser
+} from "@shared/schema";
 
 // Create upload directories if they don't exist
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -299,7 +304,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title: lesson.title,
         videoUrl: lesson.videoUrl,
         duration: lesson.duration,
-        isPreview: lesson.isPreview
+        isPreview: lesson.isPreview,
+        description: lesson.description
       });
     } catch (error) {
       console.error("Error fetching preview video:", error);
@@ -805,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Resource upload - with expanded debugging
-  app.post("/api/admin/upload-resource", upload.single('file'), async (req, res) => {
+  app.post("/api/admin/upload-resource", isAdmin, upload.single('file'), async (req, res) => {
     try {
       console.log("=== Resource Upload Attempted ===");
       console.log("User:", req.user ? req.user.username : "Not logged in");
@@ -870,6 +876,426 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ message: "Failed to delete resource" });
+    }
+  });
+
+  // Forum topic routes
+  app.get("/api/courses/:courseId/forum", isAuthenticated, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      const course = await storage.getCourse(courseId);
+      
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check if user has access to this course
+      const isAdmin = req.user && req.user.role === "admin";
+      if (!isAdmin) {
+        const enrollment = await storage.getEnrollment(req.user!.id, courseId);
+        if (!enrollment) {
+          return res.status(403).json({ message: "You are not enrolled in this course" });
+        }
+      }
+      
+      const topics = await storage.getForumTopicsByCourse(courseId);
+      
+      // If user is authenticated, set user reaction for each topic
+      if (req.isAuthenticated() && req.user) {
+        for (const topic of topics) {
+          const userReaction = await storage.getUserReaction(req.user.id, topic.id);
+          if (userReaction) {
+            topic.reactions.userReaction = userReaction.reactionType;
+          }
+        }
+      }
+      
+      res.json(topics);
+    } catch (error) {
+      console.error("Error fetching forum topics:", error);
+      res.status(500).json({ message: "Failed to fetch forum topics" });
+    }
+  });
+  
+  app.get("/api/forum/topics/:id", isAuthenticated, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const topic = await storage.getForumTopicWithDetails(topicId, req.user!.id);
+      
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Get course for access control
+      const course = await storage.getCourse(topic.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check if user has access to this topic's course
+      const isAdmin = req.user && req.user.role === "admin";
+      if (!isAdmin) {
+        const enrollment = await storage.getEnrollment(req.user!.id, course.id);
+        if (!enrollment) {
+          return res.status(403).json({ message: "You are not enrolled in this course" });
+        }
+      }
+      
+      // Get comments for this topic
+      const comments = await storage.getForumCommentsByTopic(topicId);
+      
+      // If user is authenticated, add user reactions to comments
+      if (req.isAuthenticated() && req.user) {
+        const addUserReactionsToComments = async (commentsList: ForumCommentWithUser[]) => {
+          for (const comment of commentsList) {
+            const userReaction = await storage.getUserReaction(req.user!.id, undefined, comment.id);
+            if (userReaction) {
+              comment.reactions.userReaction = userReaction.reactionType;
+            }
+            
+            // Process replies recursively
+            if (comment.replies && comment.replies.length > 0) {
+              await addUserReactionsToComments(comment.replies);
+            }
+          }
+        };
+        
+        await addUserReactionsToComments(comments);
+      }
+      
+      res.json({
+        ...topic,
+        comments
+      });
+    } catch (error) {
+      console.error("Error fetching forum topic details:", error);
+      res.status(500).json({ message: "Failed to fetch forum topic details" });
+    }
+  });
+  
+  app.post("/api/forum/topics", isAuthenticated, async (req, res) => {
+    try {
+      const { courseId, title, content } = req.body;
+      
+      if (!courseId || !title || !content) {
+        return res.status(400).json({ message: "Course ID, title and content are required" });
+      }
+      
+      // Check if course exists
+      const course = await storage.getCourse(parseInt(courseId));
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Check if user has access to this course
+      const isAdmin = req.user && req.user.role === "admin";
+      if (!isAdmin) {
+        const enrollment = await storage.getEnrollment(req.user!.id, parseInt(courseId));
+        if (!enrollment) {
+          return res.status(403).json({ message: "You are not enrolled in this course" });
+        }
+      }
+      
+      const newTopic = await storage.createForumTopic({
+        courseId: parseInt(courseId),
+        userId: req.user!.id,
+        title,
+        content,
+        isPinned: isAdmin ? req.body.isPinned || false : false
+      });
+      
+      res.status(201).json(newTopic);
+    } catch (error) {
+      console.error("Error creating forum topic:", error);
+      res.status(500).json({ message: "Failed to create forum topic" });
+    }
+  });
+  
+  app.put("/api/forum/topics/:id", isAuthenticated, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      const { title, content, isPinned } = req.body;
+      
+      // Get topic
+      const topic = await storage.getForumTopic(topicId);
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Check if user owns this topic or is admin
+      const isAdmin = req.user && req.user.role === "admin";
+      if (topic.userId !== req.user!.id && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to edit this topic" });
+      }
+      
+      const updateData: Partial<ForumTopic> = {};
+      if (title) updateData.title = title;
+      if (content) updateData.content = content;
+      
+      // Only admins can pin/unpin topics
+      if (isAdmin && isPinned !== undefined) {
+        updateData.isPinned = isPinned;
+      }
+      
+      const updatedTopic = await storage.updateForumTopic(topicId, updateData);
+      res.json(updatedTopic);
+    } catch (error) {
+      console.error("Error updating forum topic:", error);
+      res.status(500).json({ message: "Failed to update forum topic" });
+    }
+  });
+  
+  app.delete("/api/forum/topics/:id", isAuthenticated, async (req, res) => {
+    try {
+      const topicId = parseInt(req.params.id);
+      
+      // Get topic
+      const topic = await storage.getForumTopic(topicId);
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Check if user owns this topic or is admin
+      const isAdmin = req.user && req.user.role === "admin";
+      if (topic.userId !== req.user!.id && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to delete this topic" });
+      }
+      
+      await storage.deleteForumTopic(topicId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting forum topic:", error);
+      res.status(500).json({ message: "Failed to delete forum topic" });
+    }
+  });
+  
+  // Forum comment routes
+  app.post("/api/forum/comments", isAuthenticated, async (req, res) => {
+    try {
+      const { topicId, parentId, content } = req.body;
+      
+      if (!topicId || !content) {
+        return res.status(400).json({ message: "Topic ID and content are required" });
+      }
+      
+      // Check if topic exists
+      const topic = await storage.getForumTopic(parseInt(topicId));
+      if (!topic) {
+        return res.status(404).json({ message: "Topic not found" });
+      }
+      
+      // Check if parent comment exists if parentId is provided
+      if (parentId) {
+        const parentComment = await storage.getForumComment(parseInt(parentId));
+        if (!parentComment) {
+          return res.status(404).json({ message: "Parent comment not found" });
+        }
+      }
+      
+      // Check if user has access to the course
+      const course = await storage.getCourse(topic.courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      const isAdmin = req.user && req.user.role === "admin";
+      if (!isAdmin) {
+        const enrollment = await storage.getEnrollment(req.user!.id, course.id);
+        if (!enrollment) {
+          return res.status(403).json({ message: "You are not enrolled in this course" });
+        }
+      }
+      
+      const newComment = await storage.createForumComment({
+        topicId: parseInt(topicId),
+        userId: req.user!.id,
+        content,
+        parentId: parentId ? parseInt(parentId) : null
+      });
+      
+      // Return comment with user details
+      const user = await storage.getUser(req.user!.id);
+      
+      res.status(201).json({
+        ...newComment,
+        user: {
+          id: user!.id,
+          username: user!.username,
+          firstName: user!.firstName,
+          lastName: user!.lastName,
+          role: user!.role
+        },
+        replies: [],
+        reactions: {
+          likes: 0,
+          userReaction: null
+        }
+      });
+    } catch (error) {
+      console.error("Error creating forum comment:", error);
+      res.status(500).json({ message: "Failed to create forum comment" });
+    }
+  });
+  
+  app.put("/api/forum/comments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.id);
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+      
+      // Get comment
+      const comment = await storage.getForumComment(commentId);
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Check if user owns this comment or is admin
+      const isAdmin = req.user && req.user.role === "admin";
+      if (comment.userId !== req.user!.id && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to edit this comment" });
+      }
+      
+      const updatedComment = await storage.updateForumComment(commentId, { content });
+      
+      const user = await storage.getUser(updatedComment.userId);
+      
+      res.json({
+        ...updatedComment,
+        user: {
+          id: user!.id,
+          username: user!.username,
+          firstName: user!.firstName,
+          lastName: user!.lastName,
+          role: user!.role
+        }
+      });
+    } catch (error) {
+      console.error("Error updating forum comment:", error);
+      res.status(500).json({ message: "Failed to update forum comment" });
+    }
+  });
+  
+  app.delete("/api/forum/comments/:id", isAuthenticated, async (req, res) => {
+    try {
+      const commentId = parseInt(req.params.id);
+      
+      // Get comment
+      const comment = await storage.getForumComment(commentId);
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      
+      // Check if user owns this comment or is admin
+      const isAdmin = req.user && req.user.role === "admin";
+      if (comment.userId !== req.user!.id && !isAdmin) {
+        return res.status(403).json({ message: "You don't have permission to delete this comment" });
+      }
+      
+      await storage.deleteForumComment(commentId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting forum comment:", error);
+      res.status(500).json({ message: "Failed to delete forum comment" });
+    }
+  });
+  
+  // Forum reaction routes
+  app.post("/api/forum/reactions", isAuthenticated, async (req, res) => {
+    try {
+      const { topicId, commentId, type } = req.body;
+      const reactionType = type; // Use reactionType instead of type for consistency
+      
+      if ((!topicId && !commentId) || !type) {
+        return res.status(400).json({ message: "Topic ID or Comment ID, and reaction type are required" });
+      }
+      
+      if (type !== "like") {
+        return res.status(400).json({ message: "Invalid reaction type" });
+      }
+      
+      // Check if target (topic or comment) exists
+      if (topicId) {
+        const topic = await storage.getForumTopic(parseInt(topicId));
+        if (!topic) {
+          return res.status(404).json({ message: "Topic not found" });
+        }
+        
+        // Check course access
+        const course = await storage.getCourse(topic.courseId);
+        if (!course) {
+          return res.status(404).json({ message: "Course not found" });
+        }
+        
+        const isAdmin = req.user && req.user.role === "admin";
+        if (!isAdmin) {
+          const enrollment = await storage.getEnrollment(req.user!.id, course.id);
+          if (!enrollment) {
+            return res.status(403).json({ message: "You are not enrolled in this course" });
+          }
+        }
+      } else if (commentId) {
+        const comment = await storage.getForumComment(parseInt(commentId));
+        if (!comment) {
+          return res.status(404).json({ message: "Comment not found" });
+        }
+        
+        // Get topic to check course access
+        const topic = await storage.getForumTopic(comment.topicId);
+        if (!topic) {
+          return res.status(404).json({ message: "Topic not found" });
+        }
+        
+        // Check course access
+        const course = await storage.getCourse(topic.courseId);
+        if (!course) {
+          return res.status(404).json({ message: "Course not found" });
+        }
+        
+        const isAdmin = req.user && req.user.role === "admin";
+        if (!isAdmin) {
+          const enrollment = await storage.getEnrollment(req.user!.id, course.id);
+          if (!enrollment) {
+            return res.status(403).json({ message: "You are not enrolled in this course" });
+          }
+        }
+      }
+      
+      // Create reaction
+      const newReaction = await storage.createForumReaction({
+        userId: req.user!.id,
+        topicId: topicId ? parseInt(topicId) : null,
+        commentId: commentId ? parseInt(commentId) : null,
+        reactionType: reactionType
+      });
+      
+      res.status(201).json(newReaction);
+    } catch (error) {
+      console.error("Error creating forum reaction:", error);
+      res.status(500).json({ message: "Failed to create forum reaction" });
+    }
+  });
+  
+  app.delete("/api/forum/reactions", isAuthenticated, async (req, res) => {
+    try {
+      const { topicId, commentId } = req.body;
+      
+      if (!topicId && !commentId) {
+        return res.status(400).json({ message: "Topic ID or Comment ID is required" });
+      }
+      
+      await storage.deleteForumReaction(
+        req.user!.id,
+        topicId ? parseInt(topicId) : undefined,
+        commentId ? parseInt(commentId) : undefined
+      );
+      
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting forum reaction:", error);
+      res.status(500).json({ message: "Failed to delete forum reaction" });
     }
   });
 
