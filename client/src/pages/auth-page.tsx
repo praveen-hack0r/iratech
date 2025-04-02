@@ -91,10 +91,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0a0a0a] py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl w-full space-y-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Form */}
-        <div className="bg-white p-8 rounded-lg shadow-md">
+        <div className="bg-white dark:bg-[#111111] p-8 rounded-lg shadow-md">
           {showResetForm ? (
             <div className="space-y-6">
               <div className="flex items-center">
@@ -106,9 +106,9 @@ export default function AuthPage() {
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-                <h2 className="text-2xl font-bold text-gray-900">Reset Your Password</h2>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Reset Your Password</h2>
               </div>
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-gray-300">
                 Enter your email address and we'll send you a link to reset your password.
               </p>
 
@@ -150,8 +150,8 @@ export default function AuthPage() {
               <TabsContent value="login">
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Sign in to your account</h2>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sign in to your account</h2>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                       Welcome back! Please sign in to access your courses.
                     </p>
                   </div>
@@ -230,8 +230,8 @@ export default function AuthPage() {
               <TabsContent value="register">
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Create an account</h2>
-                    <p className="mt-2 text-sm text-gray-600">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create an account</h2>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                       Sign up to start your learning journey with TechLearn.
                     </p>
                   </div>
@@ -367,7 +367,7 @@ export default function AuthPage() {
         </div>
 
         {/* Right Column - Hero Section */}
-        <div className="hidden lg:flex lg:flex-col lg:justify-center bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-8 rounded-lg">
+        <div className="hidden lg:flex lg:flex-col lg:justify-center bg-gradient-to-r from-blue-600 to-indigo-600 dark:bg-gradient-to-r dark:from-[#000000] dark:to-[#111111] text-white p-8 rounded-lg">
           <div className="mb-6">
             <svg className="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
