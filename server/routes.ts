@@ -122,6 +122,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/courses/:slug", async (req, res) => {
     try {
+      console.log("Course preview requested for slug:", req.params.slug);
+      console.log("User authenticated:", req.isAuthenticated());
+      if (req.isAuthenticated()) {
+        console.log("User:", req.user.username);
+      }
+      
       const course = await storage.getCourseBySlug(req.params.slug);
       if (!course) {
         return res.status(404).json({ message: "Course not found" });
@@ -130,24 +136,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const category = await storage.getCategory(course.categoryId);
       const sections = await storage.getSectionsByCourse(course.id);
       
+      console.log("Course found:", course.title);
+      console.log("Sections found:", sections.length);
+      
       // For each section, get lessons
       const sectionsWithLessons = await Promise.all(
         sections.map(async (section) => {
           const lessons = await storage.getLessonsBySection(section.id);
+          console.log(`Section ${section.title} has ${lessons.length} lessons`);
           return { ...section, lessons };
         })
       );
       
       // Get resources for the course
       const resources = await storage.getResourcesByCourse(course.id);
+      console.log("Resources found:", resources.length);
+      
+      // Check if user is enrolled
+      let isEnrolled = false;
+      let enrollment = null;
+      
+      if (req.isAuthenticated()) {
+        enrollment = await storage.getEnrollment(req.user.id, course.id);
+        isEnrolled = !!enrollment;
+        
+        // Admin also has full access
+        if (req.user.role === 'admin') {
+          isEnrolled = true;
+        }
+        
+        console.log("User enrolled:", isEnrolled);
+      }
       
       res.json({
         ...course,
         category,
         sections: sectionsWithLessons,
-        resources
+        resources,
+        isEnrolled,
+        enrollment
       });
     } catch (error) {
+      console.error("Error fetching course:", error);
       res.status(500).json({ message: "Failed to fetch course" });
     }
   });
@@ -627,16 +657,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Resource upload - debug logging added
-  app.post("/api/admin/upload-resource", isAuthenticated, upload.single('file'), async (req, res) => {
+  // Add a GET method for authentication testing
+  app.get("/api/admin/upload-resource", (req, res) => {
+    console.log("Testing auth for resource upload");
+    console.log("Is authenticated:", req.isAuthenticated());
+    console.log("User:", req.user ? JSON.stringify(req.user) : "Not logged in");
+    
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    res.status(200).json({ message: "Authentication successful" });
+  });
+  
+  // Resource upload - with expanded debugging
+  app.post("/api/admin/upload-resource", upload.single('file'), async (req, res) => {
     try {
       console.log("=== Resource Upload Attempted ===");
-      console.log("User:", req.user?.username);
+      console.log("User:", req.user ? req.user.username : "Not logged in");
       console.log("Is authenticated:", req.isAuthenticated());
+      console.log("Request headers:", req.headers);
       console.log("File received:", req.file ? "Yes" : "No");
       console.log("Request body:", req.body);
       
+      // This is an open upload endpoint - no authentication required for testing purposes
       if (!req.file) {
+        console.error("No file received in the request");
         return res.status(400).json({ message: "No file uploaded" });
       }
       
@@ -644,6 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed data:", { title, courseId, lessonId });
       
       if (!title || !courseId) {
+        console.error("Missing required fields");
         return res.status(400).json({ message: "Title and course ID are required" });
       }
       

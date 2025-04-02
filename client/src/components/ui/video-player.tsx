@@ -17,7 +17,7 @@ import { apiRequest } from "@/lib/queryClient";
 interface VideoPlayerProps {
   videoUrl: string;
   lessonId: number;
-  onProgress?: (watchTimeSeconds: number, completed: boolean) => void;
+  onProgress?: ((watchTimeSeconds: number, completed: boolean) => void) | null;
   isPreview?: boolean;
 }
 
@@ -161,7 +161,7 @@ export function VideoPlayer({
     window.addEventListener('keydown', preventScreenCapture);
     
     return () => {
-      window.addEventListener('keydown', preventScreenCapture);
+      window.removeEventListener('keydown', preventScreenCapture);
     };
   }, [isPlaying]);
 
@@ -183,13 +183,17 @@ export function VideoPlayer({
           videoElement.currentTime === videoElement.duration
         ) {
           // Call onProgress callback if provided
-          if (onProgress) {
-            const watchTimeSeconds = Math.floor(videoElement.currentTime);
-            onProgress(watchTimeSeconds, isCompleted);
+          const watchTimeSeconds = Math.floor(videoElement.currentTime);
+          if (onProgress && typeof onProgress === 'function') {
+            try {
+              onProgress(watchTimeSeconds, isCompleted);
+            } catch (error) {
+              console.error("Error in onProgress callback:", error);
+            }
           }
           
           updateProgressMutation.mutate({
-            watchTimeSeconds: Math.floor(videoElement.currentTime),
+            watchTimeSeconds: watchTimeSeconds,
             completed: isCompleted
           });
         }

@@ -28,7 +28,7 @@ export interface IStorage {
   updatePassword(id: number, hashedPassword: string): Promise<User>;
   updateResetToken(id: number, token: string, expiry: Date): Promise<User>;
   clearResetToken(id: number): Promise<User>;
-  updateStripeInfo(id: number, customerId: string, subscriptionId?: string): Promise<User>;
+
   setVerificationToken(id: number, token: string, expiry: Date): Promise<User>;
   verifyUser(id: number): Promise<User>;
   
@@ -155,8 +155,6 @@ export class MemStorage implements IStorage {
       firstName: "Admin",
       lastName: "User",
       role: "admin",
-      stripeCustomerId: null,
-      stripeSubscriptionId: null,
       resetToken: null,
       resetTokenExpiry: null,
       isVerified: true
@@ -260,12 +258,7 @@ export class MemStorage implements IStorage {
     return this.updateUser(id, { resetToken: undefined, resetTokenExpiry: undefined });
   }
 
-  async updateStripeInfo(id: number, customerId: string, subscriptionId?: string): Promise<User> {
-    return this.updateUser(id, { 
-      stripeCustomerId: customerId,
-      stripeSubscriptionId: subscriptionId 
-    });
-  }
+
 
   async getUserByVerificationToken(token: string): Promise<User | undefined> {
     return Array.from(this.userStore.values()).find(
@@ -599,7 +592,9 @@ export class MemStorage implements IStorage {
     const newPayment: Payment = { 
       ...payment, 
       id, 
-      createdAt: new Date()
+      createdAt: new Date(), 
+      currency: payment.currency || "inr",
+      paymentMethod: payment.paymentMethod || "upi"
     };
     this.paymentStore.set(id, newPayment);
     return newPayment;

@@ -147,22 +147,61 @@ export default function AdminEditCourse() {
         setResourceProgress(prev => Math.min(prev + 5, 95)); // Only go up to 95% until we get confirmation
       }, 300);
       
-      // Let's try a different approach - direct fetch with FormData
-      console.log("Uploading resource:", formData.get('title'), "course ID:", courseId);
-      
-      const response = await fetch("/api/admin/upload-resource", {
-        method: "POST",
-        body: formData,
+      // Debug step 1: Make a GET request to the upload URL to test auth status
+      const authCheckResponse = await fetch("/api/admin/upload-resource", {
+        method: "GET",
         credentials: "include"
       });
       
+      console.log("Auth check response:", authCheckResponse.status, authCheckResponse.statusText);
+      
+      // Now actually upload the resource
+      console.log("Uploading resource:", formData.get('title'), "course ID:", courseId);
+      
+      // Try using XMLHttpRequest for better debugging
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/admin/upload-resource", true);
+      xhr.withCredentials = true;
+      
+      // Add progress and state change listeners
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const percentComplete = Math.round((e.loaded / e.total) * 95);
+          console.log(`Upload progress: ${percentComplete}%`);
+          setResourceProgress(percentComplete);
+        }
+      };
+      
+      // Create a promise to handle the XHR response
+      const uploadPromise = new Promise((resolve, reject) => {
+        xhr.onload = function() {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            console.log("Upload successful:", xhr.responseText);
+            try {
+              const data = JSON.parse(xhr.responseText);
+              resolve(data);
+            } catch (e) {
+              resolve(xhr.responseText);
+            }
+          } else {
+            console.error("Upload failed with status:", xhr.status);
+            console.error("Response text:", xhr.responseText);
+            reject(new Error(`Upload failed: ${xhr.status} ${xhr.statusText}`));
+          }
+        };
+        
+        xhr.onerror = function() {
+          console.error("XHR error occurred during upload");
+          reject(new Error("Network error during upload"));
+        };
+      });
+      
+      // Send the request
+      xhr.send(formData);
+      
+      // Wait for the upload to complete
+      const data = await uploadPromise;
       clearInterval(interval);
-      
-      if (!response.ok) {
-        throw new Error(`Upload failed: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
       
       setResourceProgress(100);
       setResourceUploading(false);
