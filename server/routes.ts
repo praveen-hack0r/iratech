@@ -2,17 +2,10 @@ import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import Stripe from "stripe";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
-
-// Initialize Stripe with fallback for testing
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || "sk_test_failover";
-const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: "2023-10-16",
-});
 
 // Create upload directories if they don't exist
 const uploadsDir = path.join(process.cwd(), "uploads");
@@ -306,8 +299,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment routes
-  app.post("/api/create-payment-intent", isAuthenticated, async (req, res) => {
+  // Direct enrollment route without payment
+  app.post("/api/enroll", isAuthenticated, async (req, res) => {
     try {
       const { courseId } = req.body;
       
@@ -327,63 +320,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "You are already enrolled in this course" });
       }
       
-      // Calculate price (use sale price if available)
-      const amount = (course.salePrice || course.price) * 100; // Convert to cents
-      
-      // Create payment intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount),
-        currency: "usd",
-        metadata: {
-          userId: req.user.id.toString(),
-          courseId: courseId.toString()
-        }
+      // Create enrollment directly
+      const enrollment = await storage.createEnrollment({
+        userId: req.user.id,
+        courseId: courseId,
+        status: 'active',
+        enrollmentDate: new Date().toISOString()
       });
       
-      res.json({ clientSecret: paymentIntent.client_secret });
+      res.status(201).json(enrollment);
     } catch (error) {
-      res.status(500).json({ message: "Error creating payment intent" });
-    }
-  });
-
-  // Webhook to handle successful payments
-  app.post("/api/payment-webhook", async (req, res) => {
-    const payload = req.body;
-    
-    try {
-      // This would normally validate the webhook signature
-      // const sig = req.headers['stripe-signature'];
-      // const event = stripe.webhooks.constructEvent(payload, sig, webhookSecret);
-      
-      // For demo, assume the payload is the event
-      const event = payload;
-      
-      if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object;
-        const { userId, courseId } = paymentIntent.metadata;
-        
-        // Create payment record
-        await storage.createPayment({
-          userId: parseInt(userId),
-          courseId: parseInt(courseId),
-          amount: paymentIntent.amount / 100, // Convert from cents
-          currency: paymentIntent.currency,
-          stripePaymentId: paymentIntent.id,
-          status: 'completed'
-        });
-        
-        // Create enrollment
-        await storage.createEnrollment({
-          userId: parseInt(userId),
-          courseId: parseInt(courseId),
-          status: 'active',
-          paymentId: paymentIntent.id
-        });
-      }
-      
-      res.json({ received: true });
-    } catch (error) {
-      res.status(400).json({ message: 'Webhook error' });
+      res.status(500).json({ message: "Error enrolling in course" });
     }
   });
 
