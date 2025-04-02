@@ -251,12 +251,12 @@ export function CourseForm({ courseId, defaultValues }: CourseFormProps) {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Regular Price ($)</FormLabel>
+                    <FormLabel>Regular Price (₹)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="99.99"
+                        placeholder="1999.00"
                         {...field}
                         onChange={e => field.onChange(parseFloat(e.target.value))}
                       />
@@ -271,12 +271,12 @@ export function CourseForm({ courseId, defaultValues }: CourseFormProps) {
                 name="salePrice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sale Price ($)</FormLabel>
+                    <FormLabel>Sale Price (₹)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="Optional"
+                        placeholder="999.00"
                         {...field}
                         value={field.value || ""}
                         onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
