@@ -7,15 +7,21 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "wouter";
-import { PlayCircle, Search, Clock, CheckCircle, BookOpen, Ban } from "lucide-react";
+import { PlayCircle, Search, Clock, CheckCircle, BookOpen, Ban, FileText, FileIcon } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { CourseWithCategory, Lesson, LessonWithProgress, Resource } from "@shared/schema";
 
-interface EnrolledCourse extends CourseWithCategory {
-  progress: {
+interface EnrolledCourse {
+  id: number;
+  userId: number;
+  courseId: number;
+  status: string;
+  enrollmentDate: string;
+  course: CourseWithCategory;
+  progress?: {
     completedLessons: number;
     totalLessons: number;
     percentComplete: number;
@@ -76,11 +82,25 @@ export default function MyLearningPage() {
     enabled: !!activeLesson,
   });
 
-  // Filter courses based on search query
-  const filteredCourses = enrolledCourses?.filter(course => 
-    course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    course.category?.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Handle the enrollment data structure which includes a course property
+  const filteredCourses = enrolledCourses?.filter(enrollment => {
+    // Make sure course exists and has a title
+    if (!enrollment.course || !enrollment.course.title) return false;
+    
+    const courseTitle = enrollment.course.title.toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
+    
+    // Check if title matches
+    if (courseTitle.includes(searchLower)) return true;
+    
+    // Check if category name matches (if category exists)
+    if (enrollment.course.category?.name && 
+        enrollment.course.category.name.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    return false;
+  });
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -100,10 +120,12 @@ export default function MyLearningPage() {
 
   // Find and select the last watched lesson
   const continueLastLesson = (courseId: number) => {
-    const course = enrolledCourses?.find(c => c.id === courseId);
-    if (course?.progress.lastWatched) {
+    const enrollment = enrolledCourses?.find(e => e.courseId === courseId);
+    if (enrollment?.progress?.lastWatched) {
       setActiveCourse(courseId);
       // Ideally you would also set the active lesson, but we need to wait for course content to load
+    } else {
+      setActiveCourse(courseId);
     }
   };
 
@@ -205,45 +227,55 @@ export default function MyLearningPage() {
             ) : (
               // Courses list
               <div className="space-y-4">
-                {filteredCourses?.map((course) => (
+                {filteredCourses?.map((enrollment) => (
                   <Card 
-                    key={course.id} 
+                    key={enrollment.id} 
                     className={`border cursor-pointer hover:border-primary transition-colors ${
-                      activeCourse === course.id ? 'border-primary bg-blue-50' : ''
+                      activeCourse === enrollment.courseId ? 'border-primary bg-blue-50' : ''
                     }`}
-                    onClick={() => setActiveCourse(course.id)}
+                    onClick={() => setActiveCourse(enrollment.courseId)}
                   >
                     <CardHeader className="pb-2">
                       <div className="flex justify-between">
-                        <CardTitle className="text-base">{course.title}</CardTitle>
-                        <Badge variant="outline" className={course.category?.textColor || 'text-primary'}>
-                          {course.category?.name}
-                        </Badge>
+                        <CardTitle className="text-base">{enrollment.course.title}</CardTitle>
+                        {enrollment.course.category && (
+                          <Badge variant="outline" className={enrollment.course.category?.textColor || 'text-primary'}>
+                            {enrollment.course.category.name}
+                          </Badge>
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="py-2">
-                      <Progress value={course.progress.percentComplete} className="h-2 mb-2" />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">
-                          {course.progress.completedLessons} of {course.progress.totalLessons} lessons completed
-                        </span>
-                        <span className="font-medium">
-                          {course.progress.percentComplete}%
-                        </span>
-                      </div>
+                      {enrollment.progress ? (
+                        <>
+                          <Progress value={enrollment.progress.percentComplete} className="h-2 mb-2" />
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">
+                              {enrollment.progress.completedLessons} of {enrollment.progress.totalLessons} lessons completed
+                            </span>
+                            <span className="font-medium">
+                              {enrollment.progress.percentComplete}%
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-sm text-gray-500">
+                          Start learning this course
+                        </div>
+                      )}
                     </CardContent>
                     <CardFooter className="pt-2 flex justify-between">
                       <Button 
                         variant="secondary" 
                         size="sm"
-                        onClick={() => continueLastLesson(course.id)}
+                        onClick={() => continueLastLesson(enrollment.courseId)}
                       >
                         <PlayCircle className="mr-1 h-4 w-4" />
-                        Continue
+                        {enrollment.progress?.lastWatched ? 'Continue' : 'Start'}
                       </Button>
-                      {course.progress.lastWatched && (
+                      {enrollment.progress?.lastWatched && (
                         <span className="text-xs text-gray-500">
-                          Last watched: {formatDate(course.progress.lastWatched.lastWatchedAt)}
+                          Last watched: {formatDate(enrollment.progress.lastWatched.lastWatchedAt)}
                         </span>
                       )}
                     </CardFooter>
@@ -412,7 +444,8 @@ export default function MyLearningPage() {
                   >
                     ← Back to Course
                   </Button>
-                  <Badge variant={lessonData?.progress?.completed ? "success" : "outline"}>
+                  <Badge variant="outline" 
+                    className={lessonData?.progress?.completed ? "bg-green-100 text-green-800 hover:bg-green-100" : ""}>
                     {lessonData?.progress?.completed ? "Completed" : "In Progress"}
                   </Badge>
                 </div>
@@ -479,7 +512,7 @@ export default function MyLearningPage() {
                       // Mark as complete - in a real app, you would make an API call here
                       console.log("Mark as complete");
                     }}
-                    disabled={lessonData?.progress?.completed}
+                    disabled={!!lessonData?.progress?.completed}
                   >
                     Mark as Complete
                   </Button>
