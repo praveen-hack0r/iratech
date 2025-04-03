@@ -146,6 +146,38 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+  
+  // Update user profile
+  app.put("/api/profile", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated()) return res.sendStatus(401);
+      
+      const { firstName, lastName, email } = req.body;
+      
+      // Validate if the updated email already exists (if email is being changed)
+      if (email !== req.user.email) {
+        const existingEmail = await storage.getUserByEmail(email);
+        if (existingEmail) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+      }
+      
+      // Update the user profile
+      const updatedUser = await storage.updateUser(req.user.id, {
+        firstName,
+        lastName,
+        email
+      });
+      
+      // Update session user
+      req.login(updatedUser, (err) => {
+        if (err) return next(err);
+        res.json(updatedUser);
+      });
+    } catch (error) {
+      next(error);
+    }
+  });
 
   // Request password reset
   app.post("/api/forgot-password", async (req, res, next) => {

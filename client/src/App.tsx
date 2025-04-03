@@ -12,6 +12,7 @@ import CoursesPage from "@/pages/courses-page";
 import CourseDetailPage from "@/pages/course-detail-page";
 import MyLearningPage from "@/pages/my-learning-page";
 import CheckoutPage from "@/pages/checkout-page";
+import ProfilePage from "@/pages/profile-page";
 import AdminDashboard from "@/pages/admin/dashboard";
 import AdminCourses from "@/pages/admin/courses";
 import AdminUsers from "@/pages/admin/users";
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/dev-verify" component={DevVerificationPage} />
       <ProtectedRoute path="/my-learning" component={MyLearningPage} />
       <ProtectedRoute path="/checkout/:courseId" component={CheckoutPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/admin" component={AdminDashboard} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/courses" component={AdminCourses} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/users" component={AdminUsers} allowedRoles={["admin"]} />
