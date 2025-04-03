@@ -135,35 +135,20 @@ export function VideoPlayer({
 
   const { toast } = useToast();
   
-  // Detect screenshot attempts and screen recording
+  // Detect screenshot attempts but allow screen recording
   useEffect(() => {
-    // Method 1: Detect keyboard shortcuts
-    const preventScreenCapture = (e: KeyboardEvent) => {
-      // Detect common screenshot key combos
+    // Method 1: Detect keyboard shortcuts for screenshots only
+    const preventScreenshots = (e: KeyboardEvent) => {
+      // Detect common screenshot key combos only
       if (
         (e.key === 'PrintScreen') ||
-        (e.ctrlKey && e.key === 'p') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'c') ||
         (e.metaKey && e.shiftKey && e.key === '3') ||
         (e.metaKey && e.shiftKey && e.key === '4') ||
-        (e.metaKey && e.shiftKey && e.key === '5') ||
-        (e.key === 'F12') ||
-        (e.ctrlKey && e.key === 's')
+        (e.metaKey && e.shiftKey && e.key === '5')
       ) {
         e.preventDefault();
         handleScreenshotDetection();
         return false;
-      }
-    };
-    
-    // Method 2: Detect when video element loses visibility (might be captured)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && videoRef.current) {
-        // Possible screen recording started - user switched tabs while recording
-        if (isPlaying) {
-          handleScreenshotDetection();
-        }
       }
     };
     
@@ -173,23 +158,8 @@ export function VideoPlayer({
       return false;
     };
     
-    // Method 4: Detect DevTools opening
-    const detectDevTools = () => {
-      const threshold = 160;
-      const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-      const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-      
-      if (widthThreshold || heightThreshold) {
-        handleScreenshotDetection();
-      }
-    };
-    
-    // Setup detection interval
-    const detectInterval = setInterval(detectDevTools, 1000);
-    
-    // Add all event listeners
-    window.addEventListener('keydown', preventScreenCapture, true);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    // Add screenshot detection event listeners only
+    window.addEventListener('keydown', preventScreenshots, true);
     document.addEventListener('contextmenu', handleContextMenu);
     
     // Add a CSS class to prevent selection
@@ -198,10 +168,8 @@ export function VideoPlayer({
     }
     
     return () => {
-      window.removeEventListener('keydown', preventScreenCapture, true);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('keydown', preventScreenshots, true);
       document.removeEventListener('contextmenu', handleContextMenu);
-      clearInterval(detectInterval);
       
       if (videoContainerRef.current) {
         videoContainerRef.current.classList.remove('no-select');
@@ -221,8 +189,8 @@ export function VideoPlayer({
     
     // Show a toast notification
     toast({
-      title: "Screen Capture Detected",
-      description: "Recording or taking screenshots of content is not allowed.",
+      title: "Screenshot Detected",
+      description: "Taking screenshots of content is not allowed. Screen recording is permitted.",
       variant: "destructive",
     });
     
@@ -406,9 +374,9 @@ export function VideoPlayer({
         <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-80 z-20">
           <div className="text-center p-6 rounded-lg bg-red-600 text-white screenshot-alert">
             <AlertTriangle className="h-12 w-12 text-white mx-auto mb-2" />
-            <h3 className="text-xl font-bold mb-2">Screen Capture Detected</h3>
-            <p>Screen recording and screenshots are not allowed for this content.</p>
-            <p className="text-sm mt-3">This activity has been logged.</p>
+            <h3 className="text-xl font-bold mb-2">Screenshot Detected</h3>
+            <p>Screenshots are not allowed for this content.</p>
+            <p className="text-sm mt-3">Screen recordings are permitted.</p>
           </div>
         </div>
       )}
