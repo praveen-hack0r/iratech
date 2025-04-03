@@ -12,13 +12,14 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { MainLayout } from "@/components/layouts/main-layout";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle, Mail } from "lucide-react";
+import { AlertCircle, CheckCircle, Mail, Phone } from "lucide-react";
 
 // Form schema
 const profileFormSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   email: z.string().email("Please enter a valid email address"),
+  phoneNumber: z.string().optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
@@ -35,6 +36,7 @@ export default function ProfilePage() {
       firstName: user?.firstName || "",
       lastName: user?.lastName || "",
       email: user?.email || "",
+      phoneNumber: user?.phoneNumber || "",
     },
   });
 
@@ -107,7 +109,7 @@ export default function ProfilePage() {
 
         {/* Verification Status */}
         {!user?.isVerified && (
-          <Alert className="mb-6" variant="warning">
+          <Alert className="mb-6 border-amber-500 text-amber-800 bg-amber-50 dark:border-amber-400 dark:text-amber-200 dark:bg-amber-950/50">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Email verification required</AlertTitle>
             <AlertDescription className="flex justify-between items-center">
@@ -190,6 +192,19 @@ export default function ProfilePage() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <div className="relative">
+                  <Input
+                    id="phoneNumber"
+                    {...form.register("phoneNumber")}
+                    placeholder="Enter your phone number"
+                    className="pl-10"
+                  />
+                  <Phone className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="role">Role</Label>
                 <Input
                   id="role"
@@ -207,6 +222,7 @@ export default function ProfilePage() {
                   firstName: user?.firstName || "",
                   lastName: user?.lastName || "",
                   email: user?.email || "",
+                  phoneNumber: user?.phoneNumber || "",
                 })}
               >
                 Cancel

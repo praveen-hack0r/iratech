@@ -152,7 +152,7 @@ export function setupAuth(app: Express) {
     try {
       if (!req.isAuthenticated()) return res.sendStatus(401);
       
-      const { firstName, lastName, email } = req.body;
+      const { firstName, lastName, email, phoneNumber } = req.body;
       
       // Validate if the updated email already exists (if email is being changed)
       if (email !== req.user.email) {
@@ -166,7 +166,8 @@ export function setupAuth(app: Express) {
       const updatedUser = await storage.updateUser(req.user.id, {
         firstName,
         lastName,
-        email
+        email,
+        phoneNumber
       });
       
       // Update session user
