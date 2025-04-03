@@ -48,6 +48,20 @@ export default function PendingEnrollmentsPage() {
     refetch
   } = useQuery<EnrichedEnrollment[]>({
     queryKey: ["/api/admin/enrollments/pending"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/enrollments/pending");
+      if (!res.ok) {
+        throw new Error("Failed to fetch pending enrollments");
+      }
+      return res.json();
+    },
+    // Add logging for debugging
+    onSuccess: (data) => {
+      console.log("Pending enrollments loaded:", data);
+    },
+    onError: (err) => {
+      console.error("Error loading pending enrollments:", err);
+    }
   });
   
   // Track successfully approved enrollments
