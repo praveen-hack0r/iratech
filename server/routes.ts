@@ -789,13 +789,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if the user is already enrolled in this course with an active status
       const existingActiveEnrollment = await storage.getActiveEnrollment(enrollment.userId, enrollment.courseId);
       if (existingActiveEnrollment) {
+        console.log("Found existing active enrollment, returning error");
         return res.status(400).json({ message: "User is already enrolled in this course" });
       }
       
+      // Update the existing enrollment status to "active" instead of creating a new one
       const approvedEnrollment = await storage.approveEnrollment(enrollmentId, req.user!.id);
       
       const user = await storage.getUser(approvedEnrollment.userId);
       const course = await storage.getCourse(approvedEnrollment.courseId);
+      
+      // Log for debugging
+      console.log(`Enrollment ${enrollmentId} has been approved by admin ${req.user!.id}`);
       
       res.json({
         ...approvedEnrollment,
@@ -811,6 +816,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Enrollment successfully approved"
       });
     } catch (error) {
+      console.error("Error approving enrollment:", error);
       res.status(500).json({ message: "Failed to approve enrollment" });
     }
   });

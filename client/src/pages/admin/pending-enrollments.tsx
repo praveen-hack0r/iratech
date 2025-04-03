@@ -56,6 +56,7 @@ export default function PendingEnrollmentsPage() {
   // Approve enrollment mutation
   const approveMutation = useMutation({
     mutationFn: async (enrollmentId: number) => {
+      console.log(`Approving enrollment ID: ${enrollmentId}`);
       const res = await apiRequest("POST", `/api/admin/enrollments/${enrollmentId}/approve`);
       if (!res.ok) {
         const errorData = await res.json();
@@ -64,16 +65,18 @@ export default function PendingEnrollmentsPage() {
       return await res.json();
     },
     onSuccess: (data, enrollmentId) => {
+      console.log(`Successfully approved enrollment ID: ${enrollmentId}`);
+      
       toast({
         title: "Enrollment Approved",
         description: "The enrollment has been approved successfully.",
         variant: "default",
       });
       
-      // Add to our locally tracked approved enrollments
+      // Add to our locally tracked approved enrollments list to provide visual feedback
       setApprovedEnrollmentIds(prev => [...prev, enrollmentId]);
       
-      // Invalidate related queries
+      // Invalidate related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["/api/admin/enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
       queryClient.invalidateQueries({ queryKey: ["/api/admin/enrollments/pending"] });
