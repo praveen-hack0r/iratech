@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Menu,
   X,
+  UploadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -66,6 +67,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       title: "Resources",
       href: "/admin/resources",
       icon: FileText,
+    },
+    {
+      title: "Upload Content",
+      href: "/admin/upload",
+      icon: UploadCloud,
     },
     {
       title: "Pending Enrollments",
