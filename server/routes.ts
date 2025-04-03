@@ -1349,6 +1349,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch dashboard data" });
     }
   });
+  
+  // Get all users - admin only
+  app.get("/api/admin/users", isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      // Remove sensitive information
+      const safeUsers = users.map(user => ({
+        ...user,
+        password: undefined,
+        resetToken: undefined,
+        resetTokenExpiry: undefined,
+        verificationToken: undefined,
+        verificationExpiry: undefined
+      }));
+      
+      res.json(safeUsers);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
 
   const httpServer = createServer(app);
 
