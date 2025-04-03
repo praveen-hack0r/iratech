@@ -73,6 +73,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve non-video files - resources like PDFs, DOCs etc.
   app.use('/uploads/resources', isAuthenticated, express.static(path.join(uploadsDir, 'resources')));
   
+  // Note about TypeScript errors:
+  // The isAuthenticated middleware ensures req.user is defined
+  // So we can safely use non-null assertions (!) for TypeScript when accessing req.user
+  
   // Direct video access pathway with minimal middleware
   app.get('/direct-videos/:filename', (req, res) => {
     try {
@@ -466,6 +470,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(enrolledCourses.filter(item => item.course !== null));
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch enrollments" });
+    }
+  });
+  
+  // Get course content for a specific course (for enrolled users)
+  app.get("/api/courses/:courseId/content", isAuthenticated, async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      
+      // Validate courseId
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+      
+      // Get course data
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      // Get category for the course
+      const category = await storage.getCategory(course.categoryId);
+      
+      // Check if user is enrolled in this course or is admin
+      const isAdmin = req.user!.role === "admin";
+      const enrollment = await storage.getEnrollment(req.user!.id, courseId);
+      
+      if (!enrollment && !isAdmin) {
+        return res.status(403).json({ message: "You are not enrolled in this course" });
+      }
+      
+      // Get sections for the course
+      const sections = await storage.getSectionsByCourse(courseId);
+      
+      // For each section, get lessons and progress
+      const sectionsWithLessons = await Promise.all(
+        sections.map(async (section) => {
+          const lessons = await storage.getLessonsBySection(section.id);
+          
+          // Get progress for each lesson
+          const lessonsWithProgress = await Promise.all(
+            lessons.map(async (lesson) => {
+              const progress = await storage.getProgressByUserAndLesson(req.user!.id, lesson.id);
+              return {
+                ...lesson,
+                progress: progress || {
+                  completed: false,
+                  watchTimeSeconds: 0
+                }
+              };
+            })
+          );
+          
+          return {
+            ...section,
+            lessons: lessonsWithProgress
+          };
+        })
+      );
+      
+      // Get resources for the course
+      const resources = await storage.getResourcesByCourse(courseId);
+      
+      // Calculate overall progress
+      let totalLessons = 0;
+      let completedLessons = 0;
+      
+      sectionsWithLessons.forEach(section => {
+        section.lessons.forEach(lesson => {
+          totalLessons++;
+          if (lesson.progress && lesson.progress.completed) {
+            completedLessons++;
+          }
+        });
+      });
+      
+      const percentComplete = totalLessons > 0 
+        ? Math.round((completedLessons / totalLessons) * 100) 
+        : 0;
+      
+      res.json({
+        course: {
+          ...course,
+          category
+        },
+        sections: sectionsWithLessons,
+        resources,
+        progress: {
+          completedLessons,
+          totalLessons,
+          percentComplete
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching course content:", error);
+      res.status(500).json({ message: "Failed to fetch course content" });
     }
   });
   
