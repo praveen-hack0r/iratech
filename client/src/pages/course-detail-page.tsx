@@ -67,12 +67,36 @@ export default function CourseDetailPage() {
   });
 
   // Fetch enrollment status if user is logged in
+  // Get enrollment status for the current user and course
   const {
     data: enrollmentData,
-    isLoading: enrollmentLoading
+    isLoading: enrollmentLoading,
+    error: enrollmentError
   } = useQuery<EnrollmentStatus>({
-    queryKey: [`/api/enrollments/${courseData?.id}`],
+    queryKey: ['/api/enrollments', courseData?.id?.toString()],
     enabled: !!user && !!courseData?.id,
+    queryFn: async ({ queryKey }) => {
+      try {
+        const courseId = queryKey[1];
+        console.log("Checking enrollment status for course:", courseId);
+        const res = await fetch(`/api/enrollments/${courseId}`, {
+          credentials: "include",
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error("Enrollment status error:", res.status, errorText);
+          throw new Error(`Enrollment check failed: ${res.status} ${errorText}`);
+        }
+        
+        const data = await res.json();
+        console.log("Enrollment status data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching enrollment:", error);
+        throw error;
+      }
+    }
   });
 
   // Format price as currency

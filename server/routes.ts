@@ -474,11 +474,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // User must be authenticated by middleware, so it's safe to access req.user
       const userId = req.user!.id;
-      const courseId = parseInt(req.params.courseId);
+      const courseIdParam = req.params.courseId;
+      
+      console.log("Enrollment check request - user:", userId, "courseId param:", courseIdParam);
+      
+      if (!courseIdParam || isNaN(parseInt(courseIdParam))) {
+        console.error("Invalid course ID parameter:", courseIdParam);
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+      
+      const courseId = parseInt(courseIdParam);
       
       // Check if user is an admin (admins have access to all courses)
       const isAdmin = req.user!.role === 'admin';
+      console.log("Is admin check:", isAdmin);
+      
       if (isAdmin) {
+        console.log("Admin access granted for course:", courseId);
         return res.json({
           isEnrolled: true,
           inProgress: false,
@@ -489,9 +501,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // First check for active enrollment
       const activeEnrollment = await storage.getActiveEnrollment(userId, courseId);
+      console.log("Active enrollment check:", !!activeEnrollment);
       
       // If there's an active enrollment, the user is enrolled
       if (activeEnrollment) {
+        console.log("User is enrolled in course:", courseId);
         return res.json({
           isEnrolled: true,
           inProgress: true,
@@ -502,7 +516,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if there's a pending enrollment
       const pendingEnrollment = await storage.getEnrollment(userId, courseId);
+      console.log("Pending enrollment check:", !!pendingEnrollment, 
+                  pendingEnrollment ? `status: ${pendingEnrollment.status}` : '');
+      
       if (pendingEnrollment && pendingEnrollment.status === "pending") {
+        console.log("User has pending enrollment for course:", courseId);
         return res.json({
           isEnrolled: false,
           isPending: true,
@@ -511,6 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // No enrollment found
+      console.log("No enrollment found for user:", userId, "course:", courseId);
       return res.json({
         isEnrolled: false,
         inProgress: false,
