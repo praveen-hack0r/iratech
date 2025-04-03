@@ -430,16 +430,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // If lesson is a preview, allow access
         if (!lesson.isPreview) {
-          // Check if user is enrolled in the course
+          // Check if user has an ACTIVE enrollment in the course
           const enrollment = await storage.getEnrollment(req.user.id, course.id);
-          if (!enrollment && req.user.role !== "admin") {
+          const isActiveEnrollment = enrollment && enrollment.status === "active";
+          
+          if (!isActiveEnrollment && req.user.role !== "admin") {
+            // If there's a pending enrollment, show a specific message
+            if (enrollment && enrollment.status === "pending") {
+              return res.status(403).json({ 
+                message: "Your enrollment is pending approval. Access will be granted once an admin approves your enrollment." 
+              });
+            }
+            
             return res.status(403).json({ message: "You are not enrolled in this course" });
           }
         }
       } else {
-        // Check if user is enrolled in the course
+        // Check if user has an ACTIVE enrollment in the course
         const enrollment = await storage.getEnrollment(req.user.id, resource.courseId);
-        if (!enrollment && req.user.role !== "admin") {
+        const isActiveEnrollment = enrollment && enrollment.status === "active";
+        
+        if (!isActiveEnrollment && req.user.role !== "admin") {
+          // If there's a pending enrollment, show a specific message
+          if (enrollment && enrollment.status === "pending") {
+            return res.status(403).json({ 
+              message: "Your enrollment is pending approval. Access will be granted once an admin approves your enrollment." 
+            });
+          }
+          
           return res.status(403).json({ message: "You are not enrolled in this course" });
         }
       }
@@ -518,9 +536,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if user is enrolled in this course or is admin
       const isAdmin = req.user!.role === "admin";
-      const enrollment = await storage.getEnrollment(req.user!.id, courseId);
       
-      if (!enrollment && !isAdmin) {
+      // Get enrollment and verify it's ACTIVE, not just pending
+      const enrollment = await storage.getEnrollment(req.user!.id, courseId);
+      const isActiveEnrollment = enrollment && enrollment.status === "active";
+      
+      if (!isActiveEnrollment && !isAdmin) {
+        // If there's a pending enrollment, show a specific message
+        if (enrollment && enrollment.status === "pending") {
+          return res.status(403).json({ 
+            message: "Your enrollment is pending approval. Access will be granted once an admin approves your enrollment." 
+          });
+        }
+        
         return res.status(403).json({ message: "You are not enrolled in this course" });
       }
       
