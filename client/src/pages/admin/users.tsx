@@ -7,6 +7,8 @@ interface EnhancedEnrollment extends Enrollment {
   courseTitle: string;
   courseSlug: string;
   coursePrice: number;
+  // Note: TypeScript declaration for enrollmentDate is already included in the Enrollment type
+  // But we're adding a comment here to make it clear that this field is expected in the API response
 }
 import { AdminLayout } from "./components/admin-layout";
 import { Button } from "@/components/ui/button";
@@ -648,7 +650,7 @@ export default function AdminUsers() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {new Date(enrollment.enrollmentDate).toLocaleDateString()}
+                          {enrollment.enrollmentDate ? new Date(enrollment.enrollmentDate).toLocaleDateString() : 'Not available'}
                         </TableCell>
                       </TableRow>
                     ))}
