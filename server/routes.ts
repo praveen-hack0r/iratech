@@ -453,11 +453,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Enrollment routes
   app.get("/api/enrollments", isAuthenticated, async (req, res) => {
     try {
-      const enrollments = await storage.getEnrollmentsByUser(req.user.id);
+      console.log("Fetching enrollments for user:", req.user!.id);
+      const enrollments = await storage.getEnrollmentsByUser(req.user!.id);
+      
+      // Only show active enrollments - this prevents duplicate courses
+      const activeEnrollments = enrollments.filter(enrollment => 
+        enrollment.status === 'active'
+      );
+      
+      console.log("Active enrollments found:", activeEnrollments.length);
+      
+      // De-duplicate by courseId - one active enrollment per course
+      const uniqueCourseIds = new Set<number>();
+      const uniqueEnrollments = activeEnrollments.filter(enrollment => {
+        if (uniqueCourseIds.has(enrollment.courseId)) {
+          return false;
+        }
+        uniqueCourseIds.add(enrollment.courseId);
+        return true;
+      });
+      
+      console.log("Unique enrollments after de-duplication:", uniqueEnrollments.length);
       
       // Get course details for each enrollment
       const enrolledCourses = await Promise.all(
-        enrollments.map(async (enrollment) => {
+        uniqueEnrollments.map(async (enrollment) => {
           const course = await storage.getCourse(enrollment.courseId);
           const category = course ? await storage.getCategory(course.categoryId) : null;
           return {
@@ -467,8 +487,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
-      res.json(enrolledCourses.filter(item => item.course !== null));
+      const finalEnrollments = enrolledCourses.filter(item => item.course !== null);
+      console.log("Final enrollments returned:", finalEnrollments.length);
+      
+      res.json(finalEnrollments);
     } catch (error) {
+      console.error("Error fetching enrollments:", error);
       res.status(500).json({ message: "Failed to fetch enrollments" });
     }
   });
