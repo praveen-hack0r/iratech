@@ -2,6 +2,7 @@ import express, { type Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
+import { hashPassword } from "./auth-utils";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -1653,6 +1654,109 @@ app.delete("/api/admin/resources/:id", isAdmin, async (req, res) => {
     } catch (error) {
       console.error("Error fetching users:", error);
       res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  // Update user (Admin)
+  app.put("/api/admin/users/:id", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { firstName, lastName, email, username, role, phoneNumber } = req.body;
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Validate if the updated email already exists (if email is being changed)
+      if (email !== user.email) {
+        const existingEmail = await storage.getUserByEmail(email);
+        if (existingEmail && existingEmail.id !== userId) {
+          return res.status(400).json({ message: "Email already in use" });
+        }
+      }
+      
+      // Update the user profile
+      const updatedUser = await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        email,
+        username,
+        role,
+        phoneNumber
+      });
+      
+      // Return user without sensitive information
+      const safeUser = {
+        ...updatedUser,
+        password: undefined,
+        resetToken: undefined,
+        resetTokenExpiry: undefined,
+        verificationToken: undefined,
+        verificationExpiry: undefined
+      };
+      
+      res.json(safeUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+  
+  // Reset user password (Admin)
+  app.post("/api/admin/users/:id/reset-password", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { newPassword } = req.body;
+      
+      if (!newPassword) {
+        return res.status(400).json({ message: "New password is required" });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const hashedPassword = await hashPassword(newPassword);
+      await storage.updatePassword(userId, hashedPassword);
+      
+      res.status(200).json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      res.status(500).json({ message: "Failed to reset password" });
+    }
+  });
+  
+  // Get user enrollments (Admin)
+  app.get("/api/admin/users/:id/enrollments", isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const enrollments = await storage.getEnrollmentsByUser(userId);
+      
+      // Enhance with course information
+      const enhancedEnrollments = await Promise.all(
+        enrollments.map(async (enrollment) => {
+          const course = await storage.getCourse(enrollment.courseId);
+          return {
+            ...enrollment,
+            courseTitle: course ? course.title : 'Unknown Course',
+            courseSlug: course ? course.slug : '',
+            coursePrice: course ? course.price : 0
+          };
+        })
+      );
+      
+      res.json(enhancedEnrollments);
+    } catch (error) {
+      console.error("Error fetching user enrollments:", error);
+      res.status(500).json({ message: "Failed to fetch user enrollments" });
     }
   });
 
