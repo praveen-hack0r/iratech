@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const response = await apiRequest("POST", "/api/logout");
         if (response.ok) {
-          return true;
+          return;
         }
         throw new Error("Logout failed");
       } catch (error) {

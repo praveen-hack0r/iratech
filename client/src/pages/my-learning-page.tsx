@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MainLayout } from "@/components/layouts/main-layout";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { VideoPlayer } from "@/components/ui/video-player";
 import { CourseWithCategory, Lesson, LessonWithProgress, Resource } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface EnrolledCourse {
   id: number;
@@ -54,6 +56,8 @@ export default function MyLearningPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCourse, setActiveCourse] = useState<number | null>(null);
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch enrolled courses
   const {
@@ -119,6 +123,76 @@ export default function MyLearningPage() {
     console.log(`Progress update: ${watchTimeSeconds}s, completed: ${completed}`);
     // In a real app, you would update the UI to reflect this change
   };
+  
+  // Mark lesson as complete mutation
+  const markAsCompleteMutation = useMutation({
+    mutationFn: async (lessonId: number) => {
+      await apiRequest("POST", `/api/lessons/${lessonId}/progress`, {
+        completed: true,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Lesson marked as complete",
+        description: "Your progress has been updated",
+      });
+      
+      // Invalidate and refetch lesson data to update UI
+      if (activeLesson?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/lessons/${activeLesson.id}`] });
+      }
+      
+      // Invalidate course content to update progress indicators
+      if (activeCourse) {
+        queryClient.invalidateQueries({ queryKey: [`/api/courses/${activeCourse}/content`] });
+      }
+      
+      // Invalidate enrolled courses to update overall progress
+      queryClient.invalidateQueries({ queryKey: ["/api/enrollments"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update progress",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    }
+  });
+  
+  // Mark lesson as incomplete mutation
+  const markAsIncompleteMutation = useMutation({
+    mutationFn: async (lessonId: number) => {
+      await apiRequest("POST", `/api/lessons/${lessonId}/progress`, {
+        completed: false,
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Lesson marked as incomplete",
+        description: "Your progress has been updated",
+      });
+      
+      // Invalidate and refetch lesson data to update UI
+      if (activeLesson?.id) {
+        queryClient.invalidateQueries({ queryKey: [`/api/lessons/${activeLesson.id}`] });
+      }
+      
+      // Invalidate course content to update progress indicators
+      if (activeCourse) {
+        queryClient.invalidateQueries({ queryKey: [`/api/courses/${activeCourse}/content`] });
+      }
+      
+      // Invalidate enrolled courses to update overall progress
+      queryClient.invalidateQueries({ queryKey: ["/api/enrollments"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update progress",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive"
+      });
+    }
+  });
 
   // Find and select the last watched lesson
   const continueLastLesson = (courseId: number) => {
@@ -566,23 +640,23 @@ export default function MyLearningPage() {
                 <div className="flex justify-between">
                   <Button 
                     variant="outline" 
-                    disabled={!lessonData?.progress?.completed}
+                    disabled={!lessonData?.progress?.completed || markAsIncompleteMutation.isPending}
                     onClick={() => {
-                      // Mark as incomplete - in a real app, you would make an API call here
-                      console.log("Mark as incomplete");
+                      if (!activeLesson?.id) return;
+                      markAsIncompleteMutation.mutate(activeLesson.id);
                     }}
                   >
-                    Mark as Incomplete
+                    {markAsIncompleteMutation.isPending ? "Updating..." : "Mark as Incomplete"}
                   </Button>
                   
                   <Button 
                     onClick={() => {
-                      // Mark as complete - in a real app, you would make an API call here
-                      console.log("Mark as complete");
+                      if (!activeLesson?.id) return;
+                      markAsCompleteMutation.mutate(activeLesson.id);
                     }}
-                    disabled={!!lessonData?.progress?.completed}
+                    disabled={!!lessonData?.progress?.completed || markAsCompleteMutation.isPending}
                   >
-                    Mark as Complete
+                    {markAsCompleteMutation.isPending ? "Updating..." : "Mark as Complete"}
                   </Button>
                 </div>
               </div>
