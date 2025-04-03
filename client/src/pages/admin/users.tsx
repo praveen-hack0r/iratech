@@ -254,7 +254,7 @@ export default function AdminUsers() {
     : [];
 
   // Get user initials for avatar
-  const getUserInitials = (firstName?: string, lastName?: string, username?: string) => {
+  const getUserInitials = (firstName?: string | null, lastName?: string | null, username?: string) => {
     if (firstName && lastName) {
       return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     } else if (username) {
@@ -648,7 +648,7 @@ export default function AdminUsers() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {new Date(enrollment.enrolledAt).toLocaleDateString()}
+                          {new Date(enrollment.enrollmentDate).toLocaleDateString()}
                         </TableCell>
                       </TableRow>
                     ))}
