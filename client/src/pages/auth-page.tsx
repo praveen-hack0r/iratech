@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,13 +23,48 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { loginSchema, registerSchema, resetPasswordSchema } from "@shared/schema";
-import { LockKeyhole, Mail, User } from "lucide-react";
+import { 
+  Book, 
+  Home, 
+  LockKeyhole, 
+  Mail, 
+  Moon, 
+  Sun, 
+  User 
+} from "lucide-react";
+
+// NavLink component
+interface NavLinkProps {
+  href: string;
+  active: boolean;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+function NavLink({ href, active, icon, children }: NavLinkProps) {
+  return (
+    <Link href={href}>
+      <a
+        className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+          active
+            ? "text-primary font-medium"
+            : "text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary"
+        }`}
+      >
+        {icon && <span className="mr-2">{icon}</span>}
+        {children}
+      </a>
+    </Link>
+  );
+}
 
 export default function AuthPage() {
   const [authType, setAuthType] = useState<"login" | "register" | "reset">("login");
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, loginMutation, registerMutation, resetPasswordMutation } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   // Redirect if already logged in
   if (user) {
@@ -38,72 +73,141 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen">
-      {/* Auth Form Side */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-background">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold text-center">
-              Welcome to TechLearn
-            </CardTitle>
-            <CardDescription className="text-center">
-              Your gateway to advanced tech education
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="register">Register</TabsTrigger>
-              </TabsList>
-              <TabsContent value="login">
-                <LoginForm />
-              </TabsContent>
-              <TabsContent value="register">
-                <RegisterForm />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            {authType !== "reset" ? (
-              <Button
-                variant="link"
-                onClick={() => setAuthType("reset")}
-                className="px-0"
-              >
-                Forgot password?
-              </Button>
-            ) : (
-              <Button
-                variant="link"
-                onClick={() => setAuthType("login")}
-                className="px-0"
-              >
-                Back to login
-              </Button>
-            )}
-          </CardFooter>
-        </Card>
-      </div>
+    <div className="flex flex-col min-h-screen">
+      {/* Navbar */}
+      <header className="border-b">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center space-x-8">
+            <Link href="/">
+              <a className="flex items-center">
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
+                  TechLearn
+                </span>
+              </a>
+            </Link>
 
-      {/* Hero Section Side */}
-      <div className="flex-1 bg-gradient-to-br from-primary/50 to-primary p-6 hidden lg:flex flex-col justify-center">
-        <div className="max-w-xl mx-auto">
-          <h1 className="text-4xl font-bold text-white mb-6">
-            Elevate Your Technical Skills
-          </h1>
-          <p className="text-white/90 text-lg mb-8">
-            Access premium courses in ethical hacking, programming, Excel with AI, and digital marketing. 
-            Learn from industry experts and advance your career with practical, hands-on training.
-          </p>
-          <div className="space-y-4">
-            <FeatureItem text="Comprehensive courses in cutting-edge technologies" />
-            <FeatureItem text="Expert instructors with industry experience" />
-            <FeatureItem text="Hands-on projects and practical exercises" />
-            <FeatureItem text="Flexible learning paths to fit your goals" />
+            <nav className="hidden md:flex space-x-4">
+              <NavLink href="/" active={location === "/"} icon={<Home size={16} />}>
+                Home
+              </NavLink>
+              <NavLink
+                href="/courses"
+                active={location === "/courses"}
+                icon={<Book size={16} />}
+              >
+                Courses
+              </NavLink>
+            </nav>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
-      </div>
+      </header>
+
+      <main className="flex-grow">
+        <div className="flex flex-col lg:flex-row min-h-[calc(100vh-130px)]">
+          {/* Auth Form Side */}
+          <div className="flex-1 flex items-center justify-center p-6 bg-background">
+            <Card className="w-full max-w-md">
+              <CardHeader>
+                <CardTitle className="text-2xl font-bold text-center">
+                  Welcome to TechLearn
+                </CardTitle>
+                <CardDescription className="text-center">
+                  Your gateway to advanced tech education
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="register">Register</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="login">
+                    <LoginForm />
+                  </TabsContent>
+                  <TabsContent value="register">
+                    <RegisterForm />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+              <CardFooter className="flex justify-center">
+                {authType !== "reset" ? (
+                  <Button
+                    variant="link"
+                    onClick={() => setAuthType("reset")}
+                    className="px-0"
+                  >
+                    Forgot password?
+                  </Button>
+                ) : (
+                  <Button
+                    variant="link"
+                    onClick={() => setAuthType("login")}
+                    className="px-0"
+                  >
+                    Back to login
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </div>
+
+          {/* Hero Section Side */}
+          <div className="flex-1 bg-gradient-to-br from-primary/50 to-primary p-6 hidden lg:flex flex-col justify-center">
+            <div className="max-w-xl mx-auto">
+              <h1 className="text-4xl font-bold text-white mb-6">
+                Elevate Your Technical Skills
+              </h1>
+              <p className="text-white/90 text-lg mb-8">
+                Access premium courses in ethical hacking, programming, Excel with AI, and digital marketing. 
+                Learn from industry experts and advance your career with practical, hands-on training.
+              </p>
+              <div className="space-y-4">
+                <FeatureItem text="Comprehensive courses in cutting-edge technologies" />
+                <FeatureItem text="Expert instructors with industry experience" />
+                <FeatureItem text="Hands-on projects and practical exercises" />
+                <FeatureItem text="Flexible learning paths to fit your goals" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t py-6">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              © {new Date().getFullYear()} TechLearn. All rights reserved.
+            </div>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                Terms
+              </a>
+              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                Privacy
+              </a>
+              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                Contact
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
