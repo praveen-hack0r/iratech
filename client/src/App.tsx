@@ -18,6 +18,7 @@ import AdminCourses from "@/pages/admin/courses";
 import AdminUsers from "@/pages/admin/users";
 import AdminNewCourse from "@/pages/admin/new-course";
 import AdminEditCourse from "@/pages/admin/edit-course";
+import AdminResources from "@/pages/admin/resources";
 import PendingEnrollmentsPage from "@/pages/admin/pending-enrollments";
 import VerificationSuccessPage from "@/pages/verification-success";
 import DevVerificationPage from "@/pages/dev-verification-page";
@@ -40,6 +41,7 @@ function Router() {
       <ProtectedRoute path="/admin/courses/new" component={AdminNewCourse} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/courses/:id/edit" component={AdminEditCourse} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/pending-enrollments" component={PendingEnrollmentsPage} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/resources" component={AdminResources} allowedRoles={["admin"]} />
       <Route component={NotFound} />
     </Switch>
   );

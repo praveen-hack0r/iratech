@@ -72,6 +72,7 @@ export interface IStorage {
   getResourcesByCourse(courseId: number): Promise<Resource[]>;
   getResourcesByLesson(lessonId: number): Promise<Resource[]>;
   getResource(id: number): Promise<Resource | undefined>;
+  getAllResources(): Promise<Resource[]>;
   createResource(resource: InsertResource): Promise<Resource>;
   updateResource(id: number, resource: Partial<Resource>): Promise<Resource>;
   deleteResource(id: number): Promise<void>;
@@ -505,6 +506,10 @@ export class MemStorage implements IStorage {
 
   async getResource(id: number): Promise<Resource | undefined> {
     return this.resourceStore.get(id);
+  }
+  
+  async getAllResources(): Promise<Resource[]> {
+    return Array.from(this.resourceStore.values());
   }
 
   async createResource(resource: InsertResource): Promise<Resource> {

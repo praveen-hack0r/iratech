@@ -1,199 +1,214 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { 
+import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
+import {
   LayoutDashboard,
   BookOpen,
   Users,
   FileText,
-  Settings,
-  Upload,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  CheckSquare,
   Menu,
   X,
-  CreditCard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { useAuth } from "@/hooks/use-auth";
-import { useMobile } from "@/hooks/use-mobile";
-import { 
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface AdminLayoutProps {
   children: ReactNode;
 }
 
+interface NavItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  alert?: boolean;
+}
+
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
   const { user, logoutMutation } = useAuth();
-  const isMobile = useMobile();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
-  const navItems = [
+  // Fetch pending enrollments count
+  useEffect(() => {
+    fetch("/api/admin/enrollments/pending")
+      .then((res) => res.json())
+      .then((data) => {
+        setPendingCount(data.length || 0);
+      })
+      .catch(() => {
+        setPendingCount(0);
+      });
+  }, []);
+
+  const navItems: NavItem[] = [
     {
       title: "Dashboard",
-      icon: <LayoutDashboard className="h-5 w-5" />,
       href: "/admin",
-      active: location === "/admin"
+      icon: LayoutDashboard,
     },
     {
       title: "Courses",
-      icon: <BookOpen className="h-5 w-5" />,
       href: "/admin/courses",
-      active: location.startsWith("/admin/courses")
+      icon: BookOpen,
     },
     {
       title: "Users",
-      icon: <Users className="h-5 w-5" />,
       href: "/admin/users",
-      active: location.startsWith("/admin/users")
-    },
-    {
-      title: "Pending Enrollments",
-      icon: <CreditCard className="h-5 w-5" />,
-      href: "/admin/pending-enrollments",
-      active: location.startsWith("/admin/pending-enrollments"),
-      badge: "Important"
+      icon: Users,
     },
     {
       title: "Resources",
-      icon: <FileText className="h-5 w-5" />,
       href: "/admin/resources",
-      active: location.startsWith("/admin/resources")
+      icon: FileText,
     },
     {
-      title: "Content Upload",
-      icon: <Upload className="h-5 w-5" />,
-      href: "/admin/upload",
-      active: location.startsWith("/admin/upload")
+      title: "Pending Enrollments",
+      href: "/admin/pending-enrollments",
+      icon: CheckSquare,
+      alert: pendingCount > 0,
     },
-    {
-      title: "Settings",
-      icon: <Settings className="h-5 w-5" />,
-      href: "/admin/settings",
-      active: location.startsWith("/admin/settings")
-    }
   ];
 
   const handleLogout = () => {
     logoutMutation.mutate();
   };
 
-  const SidebarContent = () => (
-    <>
-      <div className="px-3 py-2">
-        <div className="flex items-center mb-6">
-          <Link href="/">
-            <a className="flex items-center">
-              <svg className="h-8 w-8 text-primary" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-              </svg>
-              {!collapsed && <span className="ml-2 text-xl font-bold">TechLearn</span>}
-            </a>
-          </Link>
-          {!isMobile && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="ml-auto" 
-              onClick={() => setCollapsed(!collapsed)}
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
-          )}
-        </div>
-
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <a className={`flex items-center px-3 py-2 rounded-md transition-colors ${
-                item.active 
-                  ? "bg-primary text-primary-foreground" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}>
-                {item.icon}
-                {!collapsed && (
-                  <div className="flex items-center justify-between w-full">
-                    <span className="ml-3">{item.title}</span>
-                    {item.badge && (
-                      <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full bg-yellow-100 text-yellow-700">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </a>
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      <div className="mt-auto px-3 py-2">
-        <Separator className="my-4" />
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-              {user?.username?.charAt(0).toUpperCase()}
-            </div>
-            {!collapsed && (
-              <div className="ml-2">
-                <p className="text-sm font-medium">{user?.username}</p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
-              </div>
-            )}
-          </div>
-          <Button 
-            variant="ghost" 
-            size={collapsed ? "icon" : "sm"} 
-            onClick={handleLogout}
-            title="Logout"
-          >
-            {collapsed ? <LogOut className="h-4 w-4" /> : (
-              <>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </>
-            )}
+  if (!user || user.role !== "admin") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="mb-6">You don't have permission to access this area.</p>
+          <Button asChild>
+            <Link href="/">Return to Home</Link>
           </Button>
         </div>
       </div>
-    </>
+    );
+  }
+
+  const renderNavItem = (item: NavItem, isMobile = false) => (
+    <Button
+      key={item.href}
+      variant={location === item.href ? "default" : "ghost"}
+      className={cn(
+        "w-full justify-start gap-3",
+        location === item.href
+          ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+          : ""
+      )}
+      asChild
+      onClick={isMobile ? () => setIsMobileMenuOpen(false) : undefined}
+    >
+      <Link href={item.href}>
+        <item.icon className="h-5 w-5" />
+        <span className="flex-1 text-left">{item.title}</span>
+        {item.alert && (
+          <span className="h-2 w-2 rounded-full bg-destructive"></span>
+        )}
+      </Link>
+    </Button>
   );
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Desktop sidebar */}
-      {!isMobile && (
-        <aside className={`bg-white border-r h-screen sticky top-0 flex flex-col ${
-          collapsed ? 'w-[70px]' : 'w-64'
-        } transition-all duration-300`}>
-          <SidebarContent />
-        </aside>
-      )}
-
-      {/* Mobile sidebar */}
-      {isMobile && (
-        <Sheet>
+    <div className="flex h-screen bg-muted/30">
+      {/* Mobile Menu Toggle */}
+      <div className="flex items-center lg:hidden absolute top-4 left-4 z-50">
+        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="fixed top-4 left-4 z-40">
-              <Menu className="h-4 w-4" />
+            <Button variant="outline" size="icon">
+              <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 flex flex-col">
-            <SidebarContent />
+          <SheetContent side="left" className="p-0">
+            <div className="flex flex-col h-full">
+              <div className="p-4">
+                <div className="flex items-center gap-2 mb-8">
+                  <Avatar>
+                    <AvatarFallback>
+                      {user.firstName && user.lastName
+                        ? `${user.firstName[0]}${user.lastName[0]}`
+                        : user.username.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">
+                      {user.firstName && user.lastName
+                        ? `${user.firstName} ${user.lastName}`
+                        : user.username}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <nav className="space-y-1">
+                  {navItems.map((item) => renderNavItem(item, true))}
+                </nav>
+              </div>
+              <div className="mt-auto p-4">
+                <Separator className="mb-4" />
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-3"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-5 w-5" />
+                  <span>Log Out</span>
+                </Button>
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
-      )}
+      </div>
 
-      {/* Main content */}
-      <main className={`flex-1 overflow-auto p-8 ${isMobile ? 'pt-16' : ''}`}>
-        {children}
-      </main>
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex w-64 flex-col border-r bg-card">
+        <div className="flex flex-col h-full">
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-8">
+              <Avatar>
+                <AvatarFallback>
+                  {user.firstName && user.lastName
+                    ? `${user.firstName[0]}${user.lastName[0]}`
+                    : user.username.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">
+                  {user.firstName && user.lastName
+                    ? `${user.firstName} ${user.lastName}`
+                    : user.username}
+                </p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+            </div>
+            <nav className="space-y-1">
+              {navItems.map((item) => renderNavItem(item))}
+            </nav>
+          </div>
+          <div className="mt-auto p-4">
+            <Separator className="mb-4" />
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-3"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Log Out</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }

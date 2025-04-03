@@ -1096,7 +1096,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/resources/:id", isAdmin, async (req, res) => {
+  // Get all resources for admin
+  app.get("/api/admin/resources", isAdmin, async (req, res) => {
+    try {
+      const resources = await storage.getAllResources();
+      
+      // Enhance resources with course and lesson information
+      const enhancedResources = await Promise.all(
+        resources.map(async (resource) => {
+          let courseInfo = null;
+          let lessonInfo = null;
+          
+          if (resource.courseId) {
+            const course = await storage.getCourse(resource.courseId);
+            if (course) {
+              courseInfo = {
+                id: course.id,
+                title: course.title
+              };
+            }
+          }
+          
+          if (resource.lessonId) {
+            const lesson = await storage.getLesson(resource.lessonId);
+            if (lesson) {
+              lessonInfo = {
+                id: lesson.id,
+                title: lesson.title
+              };
+            }
+          }
+          
+          return {
+            ...resource,
+            courseInfo,
+            lessonInfo
+          };
+        })
+      );
+      
+      res.json(enhancedResources);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch resources" });
+    }
+  });
+
+app.delete("/api/admin/resources/:id", isAdmin, async (req, res) => {
     try {
       const resourceId = parseInt(req.params.id);
       
