@@ -67,7 +67,8 @@ export default function MyLearningPage() {
   // Fetch course content when a course is selected
   const {
     data: courseContent,
-    isLoading: contentLoading
+    isLoading: contentLoading,
+    error: contentError
   } = useQuery<CourseWithContentData>({
     queryKey: [`/api/courses/${activeCourse}/content`],
     enabled: !!activeCourse,
@@ -76,7 +77,8 @@ export default function MyLearningPage() {
   // Fetch lesson details when a lesson is selected
   const {
     data: lessonData,
-    isLoading: lessonLoading
+    isLoading: lessonLoading,
+    error: lessonError
   } = useQuery<LessonWithProgress & { resources: Resource[] }>({
     queryKey: [`/api/lessons/${activeLesson?.id}`],
     enabled: !!activeLesson,
@@ -192,7 +194,9 @@ export default function MyLearningPage() {
                 </CardHeader>
                 <CardContent>
                   <p className="text-red-600">
-                    There was a problem loading your courses. Please try again later.
+                    {coursesError instanceof Error 
+                      ? coursesError.message 
+                      : "There was a problem loading your courses. Please try again later."}
                   </p>
                 </CardContent>
                 <CardFooter>
@@ -329,6 +333,33 @@ export default function MyLearningPage() {
                   ))}
                 </div>
               </div>
+            ) : contentError ? (
+              // Course content error state
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center mb-2">
+                    <Ban className="h-5 w-5 text-red-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-red-700">Error Loading Course Content</h3>
+                  </div>
+                  <p className="text-red-600">
+                    {contentError instanceof Error 
+                      ? contentError.message 
+                      : "There was a problem loading the course content. Please try again later."}
+                  </p>
+                  <div className="mt-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        // Clear the active course to go back
+                        setActiveCourse(null);
+                      }}
+                    >
+                      Go Back to My Courses
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ) : !activeLesson ? (
               // Course overview - no lesson selected
               <div className="bg-white rounded-lg shadow-sm p-6">
@@ -432,6 +463,43 @@ export default function MyLearningPage() {
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-full mb-2" />
                 <Skeleton className="h-4 w-3/4 mb-6" />
+              </div>
+            ) : lessonError ? (
+              // Lesson error state
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setActiveLesson(null)}
+                  >
+                    ← Back to Course
+                  </Button>
+                </div>
+                
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center mb-2">
+                    <Ban className="h-5 w-5 text-red-600 mr-2" />
+                    <h3 className="text-lg font-semibold text-red-700">Error Loading Lesson</h3>
+                  </div>
+                  <p className="text-red-600">
+                    {lessonError instanceof Error 
+                      ? lessonError.message 
+                      : "There was a problem loading the lesson content. Please try again later."}
+                  </p>
+                  <div className="mt-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        // Go back to course view
+                        setActiveLesson(null);
+                      }}
+                    >
+                      Return to Course Content
+                    </Button>
+                  </div>
+                </div>
               </div>
             ) : (
               // Lesson view
