@@ -200,11 +200,20 @@ export default function CheckoutPage() {
                           Payment Options
                         </h3>
                         
-                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <p className="text-sm font-medium text-yellow-800 flex items-center">
-                            <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
-                            Please pay exactly <span className="font-bold mx-1">₹{course.price || 999}</span> to UPI ID: <span className="font-bold mx-1">9015090976@upi</span>
-                          </p>
+                        <div className="space-y-3">
+                          <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p className="text-sm font-medium text-yellow-800 flex items-center">
+                              <AlertCircle className="h-4 w-4 mr-2 text-yellow-600" />
+                              Please pay exactly <span className="font-bold mx-1">₹{course.price || 999}</span> to UPI ID: <span className="font-bold mx-1">9015090976@upi</span>
+                            </p>
+                          </div>
+                          
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <p className="text-sm font-medium text-green-800 flex items-center">
+                              <Smartphone className="h-4 w-4 mr-2 text-green-600" />
+                              After payment, send a screenshot of payment to <span className="font-bold mx-1">WhatsApp: 9015090976</span> and we will activate your course.
+                            </p>
+                          </div>
                         </div>
                         
                         <Tabs defaultValue="upi-qr" className="w-full">
@@ -279,8 +288,12 @@ export default function CheckoutPage() {
                           <p className="text-sm text-orange-700 mb-2">
                             After completing your payment, you must enter your UPI transaction ID or reference number below. This information is crucial for us to verify your payment and approve your enrollment.
                           </p>
-                          <p className="text-sm font-medium text-orange-800">
+                          <p className="text-sm font-medium text-orange-800 mb-2">
                             You can find the transaction ID in your UPI app payment history.
+                          </p>
+                          <p className="text-sm font-medium text-orange-800 flex items-center">
+                            <Smartphone className="h-4 w-4 mr-2" />
+                            Please also send a screenshot of your payment to WhatsApp: 9015090976 for faster activation.
                           </p>
                         </div>
                         
