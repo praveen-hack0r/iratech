@@ -39,30 +39,36 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        console.log(`Attempting login for username: ${username}`);
-        const user = await storage.getUserByUsername(username);
-        
-        if (!user) {
-          console.log(`User not found for username: ${username}`);
-          return done(null, false);
+    new LocalStrategy(
+      {
+        usernameField: 'email',
+        passwordField: 'password',
+      },
+      async (email, password, done) => {
+        try {
+          console.log(`Attempting login for email: ${email}`);
+          const user = await storage.getUserByEmail(email);
+          
+          if (!user) {
+            console.log(`User not found for email: ${email}`);
+            return done(null, false);
+          }
+          
+          console.log(`Found user: ${user.email}, checking password...`);
+          const isValidPassword = await comparePasswords(password, user.password);
+          console.log(`Password comparison result: ${isValidPassword}`);
+          
+          if (!isValidPassword) {
+            return done(null, false);
+          } else {
+            return done(null, user);
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+          return done(error);
         }
-        
-        console.log(`Found user: ${user.username}, checking password...`);
-        const isValidPassword = await comparePasswords(password, user.password);
-        console.log(`Password comparison result: ${isValidPassword}`);
-        
-        if (!isValidPassword) {
-          return done(null, false);
-        } else {
-          return done(null, user);
-        }
-      } catch (error) {
-        console.error("Login error:", error);
-        return done(error);
       }
-    }),
+    ),
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
@@ -124,7 +130,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login", (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false, info: any) => {
       if (err) return next(err);
-      if (!user) return res.status(400).json({ message: "Invalid username or password" });
+      if (!user) return res.status(400).json({ message: "Invalid email or password" });
       
       req.login(user, (err) => {
         if (err) return next(err);
