@@ -35,6 +35,10 @@ export function CourseCard({ course, showEnrollButton = true }: CourseCardProps)
     queryKey: [`/api/enrollments/${id}`],
     // Only run this query if the user is logged in
     enabled: !!user,
+    // Add additional logging to debug enrollment status
+    onSuccess: (data) => {
+      console.log(`Enrollment status for course ${id}:`, data);
+    }
   });
 
   // Format price as currency

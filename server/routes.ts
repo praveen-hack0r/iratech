@@ -636,19 +636,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const courseId = parseInt(courseIdParam);
       
-      // Check if user is an admin (admins have access to all courses)
+      // Check if user is an admin (admins have access to view all courses, but shouldn't auto-enroll)
       const isAdmin = req.user!.role === 'admin';
       console.log("Is admin check:", isAdmin);
       
-      if (isAdmin) {
-        console.log("Admin access granted for course:", courseId);
-        return res.json({
-          isEnrolled: true,
-          inProgress: false,
-          completedPercent: 0,
-          enrollment: null
-        });
-      }
+      // Note: We no longer auto-enroll admins in all courses
+      // Instead, we check for actual enrollments like regular users
       
       // First check for active enrollment
       const activeEnrollment = await storage.getActiveEnrollment(userId, courseId);
