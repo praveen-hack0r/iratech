@@ -48,6 +48,11 @@ export async function apiRequest(
     return res;
   }
 
+  // For logout, just return the response without trying to parse JSON
+  if (url === '/api/logout' && res.ok) {
+    return res;
+  }
+
   await throwIfResNotOk(res);
   return res;
 }
