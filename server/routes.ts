@@ -468,6 +468,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch enrollments" });
     }
   });
+  
+  // Get enrollment status for a specific course
+  app.get("/api/enrollments/:courseId", isAuthenticated, async (req, res) => {
+    try {
+      // User must be authenticated by middleware, so it's safe to access req.user
+      const userId = req.user!.id;
+      const courseId = parseInt(req.params.courseId);
+      
+      // Check if user is an admin (admins have access to all courses)
+      const isAdmin = req.user!.role === 'admin';
+      if (isAdmin) {
+        return res.json({
+          isEnrolled: true,
+          inProgress: false,
+          completedPercent: 0,
+          enrollment: null
+        });
+      }
+      
+      // First check for active enrollment
+      const activeEnrollment = await storage.getActiveEnrollment(userId, courseId);
+      
+      // If there's an active enrollment, the user is enrolled
+      if (activeEnrollment) {
+        return res.json({
+          isEnrolled: true,
+          inProgress: true,
+          completedPercent: 0, // In a real app, would calculate progress
+          enrollment: activeEnrollment
+        });
+      }
+      
+      // Check if there's a pending enrollment
+      const pendingEnrollment = await storage.getEnrollment(userId, courseId);
+      if (pendingEnrollment && pendingEnrollment.status === "pending") {
+        return res.json({
+          isEnrolled: false,
+          isPending: true,
+          enrollment: pendingEnrollment
+        });
+      }
+      
+      // No enrollment found
+      return res.json({
+        isEnrolled: false,
+        inProgress: false,
+        completedPercent: 0
+      });
+    } catch (error) {
+      console.error("Error fetching enrollment status:", error);
+      res.status(500).json({ message: "Failed to check enrollment status" });
+    }
+  });
 
   // Direct enrollment route without payment
   // Request enrollment with UPI payment reference
@@ -486,19 +539,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if user is already enrolled
-      const existingEnrollment = await storage.getEnrollment(req.user.id, courseId);
+      const existingEnrollment = await storage.getEnrollment(req.user!.id, courseId);
       if (existingEnrollment) {
         return res.status(400).json({ message: "You are already enrolled in this course" });
       }
       
       // Create pending enrollment with payment reference
       const enrollment = await storage.createEnrollment({
-        userId: req.user.id,
+        userId: req.user!.id,
         courseId: courseId,
         status: 'pending',
         paymentReference: paymentReference || null,
-        paymentMethod: paymentMethod || 'upi',
-        enrollmentDate: new Date().toISOString()
+        paymentMethod: paymentMethod || 'upi'
+        // Note: enrollmentDate is added by the storage layer
       });
       
       res.status(201).json({
@@ -597,7 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User is already enrolled in this course" });
       }
       
-      const approvedEnrollment = await storage.approveEnrollment(enrollmentId, req.user.id);
+      const approvedEnrollment = await storage.approveEnrollment(enrollmentId, req.user!.id);
       
       const user = await storage.getUser(approvedEnrollment.userId);
       const course = await storage.getCourse(approvedEnrollment.courseId);
