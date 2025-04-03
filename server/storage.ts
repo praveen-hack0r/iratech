@@ -80,6 +80,8 @@ export interface IStorage {
   getEnrollmentsByUser(userId: number): Promise<Enrollment[]>;
   getEnrollmentsByCourse(courseId: number): Promise<Enrollment[]>;
   getEnrollment(userId: number, courseId: number): Promise<Enrollment | undefined>;
+  getEnrollmentById(id: number): Promise<Enrollment | undefined>;
+  getActiveEnrollment(userId: number, courseId: number): Promise<Enrollment | undefined>;
   getAllEnrollments(): Promise<Enrollment[]>;
   getPendingEnrollments(): Promise<Enrollment[]>;
   approveEnrollment(id: number, adminId: number): Promise<Enrollment>;
@@ -560,6 +562,19 @@ export class MemStorage implements IStorage {
     );
   }
   
+  async getEnrollmentById(id: number): Promise<Enrollment | undefined> {
+    return this.enrollmentStore.get(id);
+  }
+  
+  async getActiveEnrollment(userId: number, courseId: number): Promise<Enrollment | undefined> {
+    return Array.from(this.enrollmentStore.values()).find(
+      enrollment => 
+        enrollment.userId === userId && 
+        enrollment.courseId === courseId && 
+        enrollment.status === "active"
+    );
+  }
+  
   async getAllEnrollments(): Promise<Enrollment[]> {
     return Array.from(this.enrollmentStore.values());
   }
@@ -586,7 +601,7 @@ export class MemStorage implements IStorage {
           status: "pending",
           paymentMethod: "upi",
           paymentReference: "UPI123456789",
-          enrollmentDate: new Date().toISOString(),
+          enrollmentDate: new Date(),
           approvedBy: null,
           approvedAt: null
         };
@@ -618,10 +633,20 @@ export class MemStorage implements IStorage {
 
   async createEnrollment(enrollment: InsertEnrollment): Promise<Enrollment> {
     const id = this.enrollmentIdCounter++;
+    
+    // Ensure status is set
+    const status = enrollment.status || "pending";
+    
     const newEnrollment: Enrollment = { 
       ...enrollment, 
-      id, 
-      enrollmentDate: new Date()
+      id,
+      status,
+      enrollmentDate: new Date(),
+      paymentId: enrollment.paymentId || null,
+      paymentMethod: enrollment.paymentMethod || null,
+      paymentReference: enrollment.paymentReference || null,
+      approvedBy: enrollment.approvedBy || null,
+      approvedAt: enrollment.approvedAt || null
     };
     this.enrollmentStore.set(id, newEnrollment);
     return newEnrollment;

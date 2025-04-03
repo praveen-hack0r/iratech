@@ -580,6 +580,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/enrollments/:id/approve", isAdmin, async (req, res) => {
     try {
       const enrollmentId = parseInt(req.params.id);
+      
+      // Check if the enrollment exists and is still pending
+      const enrollment = await storage.getEnrollmentById(enrollmentId);
+      if (!enrollment) {
+        return res.status(404).json({ message: "Enrollment not found" });
+      }
+      
+      if (enrollment.status !== "pending") {
+        return res.status(400).json({ message: "This enrollment has already been processed" });
+      }
+      
+      // Check if the user is already enrolled in this course with an active status
+      const existingActiveEnrollment = await storage.getActiveEnrollment(enrollment.userId, enrollment.courseId);
+      if (existingActiveEnrollment) {
+        return res.status(400).json({ message: "User is already enrolled in this course" });
+      }
+      
       const approvedEnrollment = await storage.approveEnrollment(enrollmentId, req.user.id);
       
       const user = await storage.getUser(approvedEnrollment.userId);
