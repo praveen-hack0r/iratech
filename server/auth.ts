@@ -251,9 +251,50 @@ export function setupAuth(app: Express) {
         }
       }
 
-      console.log("Redirecting to verification success page");
-      // Redirect to the frontend verification success page
-      res.redirect('/verification-success');
+      // Try to determine best redirect method
+      try {
+        console.log("Redirecting to verification success page");
+        // Redirect to the frontend verification success page
+        res.redirect('/verification-success');
+      } catch (redirectError) {
+        console.error("Redirect error:", redirectError);
+        
+        // Fallback: If redirect fails, show a simple success message
+        res.send(`
+          <html>
+            <head>
+              <title>Email Verified - IraTech</title>
+              <style>
+                body { font-family: Arial, sans-serif; text-align: center; padding: 40px; line-height: 1.6; }
+                .container { max-width: 600px; margin: 0 auto; }
+                h1 { color: #4F46E5; }
+                .success-icon { font-size: 48px; color: #10B981; margin-bottom: 20px; }
+                .message { margin-bottom: 30px; }
+                .button { 
+                  display: inline-block; 
+                  background-color: #4F46E5; 
+                  color: white; 
+                  padding: 12px 24px; 
+                  text-decoration: none; 
+                  border-radius: 4px; 
+                  font-weight: bold; 
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="success-icon">✓</div>
+                <h1>Email Successfully Verified!</h1>
+                <div class="message">
+                  <p>Your email has been successfully verified and your IraTech account is now fully activated.</p>
+                  <p>You now have complete access to all our premium learning resources.</p>
+                </div>
+                <a href="/" class="button">Go to Homepage</a>
+              </div>
+            </body>
+          </html>
+        `);
+      }
     } catch (error) {
       console.error("Error during email verification:", error);
       next(error);
