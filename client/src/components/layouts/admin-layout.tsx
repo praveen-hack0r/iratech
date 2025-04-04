@@ -11,7 +11,8 @@ import {
   Settings, 
   LogOut,
   ClipboardList,
-  AlertTriangle
+  AlertTriangle,
+  MessageSquare
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -69,6 +70,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       label: 'Users', 
       icon: <Users className="h-5 w-5" />, 
       href: '/admin/users' 
+    },
+    { 
+      label: 'Contact Messages', 
+      icon: <MessageSquare className="h-5 w-5" />, 
+      href: '/admin/contact-messages' 
     },
     { 
       label: 'Resources', 

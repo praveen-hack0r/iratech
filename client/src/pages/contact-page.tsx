@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Mail, 
   Phone, 
@@ -29,12 +31,13 @@ export default function ContactPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate form submission
-    setTimeout(() => {
+  // Create a mutation for contact form submission
+  const contactMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await apiRequest("POST", "/api/contact", data);
+      return response.json();
+    },
+    onSuccess: () => {
       toast({
         title: "Message Sent",
         description: "Thank you for contacting us. We'll get back to you soon!",
@@ -46,7 +49,21 @@ export default function ContactPage() {
         message: ""
       });
       setIsSubmitting(false);
-    }, 1500);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: `Failed to send message: ${error.message}`,
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    contactMutation.mutate(formData);
   };
 
   return (

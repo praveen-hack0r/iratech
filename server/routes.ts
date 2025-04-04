@@ -10,7 +10,8 @@ import { v4 as uuidv4 } from "uuid";
 import { 
   ForumTopic, 
   ForumComment, 
-  ForumCommentWithUser
+  ForumCommentWithUser,
+  insertContactMessageSchema
 } from "@shared/schema";
 
 // Create upload directories if they don't exist
@@ -1819,6 +1820,79 @@ app.delete("/api/admin/resources/:id", isAdmin, async (req, res) => {
     } catch (error) {
       console.error("Error fetching user enrollments:", error);
       res.status(500).json({ message: "Failed to fetch user enrollments" });
+    }
+  });
+
+  // Contact message routes
+  // Submit a contact message
+  app.post("/api/contact", async (req, res) => {
+    try {
+      // Validate the contact message data
+      const result = insertContactMessageSchema.safeParse(req.body);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          message: "Invalid contact message data", 
+          errors: result.error.format() 
+        });
+      }
+      
+      // Create the contact message
+      const contactMessage = await storage.createContactMessage(result.data);
+      
+      res.status(201).json({
+        message: "Your message has been sent successfully!",
+        id: contactMessage.id
+      });
+    } catch (error) {
+      console.error("Error creating contact message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+  
+  // Get all contact messages (Admin only)
+  app.get("/api/admin/contact-messages", isAdmin, async (req, res) => {
+    try {
+      const messages = await storage.getContactMessages();
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching contact messages:", error);
+      res.status(500).json({ message: "Failed to fetch contact messages" });
+    }
+  });
+  
+  // Get a single contact message (Admin only)
+  app.get("/api/admin/contact-messages/:id", isAdmin, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getContactMessage(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Contact message not found" });
+      }
+      
+      res.json(message);
+    } catch (error) {
+      console.error("Error fetching contact message:", error);
+      res.status(500).json({ message: "Failed to fetch contact message" });
+    }
+  });
+  
+  // Mark a contact message as read (Admin only)
+  app.patch("/api/admin/contact-messages/:id/read", isAdmin, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const message = await storage.getContactMessage(messageId);
+      
+      if (!message) {
+        return res.status(404).json({ message: "Contact message not found" });
+      }
+      
+      const updatedMessage = await storage.markContactMessageAsRead(messageId);
+      res.json(updatedMessage);
+    } catch (error) {
+      console.error("Error marking contact message as read:", error);
+      res.status(500).json({ message: "Failed to mark contact message as read" });
     }
   });
 

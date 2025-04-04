@@ -153,6 +153,17 @@ export const forumReactions = pgTable("forum_reactions", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+// Contact Messages table for contact form submissions
+export const contactMessages = pgTable("contact_messages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 // Define insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -272,6 +283,14 @@ export const insertForumReactionSchema = createInsertSchema(forumReactions).pick
   reactionType: true,
 });
 
+// Contact message insert schema
+export const insertContactMessageSchema = createInsertSchema(contactMessages).pick({
+  name: true,
+  email: true,
+  subject: true,
+  message: true,
+});
+
 // Define types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -309,6 +328,10 @@ export type ForumComment = typeof forumComments.$inferSelect;
 
 export type InsertForumReaction = z.infer<typeof insertForumReactionSchema>;
 export type ForumReaction = typeof forumReactions.$inferSelect;
+
+// Contact message types
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;
 
 // Add specific schemas for auth
 export const loginSchema = z.object({

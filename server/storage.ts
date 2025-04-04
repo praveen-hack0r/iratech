@@ -11,6 +11,7 @@ import {
   forumTopics, type ForumTopic, type InsertForumTopic,
   forumComments, type ForumComment, type InsertForumComment,
   forumReactions, type ForumReaction, type InsertForumReaction,
+  contactMessages, type ContactMessage, type InsertContactMessage,
   type ForumTopicWithUser, type ForumCommentWithUser
 } from "@shared/schema";
 import session from "express-session";
@@ -124,6 +125,12 @@ export interface IStorage {
   getReactionsByComment(commentId: number): Promise<ForumReaction[]>;
   getUserReaction(userId: number, topicId?: number, commentId?: number): Promise<ForumReaction | undefined>;
   
+  // Contact message operations
+  createContactMessage(message: InsertContactMessage): Promise<ContactMessage>;
+  getContactMessages(): Promise<ContactMessage[]>;
+  getContactMessage(id: number): Promise<ContactMessage | undefined>;
+  markContactMessageAsRead(id: number): Promise<ContactMessage>;
+  
   // Session store for authentication
   sessionStore: any; // Using any to bypass type checking for session store
 }
@@ -142,6 +149,7 @@ export class MemStorage implements IStorage {
   private forumTopicStore: Map<number, ForumTopic>;
   private forumCommentStore: Map<number, ForumComment>;
   private forumReactionStore: Map<number, ForumReaction>;
+  private contactMessageStore: Map<number, ContactMessage>;
   sessionStore: any; // Using any to bypass type checking
 
   private userIdCounter: number;
@@ -156,6 +164,7 @@ export class MemStorage implements IStorage {
   private forumTopicIdCounter: number;
   private forumCommentIdCounter: number;
   private forumReactionIdCounter: number;
+  private contactMessageIdCounter: number;
 
   constructor() {
     this.userStore = new Map();
@@ -170,6 +179,7 @@ export class MemStorage implements IStorage {
     this.forumTopicStore = new Map();
     this.forumCommentStore = new Map();
     this.forumReactionStore = new Map();
+    this.contactMessageStore = new Map();
     
     this.userIdCounter = 1;
     this.categoryIdCounter = 1;
@@ -183,6 +193,7 @@ export class MemStorage implements IStorage {
     this.forumTopicIdCounter = 1;
     this.forumCommentIdCounter = 1;
     this.forumReactionIdCounter = 1;
+    this.contactMessageIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // Prune expired entries every 24h
@@ -1200,6 +1211,42 @@ export class MemStorage implements IStorage {
         (topicId ? reaction.topicId === topicId : true) &&
         (commentId ? reaction.commentId === commentId : true)
       );
+  }
+
+  // Contact message operations
+  async createContactMessage(message: InsertContactMessage): Promise<ContactMessage> {
+    const id = this.contactMessageIdCounter++;
+    
+    const newMessage: ContactMessage = {
+      id,
+      name: message.name,
+      email: message.email,
+      subject: message.subject,
+      message: message.message,
+      isRead: false,
+      createdAt: new Date()
+    };
+    
+    this.contactMessageStore.set(id, newMessage);
+    return newMessage;
+  }
+  
+  async getContactMessages(): Promise<ContactMessage[]> {
+    return Array.from(this.contactMessageStore.values())
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Most recent first
+  }
+  
+  async getContactMessage(id: number): Promise<ContactMessage | undefined> {
+    return this.contactMessageStore.get(id);
+  }
+  
+  async markContactMessageAsRead(id: number): Promise<ContactMessage> {
+    const message = this.contactMessageStore.get(id);
+    if (!message) throw new Error(`Contact message with id ${id} not found`);
+    
+    const updatedMessage = { ...message, isRead: true };
+    this.contactMessageStore.set(id, updatedMessage);
+    return updatedMessage;
   }
 }
 
