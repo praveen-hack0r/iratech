@@ -21,6 +21,7 @@ import {
   Sun,
   User,
   Wrench,
+  Phone,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -70,6 +71,13 @@ export function MainLayout({ children }: MainLayoutProps) {
                 icon={<Wrench size={16} />}
               >
                 Services
+              </NavLink>
+              <NavLink
+                href="/contact"
+                active={location === "/contact"}
+                icon={<Phone size={16} />}
+              >
+                Contact Us
               </NavLink>
               {user && (
                 <NavLink
