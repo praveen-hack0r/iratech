@@ -7,6 +7,16 @@ const scryptAsync = promisify(scrypt);
 // Check if email environment variables are set
 const hasEmailCredentials = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD;
 
+console.log("Email credentials available:", hasEmailCredentials);
+if (hasEmailCredentials) {
+  console.log("Email configuration:", {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_SECURE,
+    user: process.env.EMAIL_USER?.substring(0, 3) + "..." // Log only first few chars for security
+  });
+}
+
 // Email transporter for verification emails
 const transporter = hasEmailCredentials 
   ? nodemailer.createTransport({
@@ -95,11 +105,21 @@ export async function sendVerificationEmail(
   token: string
 ): Promise<boolean> {
   // Generate the verification link
-  // Use Replit domain in development if available
-  const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER 
-    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-    : null;
-  const baseUrl = process.env.BASE_URL || replitDomain || "http://localhost:5000";
+  // Find the most appropriate base URL
+  let baseUrl = process.env.BASE_URL;
+  
+  // For Replit deployments, use the Replit domain
+  if (!baseUrl) {
+    // New way to detect Replit environment
+    if (process.env.REPL_ID && process.env.REPL_OWNER && process.env.REPL_SLUG) {
+      baseUrl = `https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.${process.env.REPL_SLUG}.replit.dev`;
+      console.log("Using Replit generated URL:", baseUrl);
+    } else {
+      baseUrl = "http://localhost:5000";
+      console.log("Using localhost development URL:", baseUrl);
+    }
+  }
+  
   const verificationLink = `${baseUrl}/api/verify-email?token=${token}`;
   
   // Create email content
@@ -131,16 +151,40 @@ export async function sendVerificationEmail(
       return true;
     }
     
+    console.log(`Attempting to send verification email to ${email}...`);
+    
     // Production mode - send actual email
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"IraTech" <${process.env.EMAIL_USER || 'noreply@iratech.com'}>`,
       to: email,
       subject: "Verify your IraTech account",
       html: emailContent,
     });
+    
+    console.log("Verification email sent successfully");
+    console.log("Message ID:", info.messageId);
+    console.log("Email response:", info.response);
+    
     return true;
   } catch (error) {
     console.error("Error sending verification email:", error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Check for common SMTP errors
+      if (error.message.includes("ECONNREFUSED")) {
+        console.error("Connection refused. Please check if the SMTP server is accessible.");
+      } else if (error.message.includes("ETIMEDOUT")) {
+        console.error("Connection timed out. Please check your network settings.");
+      } else if (error.message.includes("EAUTH")) {
+        console.error("Authentication failed. Please check your email credentials.");
+      }
+    }
+    
     return false;
   }
 }
@@ -153,11 +197,21 @@ export async function sendPasswordResetEmail(
   token: string
 ): Promise<boolean> {
   // Generate the reset link
-  // Use Replit domain in development if available
-  const replitDomain = process.env.REPL_SLUG && process.env.REPL_OWNER 
-    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-    : null;
-  const baseUrl = process.env.BASE_URL || replitDomain || "http://localhost:5000";
+  // Find the most appropriate base URL
+  let baseUrl = process.env.BASE_URL;
+  
+  // For Replit deployments, use the Replit domain
+  if (!baseUrl) {
+    // New way to detect Replit environment
+    if (process.env.REPL_ID && process.env.REPL_OWNER && process.env.REPL_SLUG) {
+      baseUrl = `https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.${process.env.REPL_SLUG}.replit.dev`;
+      console.log("Using Replit generated URL for password reset:", baseUrl);
+    } else {
+      baseUrl = "http://localhost:5000";
+      console.log("Using localhost development URL for password reset:", baseUrl);
+    }
+  }
+  
   const resetLink = `${baseUrl}/reset-password?token=${token}`;
   
   // Create email content
@@ -189,16 +243,40 @@ export async function sendPasswordResetEmail(
       return true;
     }
     
+    console.log(`Attempting to send password reset email to ${email}...`);
+    
     // Production mode - send actual email
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"IraTech" <${process.env.EMAIL_USER || 'noreply@iratech.com'}>`,
       to: email,
       subject: "Reset Your IraTech Password",
       html: emailContent,
     });
+    
+    console.log("Password reset email sent successfully");
+    console.log("Message ID:", info.messageId);
+    console.log("Email response:", info.response);
+    
     return true;
   } catch (error) {
     console.error("Error sending password reset email:", error);
+    
+    // More detailed error logging
+    if (error instanceof Error) {
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Check for common SMTP errors
+      if (error.message.includes("ECONNREFUSED")) {
+        console.error("Connection refused. Please check if the SMTP server is accessible.");
+      } else if (error.message.includes("ETIMEDOUT")) {
+        console.error("Connection timed out. Please check your network settings.");
+      } else if (error.message.includes("EAUTH")) {
+        console.error("Authentication failed. Please check your email credentials.");
+      }
+    }
+    
     return false;
   }
 }

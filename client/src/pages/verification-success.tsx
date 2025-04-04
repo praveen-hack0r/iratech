@@ -12,11 +12,22 @@ export default function VerificationSuccessPage() {
             <Check className="h-8 w-8 text-primary" />
           </div>
           
-          <h1 className="text-2xl font-bold mb-4">Email Verified!</h1>
+          <h1 className="text-2xl font-bold mb-2">Email Successfully Verified!</h1>
           
-          <p className="text-muted-foreground mb-8">
-            Your email has been successfully verified. You now have full access to all features and courses on IraTech.
-          </p>
+          <div className="space-y-4 mb-8">
+            <p className="text-card-foreground">
+              Thank you for verifying your email address. Your IraTech account is now fully activated!
+            </p>
+            
+            <p className="text-muted-foreground">
+              You now have complete access to all our premium learning resources, including 
+              hacking tutorials, coding courses, Excel with AI training, and digital marketing lessons.
+            </p>
+            
+            <p className="text-primary font-medium">
+              Start your learning journey today and unlock your full potential!
+            </p>
+          </div>
           
           <div className="flex flex-col gap-3">
             <Button asChild size="lg">

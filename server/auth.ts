@@ -85,31 +85,45 @@ export function setupAuth(app: Express) {
   // Register new user
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("Registration attempt with email:", req.body.email);
+      
       // Only check for email uniqueness since username doesn't need to be unique
       const existingEmail = await storage.getUserByEmail(req.body.email);
       if (existingEmail) {
+        console.log("Registration failed: Email already in use");
         return res.status(400).json({ message: "Email already in use" });
       }
 
+      console.log("Creating new user account...");
+      
       // Create the user with hashed password
       const user = await storage.createUser({
         ...req.body,
         password: await hashPassword(req.body.password),
         isVerified: false,
       });
+      
+      console.log("User created with ID:", user.id);
 
       // Generate and set verification token
       const verificationToken = generateVerificationToken();
       const tokenExpiry = getVerificationTokenExpiry();
       
+      console.log("Generated verification token for user ID:", user.id);
+      console.log("Token expiry:", tokenExpiry);
+      
       await storage.setVerificationToken(user.id, verificationToken, tokenExpiry);
+      console.log("Verification token stored in database");
 
       // Send verification email
+      console.log("Sending verification email to:", user.email);
       const emailSent = await sendVerificationEmail(
         user.email,
         user.username,
         verificationToken
       );
+      
+      console.log("Verification email sending result:", emailSent ? "Success" : "Failed");
 
       req.login(user, (err) => {
         if (err) return next(err);
@@ -188,35 +202,60 @@ export function setupAuth(app: Express) {
   // Email Verification
   app.get("/api/verify-email", async (req, res, next) => {
     try {
+      console.log("Email verification request received");
       const { token } = req.query;
       
+      console.log("Verification token:", token);
+      
       if (!token) {
+        console.log("Verification failed: No token provided");
         return res.status(400).json({ message: "Verification token is required" });
       }
 
+      console.log("Looking up user by verification token...");
       const user = await storage.getUserByVerificationToken(token as string);
       
       if (!user) {
+        console.log("Verification failed: Invalid token, no matching user found");
         return res.status(400).json({ message: "Invalid verification token" });
       }
 
-      if (!user.verificationExpiry || isTokenExpired(new Date(user.verificationExpiry))) {
+      console.log("User found for verification:", user.id, user.email);
+      
+      if (!user.verificationExpiry) {
+        console.log("Verification failed: No expiry date for token");
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      const expiry = new Date(user.verificationExpiry);
+      const expired = isTokenExpired(expiry);
+      
+      console.log("Token expiry:", expiry);
+      console.log("Token expired:", expired);
+      
+      if (expired) {
+        console.log("Verification failed: Token has expired");
         return res.status(400).json({ message: "Verification token has expired" });
       }
 
+      console.log("Verifying user account...");
       await storage.verifyUser(user.id);
+      console.log("User verified successfully");
       
       // If user is logged in, update their session
       if (req.isAuthenticated() && req.user.id === user.id) {
+        console.log("Updating user session with verified status");
         const updatedUser = await storage.getUser(user.id);
         if (updatedUser) {
           req.user = updatedUser;
         }
       }
 
+      console.log("Redirecting to verification success page");
       // Redirect to the frontend verification success page
       res.redirect('/verification-success');
     } catch (error) {
+      console.error("Error during email verification:", error);
       next(error);
     }
   });
@@ -224,13 +263,18 @@ export function setupAuth(app: Express) {
   // Resend verification email
   app.post("/api/resend-verification", async (req, res, next) => {
     try {
+      console.log("Resend verification email request received");
+      
       if (!req.isAuthenticated()) {
+        console.log("Resend failed: User not authenticated");
         return res.status(401).json({ message: "Authentication required" });
       }
 
       const user = req.user;
+      console.log("User requesting verification resend:", user.id, user.email);
       
       if (user.isVerified) {
+        console.log("Resend failed: Email already verified");
         return res.status(400).json({ message: "Email is already verified" });
       }
 
@@ -238,14 +282,21 @@ export function setupAuth(app: Express) {
       const verificationToken = generateVerificationToken();
       const tokenExpiry = getVerificationTokenExpiry();
       
+      console.log("Generated new verification token");
+      console.log("Token expiry:", tokenExpiry);
+      
       await storage.setVerificationToken(user.id, verificationToken, tokenExpiry);
+      console.log("Verification token stored in database");
 
       // Send verification email
+      console.log("Sending verification email to:", user.email);
       const emailSent = await sendVerificationEmail(
         user.email,
         user.username,
         verificationToken
       );
+      
+      console.log("Verification email sending result:", emailSent ? "Success" : "Failed");
 
       if (emailSent) {
         res.status(200).json({ message: "Verification email sent successfully" });
@@ -253,6 +304,7 @@ export function setupAuth(app: Express) {
         res.status(500).json({ message: "Failed to send verification email" });
       }
     } catch (error) {
+      console.error("Error in resend verification:", error);
       next(error);
     }
   });
@@ -260,34 +312,49 @@ export function setupAuth(app: Express) {
   // Password reset request route
   app.post("/api/forgot-password", async (req, res, next) => {
     try {
+      console.log("Password reset request received");
       const { email } = req.body;
       
+      console.log("Email provided for password reset:", email);
+      
       if (!email) {
+        console.log("Password reset failed: No email provided");
         return res.status(400).json({ message: "Email is required" });
       }
       
       // Find the user by email
+      console.log("Looking up user by email...");
       const user = await storage.getUserByEmail(email);
       
       // For security, don't reveal if the email exists or not
       if (!user) {
+        console.log("Password reset: User not found for email", email);
         return res.status(200).json({ 
           message: "If your email is registered, you will receive a reset link" 
         });
       }
       
+      console.log("User found for password reset:", user.id);
+      
       // Generate a reset token
       const resetToken = generateVerificationToken();
       const tokenExpiry = getVerificationTokenExpiry();
       
+      console.log("Generated password reset token");
+      console.log("Token expiry:", tokenExpiry);
+      
       // Save the reset token
+      console.log("Storing password reset token in database");
       await storage.setPasswordResetToken(user.id, resetToken, tokenExpiry);
       
       // Send the reset email
+      console.log("Sending password reset email to:", user.email);
       const emailSent = await sendPasswordResetEmail(
         user.email,
         resetToken
       );
+      
+      console.log("Password reset email sending result:", emailSent ? "Success" : "Failed");
       
       if (!emailSent) {
         console.error("Failed to send password reset email");
@@ -306,30 +373,54 @@ export function setupAuth(app: Express) {
   // Reset password route
   app.post("/api/reset-password", async (req, res, next) => {
     try {
+      console.log("Password reset submission received");
       const { token, password } = req.body;
       
+      console.log("Reset token provided:", token ? "Yes" : "No");
+      console.log("New password provided:", password ? "Yes" : "No");
+      
       if (!token || !password) {
+        console.log("Password reset failed: Missing token or password");
         return res.status(400).json({ message: "Token and password are required" });
       }
       
       // Find user by reset token
+      console.log("Looking up user by reset token...");
       const user = await storage.getUserByResetToken(token);
       
       if (!user) {
+        console.log("Password reset failed: Invalid token, no matching user found");
         return res.status(400).json({ message: "Invalid or expired reset token" });
       }
       
+      console.log("User found for password reset:", user.id, user.email);
+      
       // Check if token is expired
-      if (!user.resetTokenExpiry || isTokenExpired(new Date(user.resetTokenExpiry))) {
+      if (!user.resetTokenExpiry) {
+        console.log("Password reset failed: No expiry date for token");
+        return res.status(400).json({ message: "Invalid reset token" });
+      }
+      
+      const expiry = new Date(user.resetTokenExpiry);
+      const expired = isTokenExpired(expiry);
+      
+      console.log("Token expiry:", expiry);
+      console.log("Token expired:", expired);
+      
+      if (expired) {
+        console.log("Password reset failed: Token has expired");
         return res.status(400).json({ message: "Reset token has expired" });
       }
       
       // Hash the new password
+      console.log("Hashing new password...");
       const hashedPassword = await hashPassword(password);
       
       // Update the password and clear the reset token
+      console.log("Updating password and clearing reset token...");
       await storage.updatePasswordAndClearResetToken(user.id, hashedPassword);
       
+      console.log("Password reset successful for user:", user.id);
       res.status(200).json({ message: "Password has been reset successfully" });
     } catch (error) {
       console.error("Error in reset password:", error);
