@@ -88,7 +88,7 @@ export default function AuthPage() {
             <Link href="/">
               <a className="flex items-center">
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
-                  TechLearn
+                  IraTech
                 </span>
               </a>
             </Link>
@@ -131,7 +131,7 @@ export default function AuthPage() {
             <Card className="w-full max-w-md">
               <CardHeader>
                 <CardTitle className="text-2xl font-bold text-center">
-                  Welcome to TechLearn
+                  Welcome to IraTech
                 </CardTitle>
                 <CardDescription className="text-center">
                   Your gateway to advanced tech education
@@ -209,7 +209,7 @@ export default function AuthPage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              © {new Date().getFullYear()} TechLearn. All rights reserved.
+              © {new Date().getFullYear()} IraTech. All rights reserved.
             </div>
             <div className="flex flex-col items-center md:items-end space-y-4 mt-4 md:mt-0">
               {/* Social Media Icons */}

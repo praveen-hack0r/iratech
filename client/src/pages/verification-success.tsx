@@ -15,7 +15,7 @@ export default function VerificationSuccessPage() {
           <h1 className="text-2xl font-bold mb-4">Email Verified!</h1>
           
           <p className="text-muted-foreground mb-8">
-            Your email has been successfully verified. You now have full access to all features and courses on TechLearn.
+            Your email has been successfully verified. You now have full access to all features and courses on IraTech.
           </p>
           
           <div className="flex flex-col gap-3">

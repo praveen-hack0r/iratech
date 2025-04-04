@@ -105,17 +105,17 @@ export async function sendVerificationEmail(
   // Create email content
   const emailContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2>Welcome to TechLearn!</h2>
+      <h2>Welcome to IraTech!</h2>
       <p>Hello ${username},</p>
-      <p>Thank you for creating an account on TechLearn. To complete your registration and gain full access to our courses, please verify your email address by clicking the button below:</p>
+      <p>Thank you for creating an account on IraTech. To complete your registration and gain full access to our courses, please verify your email address by clicking the button below:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold;">Verify Email Address</a>
       </div>
       <p>If the button doesn't work, copy and paste this link into your browser:</p>
       <p><a href="${verificationLink}">${verificationLink}</a></p>
       <p>This link will expire in 24 hours.</p>
-      <p>If you didn't create an account on TechLearn, you can safely ignore this email.</p>
-      <p>Best regards,<br>The TechLearn Team</p>
+      <p>If you didn't create an account on IraTech, you can safely ignore this email.</p>
+      <p>Best regards,<br>The IraTech Team</p>
     </div>
   `;
   
@@ -124,7 +124,7 @@ export async function sendVerificationEmail(
       // Development mode - log email info to console and return true
       console.log("\n================ VERIFICATION EMAIL ================");
       console.log(`TO: ${email}`);
-      console.log(`SUBJECT: Verify your TechLearn account`);
+      console.log(`SUBJECT: Verify your IraTech account`);
       console.log(`VERIFICATION LINK: ${verificationLink}`);
       console.log(`TOKEN: ${token}`);
       console.log("====================================================\n");
@@ -133,9 +133,9 @@ export async function sendVerificationEmail(
     
     // Production mode - send actual email
     await transporter.sendMail({
-      from: `"TechLearn" <${process.env.EMAIL_USER || 'noreply@techlearn.com'}>`,
+      from: `"IraTech" <${process.env.EMAIL_USER || 'noreply@iratech.com'}>`,
       to: email,
-      subject: "Verify your TechLearn account",
+      subject: "Verify your IraTech account",
       html: emailContent,
     });
     return true;
@@ -164,7 +164,7 @@ export async function sendPasswordResetEmail(
   const emailContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <h2>Reset Your Password</h2>
-      <p>We received a request to reset your password for your TechLearn account.</p>
+      <p>We received a request to reset your password for your IraTech account.</p>
       <p>To reset your password, click the button below:</p>
       <div style="text-align: center; margin: 30px 0;">
         <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold;">Reset Password</a>
@@ -173,7 +173,7 @@ export async function sendPasswordResetEmail(
       <p><a href="${resetLink}">${resetLink}</a></p>
       <p>This link will expire in 1 hour.</p>
       <p>If you didn't request a password reset, you can safely ignore this email.</p>
-      <p>Best regards,<br>The TechLearn Team</p>
+      <p>Best regards,<br>The IraTech Team</p>
     </div>
   `;
   
@@ -182,7 +182,7 @@ export async function sendPasswordResetEmail(
       // Development mode - log email info to console and return true
       console.log("\n================ PASSWORD RESET EMAIL ================");
       console.log(`TO: ${email}`);
-      console.log(`SUBJECT: Reset Your TechLearn Password`);
+      console.log(`SUBJECT: Reset Your IraTech Password`);
       console.log(`RESET LINK: ${resetLink}`);
       console.log(`TOKEN: ${token}`);
       console.log("=======================================================\n");
@@ -191,9 +191,9 @@ export async function sendPasswordResetEmail(
     
     // Production mode - send actual email
     await transporter.sendMail({
-      from: `"TechLearn" <${process.env.EMAIL_USER || 'noreply@techlearn.com'}>`,
+      from: `"IraTech" <${process.env.EMAIL_USER || 'noreply@iratech.com'}>`,
       to: email,
-      subject: "Reset Your TechLearn Password",
+      subject: "Reset Your IraTech Password",
       html: emailContent,
     });
     return true;

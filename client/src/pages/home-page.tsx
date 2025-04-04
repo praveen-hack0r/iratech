@@ -268,7 +268,7 @@ export default function HomePage() {
       <section className="py-12 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-foreground">Why Choose TechLearn</h2>
+            <h2 className="text-3xl font-bold mb-4 text-foreground">Why Choose IraTech</h2>
             <p className="text-muted-foreground max-w-3xl mx-auto">
               We provide high-quality, industry-relevant tech courses with features designed to enhance your learning experience.
             </p>
@@ -294,7 +294,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Your Learning Journey?</h2>
           <p className="text-xl mb-8 max-w-3xl mx-auto">
-            Join thousands of students already learning with TechLearn and take your skills to the next level.
+            Join thousands of students already learning with IraTech and take your skills to the next level.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 font-medium px-8 py-3 rounded-md transition-colors">
