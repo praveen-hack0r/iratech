@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -53,7 +54,7 @@ interface NavLinkProps {
 function NavLink({ href, active, icon, children }: NavLinkProps) {
   return (
     <Link href={href}>
-      <a
+      <div
         className={`flex items-center px-3 py-2 rounded-md transition-colors ${
           active
             ? "text-primary font-medium"
@@ -62,7 +63,7 @@ function NavLink({ href, active, icon, children }: NavLinkProps) {
       >
         {icon && <span className="mr-2">{icon}</span>}
         {children}
-      </a>
+      </div>
     </Link>
   );
 }
@@ -74,8 +75,13 @@ export default function AuthPage() {
   const { theme, setTheme } = useTheme();
 
   // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+  
   if (user) {
-    setLocation("/");
     return null;
   }
 
@@ -86,11 +92,11 @@ export default function AuthPage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link href="/">
-              <a className="flex items-center">
+              <div className="flex items-center">
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                   IraTech
                 </span>
-              </a>
+              </div>
             </Link>
 
             <nav className="hidden md:flex space-x-4">
@@ -149,9 +155,20 @@ export default function AuthPage() {
                 ) : authType === "verify" ? (
                   <div className="mt-4">
                     <h2 className="text-xl font-semibold mb-2">Verify Your Email</h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-6">
-                      Enter the verification token sent to your email to complete your registration.
-                    </p>
+                    <div className="text-gray-600 dark:text-gray-400 mb-6 space-y-2">
+                      <p>
+                        Enter the verification token from the email we sent you to complete your registration.
+                      </p>
+                      <div className="rounded-md bg-amber-50 dark:bg-amber-950 p-3 text-sm border border-amber-200 dark:border-amber-800">
+                        <p className="font-medium text-amber-800 dark:text-amber-400">Can't find the email?</p>
+                        <ul className="list-disc ml-5 mt-1 text-amber-700 dark:text-amber-300">
+                          <li>Check your spam or junk folder</li>
+                          <li>Look for an email from "IraTech"</li>
+                          <li>The token is a long string of letters and numbers</li>
+                          <li>Copy the token exactly as shown in the email</li>
+                        </ul>
+                      </div>
+                    </div>
                     <VerifyEmailForm />
                   </div>
                 ) : (
@@ -547,6 +564,7 @@ function ResetPasswordForm() {
 
 function VerifyEmailForm() {
   const { verifyEmailMutation } = useAuth();
+  const [verificationStatus, setVerificationStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const form = useForm({
     resolver: zodResolver(verifyEmailSchema),
     defaultValues: {
@@ -556,18 +574,57 @@ function VerifyEmailForm() {
   });
 
   function onSubmit(values: z.infer<typeof verifyEmailSchema>) {
-    verifyEmailMutation.mutate(values);
+    setVerificationStatus('idle');
+    verifyEmailMutation.mutate(values, {
+      onSuccess: () => {
+        setVerificationStatus('success');
+      },
+      onError: () => {
+        setVerificationStatus('error');
+      }
+    });
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        {verificationStatus === 'success' && (
+          <div className="rounded-md bg-green-50 dark:bg-green-900 p-4 mb-4 border border-green-200 dark:border-green-800">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-green-800 dark:text-green-300">
+                  Email Verification Successful
+                </h3>
+                <div className="mt-2 text-sm text-green-700 dark:text-green-400">
+                  <p>Your email has been verified successfully. You can now login to your account.</p>
+                </div>
+                <div className="mt-4">
+                  <Link href="/auth?tab=login">
+                    <Button type="button" size="sm" variant="outline" className="flex items-center space-x-1 text-xs">
+                      <span>Go to Login</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email Address</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -576,9 +633,13 @@ function VerifyEmailForm() {
                     placeholder="your@email.com"
                     className="pl-9"
                     {...field}
+                    disabled={verifyEmailMutation.isPending || verificationStatus === 'success'}
                   />
                 </div>
               </FormControl>
+              <FormDescription className="text-xs">
+                Enter the same email address you used during registration.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -590,23 +651,51 @@ function VerifyEmailForm() {
             <FormItem>
               <FormLabel>Verification Token</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="Enter the token from your email"
-                  {...field}
-                />
+                <div className="relative">
+                  <div className="absolute left-3 top-3 h-4 w-4 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                  </div>
+                  <Input
+                    className="pl-9 font-mono text-sm"
+                    placeholder="Enter the token from your email"
+                    {...field}
+                    disabled={verifyEmailMutation.isPending || verificationStatus === 'success'}
+                  />
+                </div>
               </FormControl>
+              <FormDescription className="text-xs">
+                Paste the complete token exactly as shown in the verification email.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+        
+        {verificationStatus === 'error' && (
+          <div className="text-sm text-red-600 dark:text-red-400 mt-2 rounded-md bg-red-50 dark:bg-red-900/30 p-3 border border-red-200 dark:border-red-800/30">
+            <p className="font-medium mb-1">Verification failed</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Check that you've entered the correct email address</li>
+              <li>Make sure you've copied the entire token correctly</li>
+              <li>Try to copy and paste the token instead of typing it</li>
+              <li>The token might have expired - try registering again</li>
+            </ul>
+          </div>
+        )}
+        
         <Button
           type="submit"
           className="w-full"
-          disabled={verifyEmailMutation.isPending}
+          disabled={verifyEmailMutation.isPending || verificationStatus === 'success'}
         >
           {verifyEmailMutation.isPending
             ? "Verifying..."
-            : "Verify Email"}
+            : verificationStatus === 'success' 
+              ? "Email Verified!"
+              : "Verify Email"}
         </Button>
       </form>
     </Form>

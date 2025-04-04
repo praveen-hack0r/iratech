@@ -474,12 +474,20 @@ export function setupAuth(app: Express) {
       console.log("Manual email verification request received");
       const { token, email } = req.body;
       
-      console.log("Verification token:", token);
-      console.log("Email:", email);
+      console.log("Verification data:", {
+        token: token ? `${token.substring(0, 6)}...${token.substring(token.length - 6)}` : 'missing',
+        email: email || 'missing'
+      });
       
       if (!token || !email) {
         console.log("Verification failed: No token or email provided");
-        return res.status(400).json({ message: "Verification token and email are required" });
+        return res.status(400).json({ 
+          message: "Verification token and email are required",
+          details: {
+            token: token ? "provided" : "missing",
+            email: email ? "provided" : "missing"
+          }
+        });
       }
 
       console.log("Looking up user by email...");
@@ -487,31 +495,80 @@ export function setupAuth(app: Express) {
       
       if (!user) {
         console.log("Verification failed: No user found with email", email);
-        return res.status(400).json({ message: "Invalid email address" });
+        return res.status(400).json({ 
+          message: "No account found with this email address. Please make sure you're using the same email you registered with.",
+          error: "user_not_found"
+        });
       }
       
       console.log("User found for verification:", user.id, user.email);
-      console.log("Checking if user token matches:", user.verificationToken);
+      console.log("User verification status:", user.isVerified ? "Already verified" : "Not verified");
+      
+      // If user is already verified, return success
+      if (user.isVerified) {
+        console.log("User already verified:", user.id);
+        return res.status(200).json({ 
+          message: "Your email is already verified. You can now log in to your account.",
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            isVerified: true
+          },
+          status: "already_verified"
+        });
+      }
+      
+      // Check if verification token exists
+      if (!user.verificationToken) {
+        console.log("Verification failed: User has no verification token");
+        return res.status(400).json({ 
+          message: "No verification token found for this account. Please register again or contact support.",
+          error: "no_token_found"
+        });
+      }
+      
+      // Log partial token for debugging (safe to log parts of the token)
+      const dbTokenPreview = user.verificationToken 
+        ? `${user.verificationToken.substring(0, 6)}...${user.verificationToken.substring(user.verificationToken.length - 6)}`
+        : 'null';
+      console.log("Token comparison:", {
+        providedTokenLength: token.length,
+        databaseTokenLength: user.verificationToken?.length || 0,
+        tokenPreviewFromDB: dbTokenPreview
+      });
       
       if (user.verificationToken !== token) {
         console.log("Verification failed: Token doesn't match");
-        return res.status(400).json({ message: "Invalid verification token" });
+        return res.status(400).json({ 
+          message: "The verification token is invalid. Please make sure you've copied it correctly from the email.",
+          error: "token_mismatch"
+        });
       }
       
       if (!user.verificationExpiry) {
         console.log("Verification failed: No expiry date for token");
-        return res.status(400).json({ message: "Invalid verification token" });
+        return res.status(400).json({ 
+          message: "The verification token is invalid. Please request a new verification email.",
+          error: "no_expiry_date"
+        });
       }
       
       const expiry = new Date(user.verificationExpiry);
       const expired = isTokenExpired(expiry);
       
-      console.log("Token expiry:", expiry);
-      console.log("Token expired:", expired);
+      console.log("Token expiry information:", {
+        expiryDate: expiry.toISOString(),
+        currentDate: new Date().toISOString(),
+        isExpired: expired
+      });
       
       if (expired) {
         console.log("Verification failed: Token has expired");
-        return res.status(400).json({ message: "Verification token has expired" });
+        return res.status(400).json({ 
+          message: "This verification link has expired. Please request a new verification email.",
+          error: "token_expired"
+        });
       }
       
       // Mark user as verified and clear verification token
@@ -530,17 +587,21 @@ export function setupAuth(app: Express) {
       
       // Return success response
       res.status(200).json({ 
-        message: "Email successfully verified",
+        message: "Email successfully verified! You can now log in to your account.",
         user: {
           id: user.id,
           username: user.username,
           email: user.email,
           isVerified: true
-        }
+        },
+        status: "verified_success"
       });
     } catch (error) {
       console.error("Error during manual email verification:", error);
-      next(error);
+      res.status(500).json({
+        message: "An unexpected error occurred during email verification. Please try again later.",
+        error: "server_error"
+      });
     }
   });
 

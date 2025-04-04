@@ -17,7 +17,7 @@ type AuthContextType = {
   registerMutation: UseMutationResult<User, Error, RegisterData>;
   resetPasswordMutation: UseMutationResult<void, Error, ResetPasswordData>;
   resendVerificationMutation: UseMutationResult<void, Error, void>;
-  verifyEmailMutation: UseMutationResult<User, Error, VerifyEmailData>;
+  verifyEmailMutation: UseMutationResult<any, Error, VerifyEmailData>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -168,21 +168,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const verifyEmailMutation = useMutation({
     mutationFn: async (data: VerifyEmailData) => {
-      const res = await apiRequest("POST", "/api/verify-email-manual", data);
-      return await res.json();
+      try {
+        const res = await apiRequest("POST", "/api/verify-email-manual", data);
+        
+        // Handle non-200 responses
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.message || "Verification failed. Please try again.");
+        }
+        
+        return await res.json();
+      } catch (error: any) {
+        console.error("Verification error:", error);
+        throw error;
+      }
     },
-    onSuccess: (updatedUser: User) => {
-      queryClient.setQueryData(["/api/user"], updatedUser);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      toast({
-        title: "Email verified successfully",
-        description: "Your email has been verified and your account is now fully activated!",
-      });
+    onSuccess: (response: any) => {
+      // Handle different success statuses
+      if (response.status === "already_verified") {
+        toast({
+          title: "Already Verified",
+          description: "Your email is already verified. You can now log in to your account.",
+        });
+      } else {
+        toast({
+          title: "Email Verified!",
+          description: "Your email has been verified and your account is now fully activated!",
+        });
+      }
+      
+      if (response.user) {
+        queryClient.setQueryData(["/api/user"], response.user);
+        queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      }
     },
     onError: (error: Error) => {
+      // Provide specific guidance based on the error message
+      let title = "Verification Failed";
+      let description = error.message || "Invalid verification token";
+      
+      if (error.message?.includes("No account found")) {
+        title = "Email Not Found";
+        description = "No account found with this email address. Please check the email you entered.";
+      } else if (error.message?.includes("token is invalid")) {
+        title = "Invalid Token";
+        description = "The verification token is invalid. Please make sure you've copied it correctly from the email.";
+      } else if (error.message?.includes("expired")) {
+        title = "Token Expired";
+        description = "Your verification token has expired. Please request a new verification email.";
+      }
+      
       toast({
-        title: "Email verification failed",
-        description: error.message || "Invalid verification token",
+        title,
+        description,
         variant: "destructive",
       });
     },
