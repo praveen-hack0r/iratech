@@ -24,7 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
-import { loginSchema, registerSchema, resetPasswordSchema } from "@shared/schema";
+import { loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from "@shared/schema";
 import { 
   Book, 
   Home, 
@@ -68,9 +68,9 @@ function NavLink({ href, active, icon, children }: NavLinkProps) {
 }
 
 export default function AuthPage() {
-  const [authType, setAuthType] = useState<"login" | "register" | "reset">("login");
+  const [authType, setAuthType] = useState<"login" | "register" | "reset" | "verify">("login");
   const [location, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation, resetPasswordMutation } = useAuth();
+  const { user, loginMutation, registerMutation, resetPasswordMutation, verifyEmailMutation } = useAuth();
   const { theme, setTheme } = useTheme();
 
   // Redirect if already logged in
@@ -146,6 +146,14 @@ export default function AuthPage() {
                     </p>
                     <ResetPasswordForm />
                   </div>
+                ) : authType === "verify" ? (
+                  <div className="mt-4">
+                    <h2 className="text-xl font-semibold mb-2">Verify Your Email</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                      Enter the verification token sent to your email to complete your registration.
+                    </p>
+                    <VerifyEmailForm />
+                  </div>
                 ) : (
                   <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
                     <TabsList className="grid w-full grid-cols-2">
@@ -161,16 +169,25 @@ export default function AuthPage() {
                   </Tabs>
                 )}
               </CardContent>
-              <CardFooter className="flex justify-center">
-                {authType !== "reset" ? (
-                  <Button
-                    variant="link"
-                    onClick={() => setAuthType("reset")}
-                    className="px-0"
-                  >
-                    Forgot password?
-                  </Button>
-                ) : (
+              <CardFooter className="flex flex-col gap-2 justify-center">
+                {authType === "login" ? (
+                  <>
+                    <Button
+                      variant="link"
+                      onClick={() => setAuthType("reset")}
+                      className="px-0"
+                    >
+                      Forgot password?
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => setAuthType("verify")}
+                      className="px-0"
+                    >
+                      Need to verify your email?
+                    </Button>
+                  </>
+                ) : authType === "reset" || authType === "verify" ? (
                   <Button
                     variant="link"
                     onClick={() => setAuthType("login")}
@@ -178,7 +195,7 @@ export default function AuthPage() {
                   >
                     Back to login
                   </Button>
-                )}
+                ) : null}
               </CardFooter>
             </Card>
           </div>
@@ -522,6 +539,74 @@ function ResetPasswordForm() {
           {resetPasswordMutation.isPending
             ? "Sending reset link..."
             : "Send Reset Link"}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+function VerifyEmailForm() {
+  const { verifyEmailMutation } = useAuth();
+  const form = useForm({
+    resolver: zodResolver(verifyEmailSchema),
+    defaultValues: {
+      token: "",
+      email: "",
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof verifyEmailSchema>) {
+    verifyEmailMutation.mutate(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 mt-4">
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    className="pl-9"
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="token"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Verification Token</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Enter the token from your email"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={verifyEmailMutation.isPending}
+        >
+          {verifyEmailMutation.isPending
+            ? "Verifying..."
+            : "Verify Email"}
         </Button>
       </form>
     </Form>

@@ -468,6 +468,82 @@ export function setupAuth(app: Express) {
     }
   });
   
+  // Manual verification route
+  app.post("/api/verify-email-manual", async (req, res, next) => {
+    try {
+      console.log("Manual email verification request received");
+      const { token, email } = req.body;
+      
+      console.log("Verification token:", token);
+      console.log("Email:", email);
+      
+      if (!token || !email) {
+        console.log("Verification failed: No token or email provided");
+        return res.status(400).json({ message: "Verification token and email are required" });
+      }
+
+      console.log("Looking up user by email...");
+      const user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        console.log("Verification failed: No user found with email", email);
+        return res.status(400).json({ message: "Invalid email address" });
+      }
+      
+      console.log("User found for verification:", user.id, user.email);
+      console.log("Checking if user token matches:", user.verificationToken);
+      
+      if (user.verificationToken !== token) {
+        console.log("Verification failed: Token doesn't match");
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      if (!user.verificationExpiry) {
+        console.log("Verification failed: No expiry date for token");
+        return res.status(400).json({ message: "Invalid verification token" });
+      }
+      
+      const expiry = new Date(user.verificationExpiry);
+      const expired = isTokenExpired(expiry);
+      
+      console.log("Token expiry:", expiry);
+      console.log("Token expired:", expired);
+      
+      if (expired) {
+        console.log("Verification failed: Token has expired");
+        return res.status(400).json({ message: "Verification token has expired" });
+      }
+      
+      // Mark user as verified and clear verification token
+      console.log("Marking user as verified:", user.id);
+      await storage.verifyUser(user.id);
+      
+      console.log("User successfully verified:", user.id);
+      
+      // If user is currently logged in, update session
+      if (req.isAuthenticated() && req.user.id === user.id) {
+        const updatedUser = await storage.getUser(user.id);
+        if (updatedUser) {
+          req.user = updatedUser;
+        }
+      }
+      
+      // Return success response
+      res.status(200).json({ 
+        message: "Email successfully verified",
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          isVerified: true
+        }
+      });
+    } catch (error) {
+      console.error("Error during manual email verification:", error);
+      next(error);
+    }
+  });
+
   // Reset password route
   app.post("/api/reset-password", async (req, res, next) => {
     try {

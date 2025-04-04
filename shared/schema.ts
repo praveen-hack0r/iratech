@@ -350,9 +350,15 @@ export const resetPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email"),
 });
 
+export const verifyEmailSchema = z.object({
+  token: z.string().min(10, "Verification token should be at least 10 characters long"),
+  email: z.string().email("Please enter a valid email"),
+});
+
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
 export type ResetPasswordData = z.infer<typeof resetPasswordSchema>;
+export type VerifyEmailData = z.infer<typeof verifyEmailSchema>;
 
 // CourseWithCategory with extended information
 export type CourseWithCategory = Course & {

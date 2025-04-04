@@ -4,7 +4,7 @@ import {
   useMutation,
   UseMutationResult,
 } from "@tanstack/react-query";
-import { User, LoginData, RegisterData, ResetPasswordData } from "@shared/schema";
+import { User, LoginData, RegisterData, ResetPasswordData, VerifyEmailData } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,7 @@ type AuthContextType = {
   registerMutation: UseMutationResult<User, Error, RegisterData>;
   resetPasswordMutation: UseMutationResult<void, Error, ResetPasswordData>;
   resendVerificationMutation: UseMutationResult<void, Error, void>;
+  verifyEmailMutation: UseMutationResult<User, Error, VerifyEmailData>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -165,6 +166,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const verifyEmailMutation = useMutation({
+    mutationFn: async (data: VerifyEmailData) => {
+      const res = await apiRequest("POST", "/api/verify-email-manual", data);
+      return await res.json();
+    },
+    onSuccess: (updatedUser: User) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      toast({
+        title: "Email verified successfully",
+        description: "Your email has been verified and your account is now fully activated!",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Email verification failed",
+        description: error.message || "Invalid verification token",
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <AuthContext.Provider
       value={{
@@ -175,7 +198,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logoutMutation,
         registerMutation,
         resetPasswordMutation,
-        resendVerificationMutation
+        resendVerificationMutation,
+        verifyEmailMutation
       }}
     >
       {children}
