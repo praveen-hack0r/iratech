@@ -17,7 +17,7 @@ interface ContactMessage {
   email: string;
   subject: string;
   message: string;
-  read: boolean;
+  isRead: boolean;
   createdAt: string;
 }
 
@@ -64,7 +64,7 @@ export default function ContactMessagesPage() {
   const openMessageDetail = (message: ContactMessage) => {
     setSelectedMessage(message);
     // If message is unread, mark it as read
-    if (!message.read) {
+    if (!message.isRead) {
       markAsReadMutation.mutate(message.id);
     }
   };
@@ -95,7 +95,7 @@ export default function ContactMessagesPage() {
                   {messages.map((message) => (
                     <tr 
                       key={message.id} 
-                      className={`hover:bg-muted/30 cursor-pointer ${!message.read ? 'font-medium' : ''}`}
+                      className={`hover:bg-muted/30 cursor-pointer ${!message.isRead ? 'font-medium' : ''}`}
                       onClick={() => openMessageDetail(message)}
                     >
                       <td className="px-6 py-4 text-sm">
@@ -114,7 +114,7 @@ export default function ContactMessagesPage() {
                         {formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}
                       </td>
                       <td className="px-6 py-4 text-sm">
-                        {message.read ? (
+                        {message.isRead ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
                             Read
                           </Badge>
@@ -132,7 +132,7 @@ export default function ContactMessagesPage() {
                             e.stopPropagation();
                             handleMarkAsRead(message.id);
                           }}
-                          disabled={message.read}
+                          disabled={message.isRead}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Mark as Read
