@@ -51,18 +51,21 @@ export default function ContactPage() {
 
   return (
     <MainLayout>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 py-16 mb-12">
+        <div className="container mx-auto px-4 text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">Contact Us</h1>
+          <p className="text-gray-300 text-lg max-w-2xl mx-auto"></p>
+        </div>
+      </div>
+      
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-bold mb-2">Contact Us</h1>
-            <p className="text-muted-foreground">Get in touch with our team for any questions or inquiries</p>
-          </div>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Contact Info */}
             <div className="col-span-1">
               <div className="bg-card rounded-lg p-6 shadow-sm">
-                <h3 className="text-xl font-semibold mb-6">Contact Information</h3>
+                <h3 className="text-xl font-semibold mb-6">Contact the IraTech</h3>
                 
                 <div className="space-y-6">
                   <div className="flex items-start">
@@ -70,25 +73,22 @@ export default function ContactPage() {
                     <div>
                       <h4 className="font-medium mb-1">Email</h4>
                       <p className="text-muted-foreground">support@iratech.com</p>
-                      <p className="text-muted-foreground">courses@iratech.com</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
                     <Phone className="h-5 w-5 mt-1 mr-3 text-primary" />
                     <div>
-                      <h4 className="font-medium mb-1">Phone</h4>
+                      <h4 className="font-medium mb-1">Call IraTech</h4>
                       <p className="text-muted-foreground">+91 9015090976</p>
-                      <p className="text-muted-foreground">Monday-Friday, 9am-6pm IST</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
                     <MapPin className="h-5 w-5 mt-1 mr-3 text-primary" />
                     <div>
-                      <h4 className="font-medium mb-1">Location</h4>
-                      <p className="text-muted-foreground">New Delhi, India</p>
-                      <p className="text-muted-foreground">110001</p>
+                      <h4 className="font-medium mb-1">Address</h4>
+                      <p className="text-muted-foreground">451, Bankner, Delhi - 110040</p>
                     </div>
                   </div>
                 </div>

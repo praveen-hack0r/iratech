@@ -45,11 +45,11 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-8">
             <Link href="/">
-              <a className="flex items-center">
+              <span className="flex items-center cursor-pointer">
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                   IraTech
                 </span>
-              </a>
+              </span>
             </Link>
 
             <nav className="hidden md:flex space-x-4">
