@@ -1,0 +1,48 @@
+ <section class="space">
+    <div class="container bg-light my-3">
+         <div class="center">
+            <br><h1 class="text-center">WebSuraksha provides services in the field of information security.</h1>
+         </div>
+        <h2>List of services provided by us:</h2>
+        <h3>Penetration testing</h3>
+        <p><strong>Our team will attempt to hack your system using the same techniques used by black-hat hackers and give you a detailed report of all the weaknesses they find.</strong></p>
+        <h5>What Is Pen Testing and Why Is It Important to Perform?</h5>
+        <p>Penetration testing is performed under controlled conditions, often by a reputable third party with substantial security experience. The goal of pen testing is to see what happens when testers act like attackers and use common compromise tools and tactics against your system.</p>
+        <p>Companies can conduct pen testing themselves, but it’s often worth partnering with firms that have dedicated expertise in this area.</p>
+        <p>This is beneficial for two reasons:</p>
+         <ol style="list-style-type: solid-circle;">
+                     <li>Experienced pen testing teams have the tools and technologies necessary to thoroughly assess your system rather than your team having to design the process from scratch.</li>
+                     <li>Third-party experts will attack your network in ways internal teams won’t expect. Familiarity with existing frameworks often predisposes internal teams to assume security in specific areas rather than conducting in-depth analysis. External pen testers have no such bias.</li>
+         </ol>
+        <p>Our team will do Pentesting manually. It will provide more and more vulnerabilities which makes your system more and more secure.</p>
+        <h3>Training</h3>
+        <h4>We provide training on following topics:</h4>
+         <ol style="list-style-type: circle;">
+                     <li>Bug-bounty</li>
+                     <li>Social Engineering attacks with defensive techniques</li>
+                     <li>Network hacking with defensive techniques</li>
+                     <li>Dark web, anonymity, privacy & security</li>
+                    <li>Digital forensic</li>
+                     <li>Website Creation</li>
+                     <li>Android App development</li>
+                     <li>Python programming from scratch.</li>
+                </ol>
+        <p>Our training is completely practical based with understanding deeply concepts of theory part.</p>
+        <p>We also provide certificate on completion of training and you can apply for jobs in MNC's </p>
+        <h3>Consulting</h3>
+        <p>Our team is made up of experienced ethical hackers who worked with MNC's and governments as consultants and as ethical hackers.</p>
+        <h4>Available Consultants</h4>
+        <div class="d-flex">
+            <div class="p-2 w-50">
+                <img src=' {% static "extra-images/praveen.jpeg" %}' class="card-img-top" alt="...">
+            <h5>Praveen khatri (Ethical Hacker)</h5>
+            </div>
+            <div class="p-2 w-50">
+                <img src=' {% static "extra-images/ravi1.jpg" %}' class="card-img-top" alt="...">
+                <h5>Ravi khatri (Ethical Hacker)</h5>
+            </div>
+        </div>
+        <h4>Private & Confidential</h4>
+        <p>We take your privacy seriously so you can discuss all your cyber security needs and get expert advice in confidence.</p>
+    </div>
+    </space>

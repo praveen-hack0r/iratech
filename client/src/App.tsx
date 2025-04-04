@@ -26,6 +26,7 @@ import DevVerificationPage from "@/pages/dev-verification-page";
 import PrivacyPolicyPage from "@/pages/privacy-policy-page";
 import TermsPage from "@/pages/terms-page";
 import ContactPage from "@/pages/contact-page";
+import ServicesPage from "@/pages/services-page";
 
 function Router() {
   return (
@@ -39,6 +40,7 @@ function Router() {
       <Route path="/privacy-policy" component={PrivacyPolicyPage} />
       <Route path="/terms" component={TermsPage} />
       <Route path="/contact" component={ContactPage} />
+      <Route path="/services" component={ServicesPage} />
       <ProtectedRoute path="/my-learning" component={MyLearningPage} />
       <ProtectedRoute path="/checkout/:courseId" component={CheckoutPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />

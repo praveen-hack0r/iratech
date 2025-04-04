@@ -20,6 +20,7 @@ import {
   Shield,
   Sun,
   User,
+  Wrench,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -62,6 +63,13 @@ export function MainLayout({ children }: MainLayoutProps) {
                 icon={<Book size={16} />}
               >
                 Courses
+              </NavLink>
+              <NavLink
+                href="/services"
+                active={location === "/services"}
+                icon={<Wrench size={16} />}
+              >
+                Services
               </NavLink>
               {user && (
                 <NavLink
@@ -144,6 +152,11 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <Link href="/privacy-policy">
                   <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
                     Privacy
+                  </span>
+                </Link>
+                <Link href="/services">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
+                    Services
                   </span>
                 </Link>
                 <Link href="/contact">
