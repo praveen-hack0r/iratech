@@ -146,6 +146,7 @@ export default function AdminUpload() {
       const response = await fetch("/api/admin/upload-video", {
         method: "POST",
         body: formData,
+        credentials: "include", // Include credentials to send cookies for authentication
         // Don't set Content-Type header as FormData will set it with boundary
       });
 
@@ -208,6 +209,7 @@ export default function AdminUpload() {
       const response = await fetch("/api/admin/upload-resource", {
         method: "POST",
         body: formData,
+        credentials: "include", // Include credentials to send cookies for authentication
         // Don't set Content-Type header as FormData will set it with boundary
       });
 
