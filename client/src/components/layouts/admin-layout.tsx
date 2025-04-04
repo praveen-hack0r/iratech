@@ -165,8 +165,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       
       {/* Mobile nav */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-10">
-        <div className="grid grid-cols-5 gap-1 p-1">
-          {navItems.slice(0, 5).map((item) => (
+        <div className="grid grid-cols-7 gap-1 p-1">
+          {navItems.map((item) => (
             <Button
               key={item.href}
               variant={location === item.href ? "secondary" : "ghost"}
