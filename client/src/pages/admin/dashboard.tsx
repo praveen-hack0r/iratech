@@ -9,7 +9,8 @@ import {
   Clock,
   TrendingUp,
   CheckCircle,
-  ArrowRight
+  ArrowRight,
+  MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +34,7 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AdminLayout } from "./components/admin-layout";
+import { AdminLayout } from "@/components/layouts/admin-layout";
 
 // Dashboard data type
 interface DashboardData {
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
         
         <TabsContent value="overview">
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -175,6 +176,26 @@ export default function AdminDashboard() {
                   <div className="text-2xl font-bold">{dashboardData?.totalEnrollments || 0}</div>
                 )}
               </CardContent>
+            </Card>
+            
+            {/* Contact Messages Card with prominent styling */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-blue-700">
+                  Contact Messages
+                </CardTitle>
+                <MessageSquare className="h-4 w-4 text-blue-700" />
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="text-xl font-bold text-blue-700">View Messages</div>
+              </CardContent>
+              <CardFooter className="pt-0">
+                <Button variant="default" className="w-full bg-blue-600 hover:bg-blue-700" asChild>
+                  <Link href="/admin/contact-messages">
+                    View All Messages
+                  </Link>
+                </Button>
+              </CardFooter>
             </Card>
           </div>
           
@@ -267,10 +288,8 @@ export default function AdminDashboard() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Link href={`/admin/courses/${enrollment.course?.id}/edit`}>
-                            <a className="text-primary hover:underline">
-                              {enrollment.course?.title}
-                            </a>
+                          <Link href={`/admin/courses/${enrollment.course?.id}/edit`} className="text-primary hover:underline">
+                            {enrollment.course?.title}
                           </Link>
                         </TableCell>
                         <TableCell>
