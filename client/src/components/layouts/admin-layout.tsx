@@ -106,24 +106,23 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex-1 overflow-y-auto">
           <nav className="p-4 space-y-2">
             {navItems.map((item) => (
-              <Button
-                key={item.href}
-                variant={location === item.href ? "secondary" : "ghost"}
-                asChild
-                className="w-full justify-start h-11 mb-1"
+              <Link 
+                key={item.href} 
+                href={item.href} 
+                className={`flex items-center px-3 py-2 rounded-md mb-1 ${
+                  location === item.href 
+                    ? "bg-primary/10 text-primary font-medium" 
+                    : "text-gray-700 hover:bg-gray-100"
+                }`}
               >
-                <Link href={item.href}>
-                  <div className="flex items-center w-full">
-                    {item.icon}
-                    <span className="ml-3 truncate">{item.label}</span>
-                    {item.badge && (
-                      <span className="ml-auto bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5">
-                        New
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              </Button>
+                <span className="flex-shrink-0">{item.icon}</span>
+                <span className="ml-3 truncate">{item.label}</span>
+                {item.badge && (
+                  <span className="ml-auto bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5">
+                    New
+                  </span>
+                )}
+              </Link>
             ))}
           </nav>
         </div>
@@ -167,21 +166,21 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-10">
         <div className="grid grid-cols-7 gap-1 p-1">
           {navItems.map((item) => (
-            <Button
+            <Link
               key={item.href}
-              variant={location === item.href ? "secondary" : "ghost"}
-              asChild
-              className="flex flex-col items-center justify-center py-2 px-1 h-auto relative"
-              size="sm"
+              href={item.href}
+              className={`flex flex-col items-center justify-center py-2 px-1 relative text-sm ${
+                location === item.href
+                  ? "text-primary font-medium"
+                  : "text-gray-700"
+              }`}
             >
-              <Link href={item.href}>
-                {item.icon}
-                <span className="text-xs mt-1 text-center">{item.label.match(/Contact/) ? "Contact" : item.label.split(' ')[0]}</span>
-                {item.badge && (
-                  <span className="absolute top-1 right-1 bg-primary w-2 h-2 rounded-full" />
-                )}
-              </Link>
-            </Button>
+              {item.icon}
+              <span className="text-xs mt-1 text-center">{item.label.match(/Contact/) ? "Contact" : item.label.split(' ')[0]}</span>
+              {item.badge && (
+                <span className="absolute top-0 right-0 bg-primary w-2 h-2 rounded-full" />
+              )}
+            </Link>
           ))}
         </div>
       </div>
