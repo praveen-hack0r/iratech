@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   DropdownMenu,
@@ -16,12 +16,14 @@ import {
   Clipboard,
   Home,
   LogOut,
+  Menu,
   Moon,
   Shield,
   Sun,
   User,
   Wrench,
   Phone,
+  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -31,6 +33,12 @@ import {
   FaLinkedin, 
   FaYoutubeSquare 
 } from "react-icons/fa";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -40,12 +48,13 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { user, logoutMutation } = useAuth();
   const { theme, setTheme } = useTheme();
   const [location] = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="border-b">
+      <header className="border-b sticky top-0 bg-background z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center space-x-8">
+          <div className="flex items-center space-x-4 sm:space-x-8">
             <Link href="/">
               <span className="flex items-center cursor-pointer">
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
@@ -54,7 +63,8 @@ export function MainLayout({ children }: MainLayoutProps) {
               </span>
             </Link>
 
-            <nav className="hidden md:flex space-x-4">
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex space-x-2 lg:space-x-4">
               <NavLink href="/" active={location === "/"} icon={<Home size={16} />}>
                 Home
               </NavLink>
@@ -100,12 +110,13 @@ export function MainLayout({ children }: MainLayoutProps) {
             </nav>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="hidden sm:flex"
             >
               {theme === "dark" ? (
                 <Sun className="h-5 w-5" />
@@ -114,17 +125,133 @@ export function MainLayout({ children }: MainLayoutProps) {
               )}
             </Button>
 
+            {/* User Menu or Login Button */}
             {user ? (
               <UserMenu user={user} onLogout={() => logoutMutation.mutate()} />
             ) : (
               <Link href="/auth">
-                <Button variant="default">Login</Button>
+                <Button variant="default" className="hidden sm:flex">Login</Button>
               </Link>
             )}
+
+            {/* Mobile Menu Button */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[80vw] sm:w-[350px] pt-12">
+                <div className="flex flex-col space-y-6">
+                  <nav className="flex flex-col space-y-4">
+                    <MobileNavLink href="/" active={location === "/"} icon={<Home size={16} />}>
+                      Home
+                    </MobileNavLink>
+                    <MobileNavLink 
+                      href="/courses" 
+                      active={location === "/courses"} 
+                      icon={<Book size={16} />}
+                    >
+                      Courses
+                    </MobileNavLink>
+                    <MobileNavLink 
+                      href="/services" 
+                      active={location === "/services"} 
+                      icon={<Wrench size={16} />}
+                    >
+                      Services
+                    </MobileNavLink>
+                    <MobileNavLink 
+                      href="/contact" 
+                      active={location === "/contact"} 
+                      icon={<Phone size={16} />}
+                    >
+                      Contact Us
+                    </MobileNavLink>
+                    {user && (
+                      <MobileNavLink 
+                        href="/my-learning" 
+                        active={location === "/my-learning"} 
+                        icon={<Clipboard size={16} />}
+                      >
+                        My Learning
+                      </MobileNavLink>
+                    )}
+                    {user && user.role === "admin" && (
+                      <MobileNavLink 
+                        href="/admin" 
+                        active={location.startsWith("/admin")} 
+                        icon={<Shield size={16} />}
+                      >
+                        Admin
+                      </MobileNavLink>
+                    )}
+                  </nav>
+                  
+                  <div className="flex items-center space-x-4">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                    >
+                      {theme === "dark" ? (
+                        <Sun className="h-5 w-5" />
+                      ) : (
+                        <Moon className="h-5 w-5" />
+                      )}
+                      <span className="ml-2">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+                    </Button>
+                  </div>
+                  
+                  {!user && (
+                    <Link href="/auth">
+                      <Button variant="default" className="w-full">Login</Button>
+                    </Link>
+                  )}
+                  
+                  {user && (
+                    <div className="flex flex-col space-y-4 border-t pt-4">
+                      <div className="flex items-center">
+                        <User className="h-5 w-5 mr-2 text-primary" />
+                        <span className="font-medium">
+                          {user.firstName
+                            ? `${user.firstName} ${user.lastName || ""}`
+                            : user.username}
+                        </span>
+                        {user.role === "admin" && (
+                          <Badge className="ml-2" variant="secondary">
+                            Admin
+                          </Badge>
+                        )}
+                      </div>
+                      <Link href="/profile">
+                        <Button variant="outline" className="w-full">Profile</Button>
+                      </Link>
+                      {user.role === "admin" && (
+                        <Link href="/admin">
+                          <Button variant="outline" className="w-full">Admin Dashboard</Button>
+                        </Link>
+                      )}
+                      <Button 
+                        variant="destructive" 
+                        className="w-full"
+                        onClick={() => logoutMutation.mutate()}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </header>
+      
       <main className="flex-grow">{children}</main>
+      
       <footer className="border-t py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
@@ -151,24 +278,24 @@ export function MainLayout({ children }: MainLayoutProps) {
                 </a>
               </div>
               {/* Footer Links */}
-              <div className="flex space-x-6">
+              <div className="flex flex-wrap justify-center md:justify-end gap-4 sm:gap-6">
                 <Link href="/terms">
-                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer text-sm">
                     Terms
                   </span>
                 </Link>
                 <Link href="/privacy-policy">
-                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer text-sm">
                     Privacy
                   </span>
                 </Link>
                 <Link href="/services">
-                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer text-sm">
                     Services
                   </span>
                 </Link>
                 <Link href="/contact">
-                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer text-sm">
                     Contact
                   </span>
                 </Link>
@@ -202,6 +329,25 @@ function NavLink({ href, active, icon, children }: NavLinkProps) {
         {children}
       </span>
     </Link>
+  );
+}
+
+function MobileNavLink({ href, active, icon, children }: NavLinkProps) {
+  return (
+    <SheetClose asChild>
+      <Link href={href}>
+        <span
+          className={`flex items-center px-4 py-3 rounded-md transition-colors cursor-pointer ${
+            active
+              ? "text-primary font-medium bg-primary/10"
+              : "text-gray-700 dark:text-gray-300 hover:bg-muted"
+          }`}
+        >
+          {icon && <span className="mr-3 text-primary">{icon}</span>}
+          <span className="text-base">{children}</span>
+        </span>
+      </Link>
+    </SheetClose>
   );
 }
 

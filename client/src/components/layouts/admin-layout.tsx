@@ -151,7 +151,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
       
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b z-10">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-950 border-b z-10">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="bg-primary/10 text-primary p-1 rounded">
@@ -160,29 +160,34 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <h1 className="text-lg font-bold">Admin Panel</h1>
           </div>
           
-          <Button variant="outline" size="sm">
-            <Link href="/">Exit Admin</Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button size="icon" variant="ghost" onClick={() => logoutMutation.mutate()}>
+              <LogOut className="h-5 w-5" />
+            </Button>
+            <Button variant="outline" size="sm">
+              <Link href="/">Exit Admin</Link>
+            </Button>
+          </div>
         </div>
       </div>
       
       {/* Mobile nav */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t z-10">
-        <div className="grid grid-cols-7 gap-1 p-1">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-950 border-t z-10">
+        <div className="flex overflow-x-auto p-1 gap-1 scrollbar-hide">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-2 px-1 relative text-sm ${
+              className={`flex flex-col items-center justify-center py-2 px-3 relative flex-shrink-0 ${
                 location === item.href
                   ? "text-primary font-medium"
                   : item.special
-                    ? "text-blue-600 font-medium bg-blue-50 rounded-md"
-                    : "text-gray-700"
+                    ? "text-blue-600 font-medium bg-blue-50 dark:bg-blue-950/30 rounded-md"
+                    : "text-gray-700 dark:text-gray-300"
               }`}
             >
               {item.icon}
-              <span className="text-xs mt-1 text-center">{item.label.match(/Contact/) ? "Contact" : item.label.split(' ')[0]}</span>
+              <span className="text-xs mt-1 whitespace-nowrap">{item.label.match(/Contact/) ? "Messages" : item.label}</span>
               {item.badge && (
                 <span className="absolute top-0 right-0 bg-primary w-2 h-2 rounded-full" />
               )}

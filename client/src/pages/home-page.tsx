@@ -142,30 +142,30 @@ export default function HomePage() {
       )}
       
       {/* Hero Section */}
-      <header className="pt-24 md:pt-32 pb-16 bg-background dark:bg-[#111111]">
+      <header className="pt-16 sm:pt-20 md:pt-32 pb-12 sm:pb-16 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="md:flex md:items-center md:justify-between">
-            <div className="md:w-1/2 mb-8 md:mb-0">
-              <h1 className="text-4xl font-bold text-foreground sm:text-5xl">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div className="w-full md:w-1/2 mb-8 md:mb-0 order-2 md:order-1">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground md:text-5xl leading-tight">
                 Master Tech Skills with Expert-Led Courses
               </h1>
-              <p className="mt-4 text-xl text-muted-foreground max-w-3xl">
+              <p className="mt-4 text-lg sm:text-xl text-muted-foreground max-w-3xl">
                 Learn hacking, coding, Excel with AI, and digital marketing from industry professionals.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                <Button asChild size="lg" className="bg-primary hover:bg-blue-600 text-white font-medium px-6 py-3 rounded-md text-center transition-colors">
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-blue-600 text-white font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-center transition-colors">
                   <Link href="/courses">
                     Explore Courses
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="bg-white hover:bg-gray-100 text-primary border border-primary font-medium px-6 py-3 rounded-md text-center transition-colors">
+                <Button asChild variant="outline" size="lg" className="w-full sm:w-auto bg-white hover:bg-gray-100 text-primary border border-primary font-medium px-4 sm:px-6 py-2.5 sm:py-3 rounded-md text-center transition-colors">
                   <Link href="/auth?tab=register">
                     Sign Up Free
                   </Link>
                 </Button>
               </div>
             </div>
-            <div className="md:w-1/2">
+            <div className="w-full md:w-1/2 order-1 md:order-2 mb-6 md:mb-0">
               <div className="rounded-lg shadow-xl w-full aspect-video overflow-hidden">
                 <div 
                   className="w-full h-full bg-cover bg-center"
@@ -179,15 +179,15 @@ export default function HomePage() {
       </header>
 
       {/* Categories Section */}
-      <section className="py-12 bg-background dark:bg-[#111111]">
+      <section className="py-8 sm:py-12 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center mb-12 text-foreground">Our Course Categories</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 sm:mb-12 text-foreground">Our Course Categories</h2>
           
           {categoriesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-card rounded-xl p-6 shadow-sm">
-                  <Skeleton className="w-14 h-14 rounded-lg mb-4" />
+                <div key={i} className="bg-card rounded-xl p-4 sm:p-6 shadow-sm">
+                  <Skeleton className="w-12 sm:w-14 h-12 sm:h-14 rounded-lg mb-4" />
                   <Skeleton className="h-6 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-full mb-2" />
@@ -201,7 +201,7 @@ export default function HomePage() {
               Failed to load categories. Please try again later.
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 md:gap-8">
               {categories?.map((category) => (
                 <CategoryCard key={category.id} category={category} />
               ))}
@@ -211,11 +211,11 @@ export default function HomePage() {
       </section>
 
       {/* Featured Courses Section */}
-      <section className="py-12 bg-secondary dark:bg-[#0a0a0a]">
+      <section className="py-8 sm:py-12 bg-secondary dark:bg-[#0a0a0a]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-foreground">Featured Courses</h2>
-            <Link href="/courses" className="text-primary hover:text-primary/90 font-medium flex items-center">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 sm:gap-0 mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Featured Courses</h2>
+            <Link href="/courses" className="text-primary hover:text-primary/90 font-medium flex items-center w-fit">
               View All
               <svg className="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -224,38 +224,38 @@ export default function HomePage() {
           </div>
           
           {coursesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {[...Array(3)].map((_, i) => (
                 <div key={i} className="bg-card rounded-lg overflow-hidden shadow-md">
-                  <Skeleton className="w-full h-48" />
-                  <div className="p-6">
+                  <Skeleton className="w-full h-40 sm:h-48" />
+                  <div className="p-4 sm:p-6">
                     <div className="flex items-center mb-2">
-                      <Skeleton className="h-5 w-20" />
+                      <Skeleton className="h-5 w-16 sm:w-20" />
                       <div className="flex items-center ml-auto">
-                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-12 sm:w-16" />
                       </div>
                     </div>
                     <Skeleton className="h-6 w-full mb-2" />
                     <Skeleton className="h-4 w-full mb-4" />
                     <Skeleton className="h-4 w-full mb-4" />
                     <div className="flex items-center justify-between">
-                      <Skeleton className="h-8 w-24" />
-                      <Skeleton className="h-10 w-28" />
+                      <Skeleton className="h-8 w-20 sm:w-24" />
+                      <Skeleton className="h-10 w-24 sm:w-28" />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : coursesError ? (
-            <div className="text-center text-destructive">
+            <div className="text-center text-destructive p-6">
               Failed to load courses. Please try again later.
             </div>
           ) : featuredCourses?.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
+            <div className="text-center text-muted-foreground py-8 sm:py-12">
               No featured courses available at the moment. Check back soon!
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {featuredCourses?.map((course) => (
                 <CourseCard key={course.id} course={course} />
               ))}
@@ -265,16 +265,16 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section className="py-12 bg-background dark:bg-[#111111]">
+      <section className="py-8 sm:py-12 bg-background dark:bg-[#111111]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-foreground">Why Choose IraTech</h2>
-            <p className="text-muted-foreground max-w-3xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-foreground">Why Choose IraTech</h2>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-3xl mx-auto">
               We provide high-quality, industry-relevant tech courses with features designed to enhance your learning experience.
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {features.map((feature, index) => (
               <FeatureCard
                 key={index}
@@ -290,19 +290,19 @@ export default function HomePage() {
       </section>
 
       {/* Call to Action */}
-      <section className="py-12 bg-primary dark:bg-[#000000] text-primary-foreground">
+      <section className="py-8 sm:py-12 bg-primary dark:bg-[#000000] text-primary-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Your Learning Journey?</h2>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Ready to Start Your Learning Journey?</h2>
+          <p className="text-base sm:text-xl mb-6 sm:mb-8 max-w-3xl mx-auto">
             Join thousands of students already learning with IraTech and take your skills to the next level.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 font-medium px-8 py-3 rounded-md transition-colors">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto bg-white text-primary hover:bg-white/90 font-medium px-6 sm:px-8 py-2.5 sm:py-3 rounded-md text-center transition-colors">
               <Link href="/auth?tab=register">
                 Get Started
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="bg-transparent text-white hover:bg-white/10 border border-white font-medium px-8 py-3 rounded-md transition-colors">
+            <Button asChild size="lg" variant="outline" className="w-full sm:w-auto bg-transparent text-white hover:bg-white/10 border border-white font-medium px-6 sm:px-8 py-2.5 sm:py-3 rounded-md text-center transition-colors">
               <Link href="/courses">
                 Browse Courses
               </Link>
