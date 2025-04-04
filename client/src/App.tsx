@@ -22,6 +22,7 @@ import AdminResources from "@/pages/admin/resources";
 import AdminUpload from "@/pages/admin/upload";
 import PendingEnrollmentsPage from "@/pages/admin/pending-enrollments";
 import ContactMessagesPage from "@/pages/admin/contact-messages";
+import AdminSettings from "@/pages/admin/settings";
 import VerificationSuccessPage from "@/pages/verification-success";
 import DevVerificationPage from "@/pages/dev-verification-page";
 import PrivacyPolicyPage from "@/pages/privacy-policy-page";
@@ -54,6 +55,7 @@ function Router() {
       <ProtectedRoute path="/admin/resources" component={AdminResources} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/upload" component={AdminUpload} allowedRoles={["admin"]} />
       <ProtectedRoute path="/admin/contact-messages" component={ContactMessagesPage} allowedRoles={["admin"]} />
+      <ProtectedRoute path="/admin/settings" component={AdminSettings} allowedRoles={["admin"]} />
       <Route component={NotFound} />
     </Switch>
   );
