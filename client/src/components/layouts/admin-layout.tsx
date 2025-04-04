@@ -67,14 +67,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       badge: true
     },
     { 
-      label: 'Contact Messages', 
-      icon: <MessageSquare className="h-5 w-5" />, 
-      href: '/admin/contact-messages' 
-    },
-    { 
       label: 'Users', 
       icon: <Users className="h-5 w-5" />, 
       href: '/admin/users' 
+    },
+    // Special styling for Contact Messages
+    { 
+      label: 'Contact Messages', 
+      icon: <MessageSquare className="h-5 w-5 text-blue-600" />, 
+      href: '/admin/contact-messages',
+      special: true 
     },
     { 
       label: 'Resources', 
@@ -112,7 +114,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 className={`flex items-center px-3 py-2 rounded-md mb-1 ${
                   location === item.href 
                     ? "bg-primary/10 text-primary font-medium" 
-                    : "text-gray-700 hover:bg-gray-100"
+                    : item.special 
+                      ? "text-blue-600 bg-blue-50 hover:bg-blue-100 font-medium border border-blue-200" 
+                      : "text-gray-700 hover:bg-gray-100"
                 }`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
@@ -172,7 +176,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               className={`flex flex-col items-center justify-center py-2 px-1 relative text-sm ${
                 location === item.href
                   ? "text-primary font-medium"
-                  : "text-gray-700"
+                  : item.special
+                    ? "text-blue-600 font-medium bg-blue-50 rounded-md"
+                    : "text-gray-700"
               }`}
             >
               {item.icon}
