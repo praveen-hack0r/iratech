@@ -203,6 +203,7 @@ export function setupAuth(app: Express) {
   app.get("/api/verify-email", async (req, res, next) => {
     try {
       console.log("Email verification request received");
+      console.log("Full URL:", req.protocol + '://' + req.get('host') + req.originalUrl);
       const { token } = req.query;
       
       console.log("Verification token:", token);

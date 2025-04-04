@@ -110,11 +110,10 @@ export async function sendVerificationEmail(
   
   // For Replit deployments, use the Replit domain
   if (!baseUrl) {
-    // Simplified way to get the Replit URL - use the current hostname
-    if (process.env.REPL_SLUG) {
-      // Use a simpler approach with just the replit.dev domain
-      baseUrl = "https://" + process.env.REPL_SLUG + ".replit.app";
-      console.log("Using Replit app URL:", baseUrl);
+    if (process.env.REPL_ID && process.env.REPL_OWNER) {
+      // Format: https://repl-id-00-owner.repl.co
+      baseUrl = `https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co`;
+      console.log("Using Replit deployment URL:", baseUrl);
     } else {
       baseUrl = "http://localhost:5000";
       console.log("Using localhost development URL:", baseUrl);
@@ -203,11 +202,10 @@ export async function sendPasswordResetEmail(
   
   // For Replit deployments, use the Replit domain
   if (!baseUrl) {
-    // Simplified way to get the Replit URL
-    if (process.env.REPL_SLUG) {
-      // Use a simpler approach with just the replit.dev domain
-      baseUrl = "https://" + process.env.REPL_SLUG + ".replit.app";
-      console.log("Using Replit app URL for password reset:", baseUrl);
+    if (process.env.REPL_ID && process.env.REPL_OWNER) {
+      // Format: https://repl-id-00-owner.repl.co
+      baseUrl = `https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co`;
+      console.log("Using Replit deployment URL for password reset:", baseUrl);
     } else {
       baseUrl = "http://localhost:5000";
       console.log("Using localhost development URL for password reset:", baseUrl);
