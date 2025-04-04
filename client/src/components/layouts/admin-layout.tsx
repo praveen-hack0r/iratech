@@ -67,14 +67,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       badge: true
     },
     { 
-      label: 'Users', 
-      icon: <Users className="h-5 w-5" />, 
-      href: '/admin/users' 
-    },
-    { 
       label: 'Contact Messages', 
       icon: <MessageSquare className="h-5 w-5" />, 
       href: '/admin/contact-messages' 
+    },
+    { 
+      label: 'Users', 
+      icon: <Users className="h-5 w-5" />, 
+      href: '/admin/users' 
     },
     { 
       label: 'Resources', 
@@ -104,7 +104,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           
           <Separator />
           
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
             {navItems.map((item) => (
               <Button
                 key={item.href}
@@ -176,7 +176,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Link href={item.href}>
                 {item.icon}
-                <span className="text-xs mt-1">{item.label.split(' ')[0]}</span>
+                <span className="text-xs mt-1 text-center">{item.label.match(/Contact/) ? "Contact" : item.label.split(' ')[0]}</span>
                 {item.badge && (
                   <span className="absolute top-1 right-1 bg-primary w-2 h-2 rounded-full" />
                 )}
