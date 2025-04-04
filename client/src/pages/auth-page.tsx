@@ -131,18 +131,28 @@ export default function AuthPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="login">Login</TabsTrigger>
-                    <TabsTrigger value="register">Register</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="login">
-                    <LoginForm />
-                  </TabsContent>
-                  <TabsContent value="register">
-                    <RegisterForm />
-                  </TabsContent>
-                </Tabs>
+                {authType === "reset" ? (
+                  <div className="mt-4">
+                    <h2 className="text-xl font-semibold mb-2">Reset Your Password</h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
+                      Enter your email address and we'll send you a link to reset your password.
+                    </p>
+                    <ResetPasswordForm />
+                  </div>
+                ) : (
+                  <Tabs value={authType} onValueChange={(value) => setAuthType(value as any)}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="login">Login</TabsTrigger>
+                      <TabsTrigger value="register">Register</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="login">
+                      <LoginForm />
+                    </TabsContent>
+                    <TabsContent value="register">
+                      <RegisterForm />
+                    </TabsContent>
+                  </Tabs>
+                )}
               </CardContent>
               <CardFooter className="flex justify-center">
                 {authType !== "reset" ? (

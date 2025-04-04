@@ -270,13 +270,30 @@ export class MemStorage implements IStorage {
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
     return Array.from(this.userStore.values()).find(
-      (user) => user.resetToken === token
+      (user) => user.resetToken === token && user.resetTokenExpiry !== null && new Date(user.resetTokenExpiry) > new Date()
     );
   }
 
   async createUser(user: InsertUser): Promise<User> {
     const id = this.userIdCounter++;
-    const newUser: User = { ...user, id };
+    
+    // Create a properly formatted User object with null values for optional fields
+    const newUser: User = {
+      id,
+      username: user.username,
+      password: user.password,
+      email: user.email,
+      firstName: user.firstName || null,
+      lastName: user.lastName || null,
+      phoneNumber: user.phoneNumber || null,
+      role: user.role || "user",
+      resetToken: user.resetToken || null,
+      resetTokenExpiry: user.resetTokenExpiry || null,
+      isVerified: user.isVerified || false,
+      verificationToken: user.verificationToken || null,
+      verificationExpiry: user.verificationExpiry || null
+    };
+    
     this.userStore.set(id, newUser);
     return newUser;
   }
@@ -288,18 +305,6 @@ export class MemStorage implements IStorage {
     const updatedUser = { ...user, ...userData };
     this.userStore.set(id, updatedUser);
     return updatedUser;
-  }
-
-  async updatePassword(id: number, hashedPassword: string): Promise<User> {
-    return this.updateUser(id, { password: hashedPassword });
-  }
-
-  async updateResetToken(id: number, token: string, expiry: Date): Promise<User> {
-    return this.updateUser(id, { resetToken: token, resetTokenExpiry: expiry });
-  }
-
-  async clearResetToken(id: number): Promise<User> {
-    return this.updateUser(id, { resetToken: undefined, resetTokenExpiry: undefined });
   }
 
 
@@ -328,6 +333,42 @@ export class MemStorage implements IStorage {
       verificationExpiry: null 
     });
   }
+  
+  // User password and reset token methods
+  
+  async updateResetToken(id: number, token: string, expiry: Date): Promise<User> {
+    return this.updateUser(id, {
+      resetToken: token,
+      resetTokenExpiry: expiry
+    });
+  }
+  
+  async clearResetToken(id: number): Promise<User> {
+    return this.updateUser(id, {
+      resetToken: null,
+      resetTokenExpiry: null
+    });
+  }
+  
+  async updatePassword(id: number, hashedPassword: string): Promise<User> {
+    return this.updateUser(id, {
+      password: hashedPassword
+    });
+  }
+  
+  // Compatibility methods that use the primary methods above
+  async setPasswordResetToken(userId: number, token: string, expiry: Date): Promise<void> {
+    await this.updateResetToken(userId, token, expiry);
+  }
+  
+  async updatePasswordAndClearResetToken(userId: number, hashedPassword: string): Promise<void> {
+    await this.updatePassword(userId, hashedPassword);
+    await this.clearResetToken(userId);
+  }
+  
+  async updateUserPassword(userId: number, hashedPassword: string): Promise<void> {
+    await this.updatePassword(userId, hashedPassword);
+  }
 
   // Category operations
   async getCategories(): Promise<Category[]> {
@@ -346,7 +387,19 @@ export class MemStorage implements IStorage {
 
   async createCategory(category: InsertCategory): Promise<Category> {
     const id = this.categoryIdCounter++;
-    const newCategory: Category = { ...category, id };
+    
+    // Create a properly formatted Category object with null values for optional fields
+    const newCategory: Category = {
+      id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description || null,
+      iconName: category.iconName || null,
+      iconColor: category.iconColor || null,
+      bgColor: category.bgColor || null,
+      textColor: category.textColor || null
+    };
+    
     this.categoryStore.set(id, newCategory);
     return newCategory;
   }
@@ -399,7 +452,23 @@ export class MemStorage implements IStorage {
 
   async createCourse(course: InsertCourse): Promise<Course> {
     const id = this.courseIdCounter++;
-    const newCourse: Course = { ...course, id };
+    
+    // Create course with proper null values and default resourceCount
+    const newCourse: Course = {
+      id,
+      title: course.title,
+      slug: course.slug,
+      price: course.price,
+      categoryId: course.categoryId,
+      description: course.description || null,
+      thumbnailUrl: course.thumbnailUrl || null,
+      salePrice: course.salePrice || null,
+      isFeatured: course.isFeatured || false,
+      isPublished: course.isPublished || false,
+      duration: course.duration || null,
+      resourceCount: 0 // Set initial resource count to 0
+    };
+    
     this.courseStore.set(id, newCourse);
     return newCourse;
   }
@@ -430,7 +499,16 @@ export class MemStorage implements IStorage {
 
   async createSection(section: InsertSection): Promise<Section> {
     const id = this.sectionIdCounter++;
-    const newSection: Section = { ...section, id };
+    
+    // Create a properly formatted Section object with null values for optional fields
+    const newSection: Section = {
+      id,
+      title: section.title,
+      courseId: section.courseId,
+      order: section.order,
+      description: section.description || null
+    };
+    
     this.sectionStore.set(id, newSection);
     return newSection;
   }
@@ -475,7 +553,19 @@ export class MemStorage implements IStorage {
 
   async createLesson(lesson: InsertLesson): Promise<Lesson> {
     const id = this.lessonIdCounter++;
-    const newLesson: Lesson = { ...lesson, id };
+    
+    // Create a properly formatted Lesson object with null values for optional fields
+    const newLesson: Lesson = {
+      id,
+      title: lesson.title,
+      sectionId: lesson.sectionId,
+      order: lesson.order,
+      description: lesson.description || null,
+      duration: lesson.duration || null,
+      videoUrl: lesson.videoUrl || null,
+      isPreview: lesson.isPreview || false
+    };
+    
     this.lessonStore.set(id, newLesson);
     return newLesson;
   }
@@ -514,13 +604,30 @@ export class MemStorage implements IStorage {
 
   async createResource(resource: InsertResource): Promise<Resource> {
     const id = this.resourceIdCounter++;
-    const newResource: Resource = { ...resource, id };
+    
+    // Create a properly formatted Resource object with null values for optional fields
+    const newResource: Resource = {
+      id,
+      title: resource.title,
+      courseId: resource.courseId,
+      fileUrl: resource.fileUrl,
+      description: resource.description || null,
+      lessonId: resource.lessonId || null,
+      fileType: resource.fileType || null,
+      fileSize: resource.fileSize || null
+    };
+    
     this.resourceStore.set(id, newResource);
     
     // Update resource count for the course
     const course = this.courseStore.get(resource.courseId);
     if (course) {
-      course.resourceCount = (course.resourceCount || 0) + 1;
+      // Ensure resourceCount is a number
+      if (course.resourceCount === null) {
+        course.resourceCount = 1;
+      } else {
+        course.resourceCount += 1;
+      }
       this.courseStore.set(course.id, course);
     }
     
@@ -541,8 +648,13 @@ export class MemStorage implements IStorage {
     if (resource) {
       // Update resource count for the course
       const course = this.courseStore.get(resource.courseId);
-      if (course && course.resourceCount > 0) {
-        course.resourceCount -= 1;
+      if (course) {
+        // Handle null resourceCount and ensure it doesn't go below 0
+        if (course.resourceCount === null) {
+          course.resourceCount = 0;
+        } else if (course.resourceCount > 0) {
+          course.resourceCount -= 1;
+        }
         this.courseStore.set(course.id, course);
       }
       
@@ -654,7 +766,17 @@ export class MemStorage implements IStorage {
 
   async createProgress(progress: InsertProgress): Promise<Progress> {
     const id = this.progressIdCounter++;
-    const newProgress: Progress = { ...progress, id, lastWatched: new Date() };
+    
+    // Create a properly formatted Progress object with null values for optional fields
+    const newProgress: Progress = {
+      id,
+      lessonId: progress.lessonId,
+      userId: progress.userId,
+      completed: progress.completed || false,
+      watchTimeSeconds: progress.watchTimeSeconds || 0,
+      lastWatched: new Date()
+    };
+    
     this.progressStore.set(id, newProgress);
     return newProgress;
   }
@@ -685,13 +807,20 @@ export class MemStorage implements IStorage {
 
   async createPayment(payment: InsertPayment): Promise<Payment> {
     const id = this.paymentIdCounter++;
+    
+    // Create a properly formatted Payment object with null values for optional fields
     const newPayment: Payment = { 
-      ...payment, 
-      id, 
-      createdAt: new Date(), 
+      id,
+      status: payment.status,
+      courseId: payment.courseId,
+      userId: payment.userId,
+      paymentMethod: payment.paymentMethod || "upi",
+      amount: payment.amount,
       currency: payment.currency || "inr",
-      paymentMethod: payment.paymentMethod || "upi"
+      transactionId: payment.transactionId || null,
+      createdAt: new Date()
     };
+    
     this.paymentStore.set(id, newPayment);
     return newPayment;
   }
@@ -769,13 +898,21 @@ export class MemStorage implements IStorage {
 
   async createForumTopic(topic: InsertForumTopic): Promise<ForumTopic> {
     const id = this.forumTopicIdCounter++;
+    
+    // Create a properly formatted ForumTopic object with null values for optional fields
     const newTopic: ForumTopic = { 
-      ...topic, 
-      id, 
+      id,
+      title: topic.title,
+      courseId: topic.courseId,
+      userId: topic.userId,
+      content: topic.content,
       createdAt: new Date(),
       updatedAt: new Date(),
-      isPinned: topic.isPinned || false
+      isPinned: topic.isPinned || false,
+      isLocked: topic.isLocked || false,
+      views: 0 // Initialize view count to 0
     };
+    
     this.forumTopicStore.set(id, newTopic);
     return newTopic;
   }
@@ -932,12 +1069,19 @@ export class MemStorage implements IStorage {
 
   async createForumComment(comment: InsertForumComment): Promise<ForumComment> {
     const id = this.forumCommentIdCounter++;
+    
+    // Create properly formatted ForumComment object with null values for optional fields
     const newComment: ForumComment = { 
-      ...comment, 
-      id, 
+      id,
+      userId: comment.userId,
+      topicId: comment.topicId,
+      content: comment.content,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      isInstructorResponse: comment.isInstructorResponse || false,
+      parentId: comment.parentId || null
     };
+    
     this.forumCommentStore.set(id, newComment);
     
     // Update the topic's updatedAt timestamp
@@ -999,15 +1143,29 @@ export class MemStorage implements IStorage {
 
   // Forum reaction operations
   async createForumReaction(reaction: InsertForumReaction): Promise<ForumReaction> {
-    // First, delete any existing reaction by this user to the same topic/comment
+    // First, convert nullable topicId/commentId to undefined for the deleteForumReaction method
+    const topicId = reaction.topicId !== null && reaction.topicId !== undefined ? reaction.topicId : undefined;
+    const commentId = reaction.commentId !== null && reaction.commentId !== undefined ? reaction.commentId : undefined;
+    
+    // Delete any existing reaction by this user to the same topic/comment
     await this.deleteForumReaction(
       reaction.userId, 
-      reaction.topicId, 
-      reaction.commentId
+      topicId,
+      commentId
     );
     
     const id = this.forumReactionIdCounter++;
-    const newReaction: ForumReaction = { ...reaction, id };
+    
+    // Create a properly formatted ForumReaction object with null values for optional fields
+    const newReaction: ForumReaction = {
+      id,
+      userId: reaction.userId,
+      createdAt: new Date(),
+      topicId: reaction.topicId || null,
+      commentId: reaction.commentId || null,
+      reactionType: reaction.reactionType || "like"
+    };
+    
     this.forumReactionStore.set(id, newReaction);
     return newReaction;
   }
