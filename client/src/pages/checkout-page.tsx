@@ -62,13 +62,13 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   
-  // Fetch course details - use the admin endpoint to retrieve by ID
+  // Fetch course details using our public endpoint
   const {
     data: course,
     isLoading: courseLoading,
     error: courseError
   } = useQuery<CourseWithCategory>({
-    queryKey: [`/api/admin/courses/${courseId}`],
+    queryKey: [`/api/courses/id/${courseId}`],
     enabled: !!courseId,
   });
   

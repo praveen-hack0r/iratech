@@ -288,6 +288,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add a new route to get course by ID for checkout page
+  app.get("/api/courses/id/:courseId", async (req, res) => {
+    try {
+      const courseId = parseInt(req.params.courseId);
+      if (isNaN(courseId)) {
+        return res.status(400).json({ message: "Invalid course ID" });
+      }
+      
+      const course = await storage.getCourse(courseId);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+      
+      const category = await storage.getCategory(course.categoryId);
+      const sections = await storage.getSectionsByCourse(course.id);
+      
+      console.log("Course found:", course.title);
+      console.log("Sections found:", sections.length);
+      
+      // For each section, get lessons
+      const sectionsWithLessons = await Promise.all(
+        sections.map(async (section) => {
+          const lessons = await storage.getLessonsBySection(section.id);
+          console.log(`Section ${section.title} has ${lessons.length} lessons`);
+          return { ...section, lessons };
+        })
+      );
+      
+      // Get resources for the course
+      const resources = await storage.getResourcesByCourse(course.id);
+      console.log("Resources found:", resources.length);
+      
+      // Check if user is enrolled
+      let isEnrolled = false;
+      let enrollment = null;
+      
+      if (req.isAuthenticated() && req.user) {
+        enrollment = await storage.getEnrollment(req.user.id, course.id);
+        isEnrolled = !!enrollment;
+        
+        // Admin also has full access
+        if (req.user.role === 'admin') {
+          isEnrolled = true;
+        }
+        
+        console.log("User enrolled:", isEnrolled);
+      }
+      
+      res.json({
+        ...course,
+        category,
+        sections: sectionsWithLessons,
+        resources,
+        isEnrolled,
+        enrollment
+      });
+    } catch (error) {
+      console.error("Error fetching course:", error);
+      res.status(500).json({ message: "Failed to fetch course" });
+    }
+  });
+
   // Video preview route - allows access to preview videos without authentication
   app.get("/api/preview-video/:lessonId", async (req, res) => {
     try {
