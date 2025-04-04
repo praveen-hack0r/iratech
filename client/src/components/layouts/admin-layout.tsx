@@ -91,31 +91,31 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-white hidden md:block">
-        <div className="h-full flex flex-col">
-          <div className="p-4">
-            <div className="flex items-center gap-2">
-              <div className="bg-primary/10 text-primary p-1 rounded">
-                <LayoutDashboard className="h-6 w-6" />
-              </div>
-              <h1 className="text-xl font-bold">Admin Panel</h1>
+      <aside className="w-64 border-r bg-white hidden md:flex md:flex-col">
+        <div className="p-4">
+          <div className="flex items-center gap-2">
+            <div className="bg-primary/10 text-primary p-1 rounded">
+              <LayoutDashboard className="h-6 w-6" />
             </div>
+            <h1 className="text-xl font-bold">Admin Panel</h1>
           </div>
-          
-          <Separator />
-          
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+        </div>
+        
+        <Separator />
+        
+        <div className="flex-1 overflow-y-auto">
+          <nav className="p-4 space-y-2">
             {navItems.map((item) => (
               <Button
                 key={item.href}
                 variant={location === item.href ? "secondary" : "ghost"}
                 asChild
-                className="w-full justify-start h-11"
+                className="w-full justify-start h-11 mb-1"
               >
                 <Link href={item.href}>
-                  <div className="flex items-center">
+                  <div className="flex items-center w-full">
                     {item.icon}
-                    <span className="ml-3">{item.label}</span>
+                    <span className="ml-3 truncate">{item.label}</span>
                     {item.badge && (
                       <span className="ml-auto bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5">
                         New
@@ -126,24 +126,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               </Button>
             ))}
           </nav>
-          
-          <div className="p-4 border-t">
-            <div className="flex items-center mb-4">
-              <div className="flex flex-col">
-                <span className="font-medium">{user?.firstName} {user?.lastName}</span>
-                <span className="text-xs text-gray-500">{user?.email}</span>
-              </div>
+        </div>
+        
+        <div className="p-4 border-t mt-auto">
+          <div className="flex items-center mb-4">
+            <div className="flex flex-col">
+              <span className="font-medium">{user?.firstName} {user?.lastName}</span>
+              <span className="text-xs text-gray-500">{user?.email}</span>
             </div>
-            
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
-              onClick={() => logoutMutation.mutate()}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
+          
+          <Button 
+            variant="outline" 
+            className="w-full justify-start" 
+            onClick={() => logoutMutation.mutate()}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
         </div>
       </aside>
       
