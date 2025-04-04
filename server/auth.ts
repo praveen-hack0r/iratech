@@ -252,50 +252,106 @@ export function setupAuth(app: Express) {
         }
       }
 
-      // Try to determine best redirect method
-      try {
-        console.log("Redirecting to verification success page");
-        // Redirect to the frontend verification success page
-        res.redirect('/verification-success');
-      } catch (redirectError) {
-        console.error("Redirect error:", redirectError);
-        
-        // Fallback: If redirect fails, show a simple success message
-        res.send(`
-          <html>
-            <head>
-              <title>Email Verified - IraTech</title>
-              <style>
-                body { font-family: Arial, sans-serif; text-align: center; padding: 40px; line-height: 1.6; }
-                .container { max-width: 600px; margin: 0 auto; }
-                h1 { color: #4F46E5; }
-                .success-icon { font-size: 48px; color: #10B981; margin-bottom: 20px; }
-                .message { margin-bottom: 30px; }
-                .button { 
-                  display: inline-block; 
-                  background-color: #4F46E5; 
-                  color: white; 
-                  padding: 12px 24px; 
-                  text-decoration: none; 
-                  border-radius: 4px; 
-                  font-weight: bold; 
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="success-icon">✓</div>
-                <h1>Email Successfully Verified!</h1>
-                <div class="message">
-                  <p>Your email has been successfully verified and your IraTech account is now fully activated.</p>
-                  <p>You now have complete access to all our premium learning resources.</p>
-                </div>
-                <a href="/" class="button">Go to Homepage</a>
-              </div>
-            </body>
-          </html>
-        `);
-      }
+      // Directly show success message rather than redirecting
+      console.log("Showing verification success page");
+      
+      // Send a complete HTML response with inline styles
+      res.send(`
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Email Verified - IraTech</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              text-align: center; 
+              padding: 40px; 
+              line-height: 1.6; 
+              background-color: #f9fafb;
+              color: #111827;
+            }
+            .container { 
+              max-width: 600px; 
+              margin: 0 auto; 
+              background-color: white;
+              padding: 30px;
+              border-radius: 8px;
+              box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+            h1 { 
+              color: #4F46E5; 
+              margin-bottom: 20px;
+            }
+            .success-icon { 
+              font-size: 64px; 
+              color: #10B981; 
+              margin-bottom: 20px; 
+            }
+            .message { 
+              margin-bottom: 30px; 
+            }
+            .button { 
+              display: inline-block; 
+              background-color: #4F46E5; 
+              color: white; 
+              padding: 12px 24px; 
+              text-decoration: none; 
+              border-radius: 4px; 
+              font-weight: bold;
+              margin: 10px;
+              transition: background-color 0.3s ease;
+            }
+            .button:hover {
+              background-color: #4338ca;
+            }
+            .secondary-button {
+              display: inline-block; 
+              background-color: #e5e7eb;
+              color: #374151; 
+              padding: 12px 24px; 
+              text-decoration: none; 
+              border-radius: 4px; 
+              font-weight: bold;
+              margin: 10px;
+              transition: background-color 0.3s ease;
+            }
+            .secondary-button:hover {
+              background-color: #d1d5db;
+            }
+            .actions {
+              margin-top: 20px;
+            }
+            .highlight {
+              color: #4F46E5;
+              font-weight: bold;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="success-icon">✓</div>
+            <h1>Email Successfully Verified!</h1>
+            <div class="message">
+              <p>Thank you for verifying your email address. Your IraTech account is now fully activated!</p>
+              <p>You now have access to all our premium learning resources, including:</p>
+              <p>
+                <span class="highlight">Hacking tutorials</span> • 
+                <span class="highlight">Coding courses</span> • 
+                <span class="highlight">Excel with AI</span> • 
+                <span class="highlight">Digital Marketing</span>
+              </p>
+              <p>Start your learning journey today and unlock your full potential!</p>
+            </div>
+            <div class="actions">
+              <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/" class="button">Go to Homepage</a>
+              <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/courses" class="secondary-button">Browse Courses</a>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
     } catch (error) {
       console.error("Error during email verification:", error);
       next(error);
