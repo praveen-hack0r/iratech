@@ -137,19 +137,19 @@ export function MainLayout({ children }: MainLayoutProps) {
               {/* Footer Links */}
               <div className="flex space-x-6">
                 <Link href="/terms">
-                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
                     Terms
-                  </a>
+                  </span>
                 </Link>
                 <Link href="/privacy-policy">
-                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
                     Privacy
-                  </a>
+                  </span>
                 </Link>
                 <Link href="/contact">
-                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  <span className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary cursor-pointer">
                     Contact
-                  </a>
+                  </span>
                 </Link>
               </div>
             </div>
@@ -170,8 +170,8 @@ interface NavLinkProps {
 function NavLink({ href, active, icon, children }: NavLinkProps) {
   return (
     <Link href={href}>
-      <a
-        className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+      <span
+        className={`flex items-center px-3 py-2 rounded-md transition-colors cursor-pointer ${
           active
             ? "text-primary font-medium"
             : "text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary"
@@ -179,7 +179,7 @@ function NavLink({ href, active, icon, children }: NavLinkProps) {
       >
         {icon && <span className="mr-2">{icon}</span>}
         {children}
-      </a>
+      </span>
     </Link>
   );
 }
@@ -216,24 +216,24 @@ function UserMenu({ user, onLogout }: UserMenuProps) {
       <DropdownMenuContent align="end">
         <DropdownMenuItem asChild>
           <Link href="/profile">
-            <a className="w-full cursor-pointer">Profile</a>
+            <span className="w-full cursor-pointer">Profile</span>
           </Link>
         </DropdownMenuItem>
         {user.role === "admin" && (
           <>
             <DropdownMenuItem asChild>
               <Link href="/admin">
-                <a className="w-full cursor-pointer">Admin Dashboard</a>
+                <span className="w-full cursor-pointer">Admin Dashboard</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/admin/pending-enrollments">
-                <a className="w-full cursor-pointer">
+                <span className="w-full cursor-pointer">
                   Pending Enrollments
                   <Badge variant="secondary" className="ml-2">
                     New
                   </Badge>
-                </a>
+                </span>
               </Link>
             </DropdownMenuItem>
           </>
