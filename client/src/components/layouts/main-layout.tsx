@@ -22,6 +22,13 @@ import {
   User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  FaFacebookSquare, 
+  FaInstagram, 
+  FaTwitterSquare, 
+  FaLinkedin, 
+  FaYoutubeSquare 
+} from "react-icons/fa";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -108,16 +115,37 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               © {new Date().getFullYear()} TechLearn. All rights reserved.
             </div>
-            <div className="flex space-x-6 mt-4 md:mt-0">
-              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                Terms
-              </a>
-              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                Privacy
-              </a>
-              <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                Contact
-              </a>
+            <div className="flex flex-col items-center md:items-end space-y-4 mt-4 md:mt-0">
+              {/* Social Media Icons */}
+              <div className="flex space-x-4">
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" aria-label="Facebook">
+                  <FaFacebookSquare size={24} />
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" aria-label="Instagram">
+                  <FaInstagram size={24} />
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" aria-label="Twitter">
+                  <FaTwitterSquare size={24} />
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" aria-label="LinkedIn">
+                  <FaLinkedin size={24} />
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary" aria-label="YouTube">
+                  <FaYoutubeSquare size={24} />
+                </a>
+              </div>
+              {/* Footer Links */}
+              <div className="flex space-x-6">
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  Terms
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  Privacy
+                </a>
+                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                  Contact
+                </a>
+              </div>
             </div>
           </div>
         </div>
