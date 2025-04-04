@@ -116,12 +116,12 @@ export function MainLayout({ children }: MainLayoutProps) {
               size="icon"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
               title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-              className="hidden sm:flex"
+              className="flex"
             >
               {theme === "dark" ? (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-5 w-5 text-yellow-500" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-5 w-5 text-blue-600" />
               )}
             </Button>
 
@@ -188,20 +188,28 @@ export function MainLayout({ children }: MainLayoutProps) {
                     )}
                   </nav>
                   
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                    >
-                      {theme === "dark" ? (
-                        <Sun className="h-5 w-5" />
-                      ) : (
-                        <Moon className="h-5 w-5" />
-                      )}
-                      <span className="ml-2">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
-                    </Button>
+                  <div className="flex flex-col space-y-2 border-t pt-4 mt-2">
+                    <p className="text-sm font-medium text-muted-foreground">Appearance</p>
+                    <div className="flex items-center justify-between bg-secondary/50 rounded-lg p-3">
+                      <div className="flex items-center">
+                        {theme === "dark" ? (
+                          <Sun className="h-5 w-5 mr-2 text-yellow-500" />
+                        ) : (
+                          <Moon className="h-5 w-5 mr-2 text-blue-600" />
+                        )}
+                        <span className="font-medium">
+                          {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                        className="h-8 rounded-full"
+                      >
+                        Switch
+                      </Button>
+                    </div>
                   </div>
                   
                   {!user && (

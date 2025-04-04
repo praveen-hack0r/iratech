@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { 
@@ -12,7 +13,9 @@ import {
   LogOut,
   ClipboardList,
   AlertTriangle,
-  MessageSquare
+  MessageSquare,
+  Moon,
+  Sun
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -21,6 +24,7 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const { user, logoutMutation } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [location] = useLocation();
   
   // Check if the user has admin privileges
@@ -91,19 +95,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   ];
   
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-white hidden md:flex md:flex-col">
+      <aside className="w-56 lg:w-64 border-r border-border bg-background hidden md:flex md:flex-col">
         <div className="p-4">
           <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary p-1 rounded">
-              <LayoutDashboard className="h-6 w-6" />
+            <div className="bg-primary/10 text-primary p-1.5 rounded">
+              <LayoutDashboard className="h-5 w-5 lg:h-6 lg:w-6" />
             </div>
-            <h1 className="text-xl font-bold">Admin Panel</h1>
+            <h1 className="text-lg lg:text-xl font-bold">Admin Panel</h1>
           </div>
         </div>
         
-        <Separator />
+        <Separator className="bg-border" />
         
         <div className="flex-1 overflow-y-auto">
           <nav className="p-4 space-y-2">
@@ -115,14 +119,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   location === item.href 
                     ? "bg-primary/10 text-primary font-medium" 
                     : item.special 
-                      ? "text-blue-600 bg-blue-50 hover:bg-blue-100 font-medium border border-blue-200" 
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium border border-blue-200 dark:border-blue-800" 
+                      : "text-gray-700 dark:text-gray-300 hover:bg-muted"
                 }`}
               >
                 <span className="flex-shrink-0">{item.icon}</span>
-                <span className="ml-3 truncate">{item.label}</span>
+                <span className="ml-3 truncate text-sm lg:text-base">{item.label}</span>
                 {item.badge && (
-                  <span className="ml-auto bg-primary/10 text-primary text-xs rounded-full px-2 py-0.5">
+                  <span className="ml-auto bg-primary/10 text-primary text-[10px] lg:text-xs rounded-full px-2 py-0.5">
                     New
                   </span>
                 )}
@@ -131,22 +135,63 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </nav>
         </div>
         
-        <div className="p-4 border-t mt-auto">
-          <div className="flex items-center mb-4">
-            <div className="flex flex-col">
-              <span className="font-medium">{user?.firstName} {user?.lastName}</span>
-              <span className="text-xs text-gray-500">{user?.email}</span>
+        <div className="p-4 border-t border-border mt-auto">
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                <User className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium text-sm">{user?.firstName} {user?.lastName}</span>
+                <span className="text-xs text-muted-foreground truncate max-w-[140px]">{user?.email}</span>
+              </div>
+            </div>
+            
+            {/* Theme toggle for desktop */}
+            <div className="flex items-center justify-between bg-secondary/50 rounded-lg p-2.5">
+              <div className="flex items-center">
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 mr-2 text-yellow-500" />
+                ) : (
+                  <Moon className="h-4 w-4 mr-2 text-blue-600" />
+                )}
+                <span className="text-sm font-medium">
+                  {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="h-7 rounded-full"
+              >
+                Switch
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="w-full justify-center" 
+              >
+                <Link href="/profile" className="flex items-center">
+                  <User className="h-3.5 w-3.5 mr-1.5" />
+                  Profile
+                </Link>
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-center text-destructive hover:text-destructive" 
+                onClick={() => logoutMutation.mutate()}
+              >
+                <LogOut className="h-3.5 w-3.5 mr-1.5" />
+                Sign Out
+              </Button>
             </div>
           </div>
-          
-          <Button 
-            variant="outline" 
-            className="w-full justify-start" 
-            onClick={() => logoutMutation.mutate()}
-          >
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
         </div>
       </aside>
       
@@ -161,6 +206,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           </div>
           
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="flex"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5 text-yellow-500" />
+              ) : (
+                <Moon className="h-5 w-5 text-blue-600" />
+              )}
+            </Button>
             <Button size="icon" variant="ghost" onClick={() => logoutMutation.mutate()}>
               <LogOut className="h-5 w-5" />
             </Button>
