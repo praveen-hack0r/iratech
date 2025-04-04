@@ -69,10 +69,10 @@ export default function ContactPage() {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 py-16 mb-12 border-b">
+      <div className="relative bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-purple-950/40 py-16 mb-12 border-b border-gray-100 dark:border-gray-800">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Contact Us</h1>
-          <p className="text-primary text-xl max-w-2xl mx-auto font-medium">We're here to help you</p>
+          <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Contact Us</h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-medium">We're here to help you</p>
         </div>
       </div>
       
@@ -81,37 +81,37 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Contact Info */}
             <div className="col-span-1">
-              <div className="bg-card rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-900">
-                <h3 className="text-xl font-semibold mb-6 text-primary">Contact the IraTech</h3>
+              <div className="bg-white dark:bg-gray-800/50 rounded-xl p-8 shadow-md backdrop-blur-sm border border-gray-100 dark:border-gray-700 h-full">
+                <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Contact IraTech</h3>
                 
-                <div className="space-y-6">
+                <div className="space-y-7">
                   <div className="flex items-start">
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-full mr-4">
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium mb-1">Email</h4>
-                      <p className="text-muted-foreground">support@iratech.com</p>
+                      <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-200">Email</h4>
+                      <p className="text-gray-600 dark:text-gray-400">support@iratech.com</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                    <div className="bg-purple-50 dark:bg-purple-900/30 p-3 rounded-full mr-4">
                       <Phone className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium mb-1">Call IraTech</h4>
-                      <p className="text-muted-foreground">+91 9015090976</p>
+                      <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-200">Call IraTech</h4>
+                      <p className="text-gray-600 dark:text-gray-400">+91 9015090976</p>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded-full mr-4">
                       <MapPin className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h4 className="font-medium mb-1">Address</h4>
-                      <p className="text-muted-foreground">451, Bankner, Delhi - 110040</p>
+                      <h4 className="font-medium mb-1 text-gray-800 dark:text-gray-200">Address</h4>
+                      <p className="text-gray-600 dark:text-gray-400">451, Bankner, Delhi - 110040</p>
                     </div>
                   </div>
                 </div>
@@ -120,13 +120,13 @@ export default function ContactPage() {
             
             {/* Contact Form */}
             <div className="col-span-1 md:col-span-2">
-              <div className="bg-card rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-900">
-                <h3 className="text-xl font-semibold mb-6 text-primary">Send us a Message</h3>
+              <div className="bg-white dark:bg-gray-800/50 rounded-xl p-8 shadow-md backdrop-blur-sm border border-gray-100 dark:border-gray-700">
+                <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">Send us a Message</h3>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label htmlFor="name" className="text-sm font-medium">
+                      <label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Your Name
                       </label>
                       <Input
@@ -136,11 +136,12 @@ export default function ContactPage() {
                         required
                         value={formData.name}
                         onChange={handleChange}
+                        className="bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-primary"
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <label htmlFor="email" className="text-sm font-medium">
+                      <label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         Your Email
                       </label>
                       <Input
@@ -151,12 +152,13 @@ export default function ContactPage() {
                         required
                         value={formData.email}
                         onChange={handleChange}
+                        className="bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-primary"
                       />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="subject" className="text-sm font-medium">
+                    <label htmlFor="subject" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Subject
                     </label>
                     <Input
@@ -166,11 +168,12 @@ export default function ContactPage() {
                       required
                       value={formData.subject}
                       onChange={handleChange}
+                      className="bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-primary"
                     />
                   </div>
                   
                   <div className="space-y-2">
-                    <label htmlFor="message" className="text-sm font-medium">
+                    <label htmlFor="message" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Message
                     </label>
                     <Textarea
@@ -181,12 +184,13 @@ export default function ContactPage() {
                       required
                       value={formData.message}
                       onChange={handleChange}
+                      className="bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 focus:border-primary resize-none"
                     />
                   </div>
                   
                   <Button 
                     type="submit" 
-                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600 text-white font-medium px-6 py-2 rounded-full transition-all duration-200" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (

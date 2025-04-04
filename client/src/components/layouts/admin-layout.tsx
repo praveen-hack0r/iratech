@@ -15,7 +15,8 @@ import {
   AlertTriangle,
   MessageSquare,
   Moon,
-  Sun
+  Sun,
+  User
 } from "lucide-react";
 
 interface AdminLayoutProps {
