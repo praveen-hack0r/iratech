@@ -52,10 +52,10 @@ export default function ContactPage() {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-gray-900 to-gray-800 py-16 mb-12">
+      <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 py-16 mb-12 border-b">
         <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl font-bold text-white mb-4">Contact Us</h1>
-          <p className="text-gray-300 text-lg max-w-2xl mx-auto"></p>
+          <h1 className="text-4xl font-bold text-gray-800 mb-4">Contact Us</h1>
+          <p className="text-primary text-xl max-w-2xl mx-auto font-medium">We're here to help you</p>
         </div>
       </div>
       
@@ -64,12 +64,14 @@ export default function ContactPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Contact Info */}
             <div className="col-span-1">
-              <div className="bg-card rounded-lg p-6 shadow-sm">
-                <h3 className="text-xl font-semibold mb-6">Contact the IraTech</h3>
+              <div className="bg-card rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-900">
+                <h3 className="text-xl font-semibold mb-6 text-primary">Contact the IraTech</h3>
                 
                 <div className="space-y-6">
                   <div className="flex items-start">
-                    <Mail className="h-5 w-5 mt-1 mr-3 text-primary" />
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                      <Mail className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
                       <h4 className="font-medium mb-1">Email</h4>
                       <p className="text-muted-foreground">support@iratech.com</p>
@@ -77,7 +79,9 @@ export default function ContactPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <Phone className="h-5 w-5 mt-1 mr-3 text-primary" />
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                      <Phone className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
                       <h4 className="font-medium mb-1">Call IraTech</h4>
                       <p className="text-muted-foreground">+91 9015090976</p>
@@ -85,7 +89,9 @@ export default function ContactPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <MapPin className="h-5 w-5 mt-1 mr-3 text-primary" />
+                    <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-full mr-4">
+                      <MapPin className="h-5 w-5 text-primary" />
+                    </div>
                     <div>
                       <h4 className="font-medium mb-1">Address</h4>
                       <p className="text-muted-foreground">451, Bankner, Delhi - 110040</p>
@@ -97,8 +103,8 @@ export default function ContactPage() {
             
             {/* Contact Form */}
             <div className="col-span-1 md:col-span-2">
-              <div className="bg-card rounded-lg p-6 shadow-sm">
-                <h3 className="text-xl font-semibold mb-6">Send us a Message</h3>
+              <div className="bg-card rounded-lg p-6 shadow-sm border border-blue-100 dark:border-blue-900">
+                <h3 className="text-xl font-semibold mb-6 text-primary">Send us a Message</h3>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -163,7 +169,7 @@ export default function ContactPage() {
                   
                   <Button 
                     type="submit" 
-                    className="w-full sm:w-auto" 
+                    className="w-full sm:w-auto bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90" 
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
