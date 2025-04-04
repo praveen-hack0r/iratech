@@ -136,15 +136,21 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
               {/* Footer Links */}
               <div className="flex space-x-6">
-                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                  Terms
-                </a>
-                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                  Privacy
-                </a>
-                <a href="#" className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
-                  Contact
-                </a>
+                <Link href="/terms">
+                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                    Terms
+                  </a>
+                </Link>
+                <Link href="/privacy-policy">
+                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                    Privacy
+                  </a>
+                </Link>
+                <Link href="/contact">
+                  <a className="text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary">
+                    Contact
+                  </a>
+                </Link>
               </div>
             </div>
           </div>

@@ -23,6 +23,9 @@ import AdminUpload from "@/pages/admin/upload";
 import PendingEnrollmentsPage from "@/pages/admin/pending-enrollments";
 import VerificationSuccessPage from "@/pages/verification-success";
 import DevVerificationPage from "@/pages/dev-verification-page";
+import PrivacyPolicyPage from "@/pages/privacy-policy-page";
+import TermsPage from "@/pages/terms-page";
+import ContactPage from "@/pages/contact-page";
 
 function Router() {
   return (
@@ -33,6 +36,9 @@ function Router() {
       <Route path="/courses/:slug" component={CourseDetailPage} />
       <Route path="/verification-success" component={VerificationSuccessPage} />
       <Route path="/dev-verify" component={DevVerificationPage} />
+      <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+      <Route path="/terms" component={TermsPage} />
+      <Route path="/contact" component={ContactPage} />
       <ProtectedRoute path="/my-learning" component={MyLearningPage} />
       <ProtectedRoute path="/checkout/:courseId" component={CheckoutPage} />
       <ProtectedRoute path="/profile" component={ProfilePage} />
