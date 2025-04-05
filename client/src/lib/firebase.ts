@@ -172,6 +172,15 @@ export async function checkRedirectResult() {
       throw new Error("Could not connect to Google authentication servers. This is common in some environments. Please use email/password login instead.");
     }
     
+    // Handle 403 Forbidden errors (also common in Replit environments)
+    if (firebaseError?.message && 
+        (firebaseError.message.includes('403') || 
+         firebaseError.message.includes('forbidden') || 
+         firebaseError.message.includes('Forbidden'))) {
+      console.error("403 Forbidden error from Google Auth servers");
+      throw new Error("Google authentication access was forbidden (403 error). This commonly happens when the authentication service is restricted in certain environments. Please use email/password login instead.");
+    }
+    
     throw error;
   }
 }
@@ -239,6 +248,12 @@ export async function signInWithGoogle() {
                 (redirectError.message.includes('accounts.google.com') || 
                  redirectError.message.includes('refused to connect'))) {
         errorMessage += "Could not connect to Google authentication servers. This is common in some environments. Please use email/password login instead.";
+      } else if (redirectError.message && 
+                (redirectError.message.includes('403') || 
+                 redirectError.message.includes('forbidden') || 
+                 redirectError.message.includes('Forbidden'))) {
+        console.error("403 Forbidden error from Google Auth servers");
+        errorMessage += "Access was forbidden (403 error). This commonly happens when the authentication service is restricted in certain environments. Please use email/password login instead.";
       } else {
         errorMessage += redirectError.message || "Unknown error occurred";
       }
