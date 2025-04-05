@@ -33,6 +33,7 @@ import {
   FaLinkedin, 
   FaYoutubeSquare 
 } from "react-icons/fa";
+import IraTechLogo from "@/assets/iratech-logo.png";
 import {
   Sheet,
   SheetContent,
@@ -57,6 +58,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex items-center space-x-4 sm:space-x-8">
             <Link href="/">
               <span className="flex items-center cursor-pointer">
+                <img src={IraTechLogo} alt="IraTech Logo" className="h-8 mr-2" />
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                   IraTech
                 </span>
@@ -145,6 +147,7 @@ export function MainLayout({ children }: MainLayoutProps) {
                 <div className="flex flex-col space-y-6">
                   {/* Title in mobile menu */}
                   <div className="flex items-center mb-2">
+                    <img src={IraTechLogo} alt="IraTech Logo" className="h-8 mr-2" />
                     <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                       IraTech
                     </span>
@@ -271,6 +274,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex flex-col items-center md:items-start space-y-2">
               <div className="flex items-center">
+                <img src={IraTechLogo} alt="IraTech Logo" className="h-7 mr-2" />
                 <span className="text-lg font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                   IraTech
                 </span>
