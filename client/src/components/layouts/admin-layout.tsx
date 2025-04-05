@@ -102,7 +102,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <aside className="w-56 lg:w-64 border-r border-border bg-background hidden md:flex md:flex-col">
         <div className="p-4">
           <div className="flex items-center gap-2">
-            <img src={IraTechLogo} alt="IraTech Logo" className="h-7 mr-1" />
+            <img src={IraTechLogo} alt="IraTech Logo" className="h-10 mr-2" />
             <div className="flex flex-col">
               <h1 className="text-lg lg:text-xl font-bold">Admin Panel</h1>
               <span className="text-xs text-muted-foreground">IraTech</span>
@@ -202,7 +202,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-950 border-b z-10">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <img src={IraTechLogo} alt="IraTech Logo" className="h-6 mr-1" />
+            <img src={IraTechLogo} alt="IraTech Logo" className="h-8 mr-2" />
             <h1 className="text-lg font-bold">Admin</h1>
           </div>
           
