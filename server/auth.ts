@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request } from "express";
 import session from "express-session";
 import { randomBytes } from "crypto";
 import { storage } from "./storage";
@@ -15,6 +15,16 @@ import {
   sendPasswordResetEmail,
   isTokenExpired
 } from "./auth-utils";
+
+// Firebase Admin SDK for verifying Google tokens
+import admin from "firebase-admin";
+
+// Initialize Firebase Admin SDK if credentials are provided
+if (process.env.VITE_FIREBASE_PROJECT_ID) {
+  admin.initializeApp({
+    projectId: process.env.VITE_FIREBASE_PROJECT_ID,
+  });
+}
 
 declare global {
   namespace Express {
@@ -162,6 +172,81 @@ export function setupAuth(app: Express) {
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
+  });
+  
+  // Google Sign-In authentication
+  app.post("/api/auth/google", async (req, res, next) => {
+    try {
+      // Verify the Firebase ID token
+      const { idToken } = req.body;
+      
+      if (!idToken) {
+        return res.status(400).json({ message: "No ID token provided" });
+      }
+      
+      // Verify the Firebase ID token
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const { email, name, picture, uid } = decodedToken;
+      
+      if (!email) {
+        return res.status(400).json({ message: "No email found in the ID token" });
+      }
+      
+      console.log(`Google authentication for email: ${email}`);
+      
+      // Check if the user exists in our database
+      let user = await storage.getUserByEmail(email);
+      
+      if (!user) {
+        // Create a new user if they don't exist
+        console.log(`Creating new user for Google account: ${email}`);
+        
+        // Generate a random password, as we won't use it for Google auth
+        const randomPassword = randomBytes(16).toString('hex');
+        const hashedPassword = await hashPassword(randomPassword);
+        
+        // Split the name into first and last name if available
+        let firstName = "", lastName = "";
+        if (name) {
+          const nameParts = name.split(' ');
+          firstName = nameParts[0] || "";
+          lastName = nameParts.slice(1).join(' ') || "";
+        }
+        
+        // Create username from email
+        const username = email.split('@')[0];
+        
+        user = await storage.createUser({
+          username,
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: "user",
+          isVerified: true, // Google accounts are already verified
+        });
+        
+        console.log(`Created new user with ID: ${user.id}`);
+      } else {
+        console.log(`Existing user found for Google account: ${email}`);
+        
+        // Update the user's verification status if needed
+        if (!user.isVerified) {
+          console.log(`Updating verification status for user: ${user.id}`);
+          user = await storage.updateUser(user.id, { isVerified: true });
+        }
+      }
+      
+      // Log the user in
+      req.login(user, (err) => {
+        if (err) return next(err);
+        return res.status(200).json(user);
+      });
+      
+    } catch (error) {
+      console.error("Google authentication error:", error);
+      return res.status(401).json({ message: "Invalid Google token" });
+    }
   });
   
   // Update user profile

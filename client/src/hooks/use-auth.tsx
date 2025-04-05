@@ -7,12 +7,14 @@ import {
 import { User, LoginData, RegisterData, ResetPasswordData, VerifyEmailData } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { signInWithGoogle as firebaseSignInWithGoogle, signOutFromFirebase } from "@/lib/firebase";
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
+  googleSignInMutation: UseMutationResult<User, Error, void>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
   resetPasswordMutation: UseMutationResult<void, Error, ResetPasswordData>;
@@ -77,6 +79,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const googleSignInMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        // Call Firebase Google sign-in function
+        const userData = await firebaseSignInWithGoogle();
+        return userData;
+      } catch (error) {
+        console.error("Google sign-in error:", error);
+        throw error;
+      }
+    },
+    onSuccess: (user: User) => {
+      queryClient.setQueryData(["/api/user"], user);
+      toast({
+        title: "Google Sign-in Successful",
+        description: `Welcome ${user.firstName || user.email}!`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Google Sign-in Failed",
+        description: error.message || "Unable to sign in with Google.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const registerMutation = useMutation({
     mutationFn: async (credentials: RegisterData) => {
       const res = await apiRequest("POST", "/api/register", credentials);
@@ -101,7 +130,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logoutMutation = useMutation({
     mutationFn: async () => {
       try {
+        // Sign out from both our server and Firebase
         const response = await apiRequest("POST", "/api/logout");
+        
+        // Also attempt to sign out from Firebase, but don't block on failure
+        try {
+          await signOutFromFirebase();
+          console.log("Successfully signed out from Firebase");
+        } catch (firebaseError) {
+          console.warn("Firebase sign out failed, but continuing:", firebaseError);
+          // We don't throw here because we still want to succeed if server logout worked
+        }
+        
         if (response.ok) {
           return;
         }
@@ -233,6 +273,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         error,
         loginMutation,
+        googleSignInMutation,
         logoutMutation,
         registerMutation,
         resetPasswordMutation,

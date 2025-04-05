@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { 
   FaFacebookSquare, 
+  FaGoogle,
   FaInstagram, 
   FaTwitterSquare, 
   FaLinkedin, 
@@ -71,7 +72,14 @@ function NavLink({ href, active, icon, children }: NavLinkProps) {
 export default function AuthPage() {
   const [authType, setAuthType] = useState<"login" | "register" | "reset" | "verify">("login");
   const [location, setLocation] = useLocation();
-  const { user, loginMutation, registerMutation, resetPasswordMutation, verifyEmailMutation } = useAuth();
+  const { 
+    user, 
+    loginMutation, 
+    googleSignInMutation,
+    registerMutation, 
+    resetPasswordMutation, 
+    verifyEmailMutation 
+  } = useAuth();
   const { theme, setTheme } = useTheme();
 
   // Redirect if already logged in
@@ -296,7 +304,7 @@ function FeatureItem({ text }: { text: string }) {
 }
 
 function LoginForm() {
-  const { loginMutation } = useAuth();
+  const { loginMutation, googleSignInMutation } = useAuth();
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -307,6 +315,10 @@ function LoginForm() {
 
   function onSubmit(values: z.infer<typeof loginSchema>) {
     loginMutation.mutate(values);
+  }
+  
+  function handleGoogleSignIn() {
+    googleSignInMutation.mutate();
   }
 
   return (
@@ -360,6 +372,26 @@ function LoginForm() {
           disabled={loginMutation.isPending}
         >
           {loginMutation.isPending ? "Signing in..." : "Sign In"}
+        </Button>
+        
+        <div className="relative flex items-center justify-center mt-2">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-muted" />
+          </div>
+          <div className="relative px-3 text-xs uppercase bg-background text-muted-foreground">
+            Or continue with
+          </div>
+        </div>
+        
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full flex items-center justify-center gap-2"
+          onClick={handleGoogleSignIn}
+          disabled={googleSignInMutation.isPending}
+        >
+          <FaGoogle className="h-4 w-4 text-red-500" />
+          {googleSignInMutation.isPending ? "Connecting..." : "Sign in with Google"}
         </Button>
       </form>
     </Form>
