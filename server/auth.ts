@@ -204,28 +204,363 @@ export function setupAuth(app: Express) {
     try {
       console.log("Email verification request received");
       console.log("Full URL:", req.protocol + '://' + req.get('host') + req.originalUrl);
-      const { token } = req.query;
       
-      console.log("Verification token:", token);
+      // Extract both token and email from the query string for better matching
+      const { token, email } = req.query;
+      
+      // Log the verification data with partial token for security
+      if (token) {
+        const tokenString = token as string;
+        const tokenPreview = tokenString.length > 12 
+          ? `${tokenString.substring(0, 6)}...${tokenString.substring(tokenString.length - 6)}`
+          : tokenString;
+        console.log("Verification data:", { tokenPreview, email: email || 'missing' });
+      } else {
+        console.log("Verification data: token missing, email:", email || 'missing');
+      }
       
       if (!token) {
         console.log("Verification failed: No token provided");
-        return res.status(400).json({ message: "Verification token is required" });
+        
+        // Instead of returning a JSON error, redirect to a user-friendly page
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Failed - IraTech</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 40px; 
+                line-height: 1.6; 
+                background-color: #f9fafb;
+                color: #111827;
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              h1 { 
+                color: #dc2626;
+                margin-bottom: 20px;
+              }
+              .error-icon { 
+                font-size: 64px; 
+                color: #dc2626;
+                margin-bottom: 20px; 
+              }
+              .message { 
+                margin-bottom: 30px; 
+              }
+              .button { 
+                display: inline-block; 
+                background-color: #4F46E5; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 4px; 
+                font-weight: bold;
+                margin: 10px;
+                transition: background-color 0.3s ease;
+              }
+              .button:hover {
+                background-color: #4338ca;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="error-icon">✗</div>
+              <h1>Verification Failed</h1>
+              <div class="message">
+                <p>The verification link is invalid or incomplete. No verification token was provided.</p>
+                <p>Please check your email and try clicking the verification link again, or request a new verification email.</p>
+              </div>
+              <div class="actions">
+                <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/auth" class="button">Go to Login Page</a>
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
       }
 
+      // Enhanced user lookup for verification
       console.log("Looking up user by verification token...");
-      const user = await storage.getUserByVerificationToken(token as string);
+      let user = await storage.getUserByVerificationToken(token as string);
+      
+      // If email is provided and user not found by token, try finding by email
+      if (!user && email) {
+        console.log("Token lookup failed, trying to find user by email...");
+        const userByEmail = await storage.getUserByEmail(email as string);
+        
+        if (userByEmail && userByEmail.verificationToken === token) {
+          console.log("User found by email and token matches");
+          user = userByEmail;
+        } else if (userByEmail) {
+          console.log("User found by email but token doesn't match");
+          console.log("Expected token:", userByEmail.verificationToken ? 
+            `${userByEmail.verificationToken.substring(0, 6)}...${userByEmail.verificationToken.substring(userByEmail.verificationToken.length - 6)}` : 
+            'null');
+        }
+      }
       
       if (!user) {
         console.log("Verification failed: Invalid token, no matching user found");
-        return res.status(400).json({ message: "Invalid verification token" });
+        
+        // Log all users and their verification tokens for debugging
+        console.log("Debugging: Checking all user verification tokens...");
+        const allUsers = await storage.getAllUsers();
+        
+        for (const u of allUsers) {
+          if (u.verificationToken) {
+            const tokenPreview = `${u.verificationToken.substring(0, 6)}...${u.verificationToken.substring(u.verificationToken.length - 6)}`;
+            console.log(`User ${u.id} (${u.email}): Token ${tokenPreview}`);
+            
+            // Try token normalization and comparison
+            const normalizedTokenFromRequest = (token as string).trim();
+            const normalizedTokenFromUser = u.verificationToken.trim();
+            
+            if (normalizedTokenFromRequest === normalizedTokenFromUser) {
+              console.log("Found matching token after normalization!");
+              user = u;
+              break;
+            }
+          } else {
+            console.log(`User ${u.id} (${u.email}): No verification token`);
+          }
+        }
+        
+        // If still no user found, return error
+        if (!user) {
+          return res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Verification Failed - IraTech</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  text-align: center; 
+                  padding: 40px; 
+                  line-height: 1.6; 
+                  background-color: #f9fafb;
+                  color: #111827;
+                }
+                .container { 
+                  max-width: 600px; 
+                  margin: 0 auto; 
+                  background-color: white;
+                  padding: 30px;
+                  border-radius: 8px;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }
+                h1 { 
+                  color: #dc2626;
+                  margin-bottom: 20px;
+                }
+                .error-icon { 
+                  font-size: 64px; 
+                  color: #dc2626;
+                  margin-bottom: 20px; 
+                }
+                .message { 
+                  margin-bottom: 30px; 
+                }
+                .button { 
+                  display: inline-block; 
+                  background-color: #4F46E5; 
+                  color: white; 
+                  padding: 12px 24px; 
+                  text-decoration: none; 
+                  border-radius: 4px; 
+                  font-weight: bold;
+                  margin: 10px;
+                  transition: background-color 0.3s ease;
+                }
+                .button:hover {
+                  background-color: #4338ca;
+                }
+                .code {
+                  background-color: #f3f4f6;
+                  padding: 2px 6px;
+                  border-radius: 4px;
+                  font-family: monospace;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="error-icon">✗</div>
+                <h1>Verification Failed</h1>
+                <div class="message">
+                  <p>No user was found with the provided verification token.</p>
+                  <p>The token may be invalid, expired, or already used.</p>
+                  ${email ? `<p>We couldn't verify the account for <span class="code">${email}</span>.</p>` : ''}
+                  <p>Please try requesting a new verification email from your account settings.</p>
+                </div>
+                <div class="actions">
+                  <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/auth" class="button">Go to Login Page</a>
+                </div>
+              </div>
+            </body>
+            </html>
+          `);
+        }
       }
 
       console.log("User found for verification:", user.id, user.email);
       
+      // Check if already verified
+      if (user.isVerified) {
+        console.log("User already verified:", user.id);
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Already Verified - IraTech</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 40px; 
+                line-height: 1.6; 
+                background-color: #f9fafb;
+                color: #111827;
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              h1 { 
+                color: #4F46E5; 
+                margin-bottom: 20px;
+              }
+              .info-icon { 
+                font-size: 64px; 
+                color: #3b82f6; 
+                margin-bottom: 20px; 
+              }
+              .message { 
+                margin-bottom: 30px; 
+              }
+              .button { 
+                display: inline-block; 
+                background-color: #4F46E5; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 4px; 
+                font-weight: bold;
+                margin: 10px;
+                transition: background-color 0.3s ease;
+              }
+              .button:hover {
+                background-color: #4338ca;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="info-icon">ℹ</div>
+              <h1>Email Already Verified</h1>
+              <div class="message">
+                <p>Your email address <strong>${user.email}</strong> has already been verified.</p>
+                <p>You can continue using all the features of your IraTech account.</p>
+              </div>
+              <div class="actions">
+                <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/auth" class="button">Go to Login Page</a>
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+      
       if (!user.verificationExpiry) {
         console.log("Verification failed: No expiry date for token");
-        return res.status(400).json({ message: "Invalid verification token" });
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Failed - IraTech</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 40px; 
+                line-height: 1.6; 
+                background-color: #f9fafb;
+                color: #111827;
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              h1 { 
+                color: #dc2626;
+                margin-bottom: 20px;
+              }
+              .error-icon { 
+                font-size: 64px; 
+                color: #dc2626;
+                margin-bottom: 20px; 
+              }
+              .message { 
+                margin-bottom: 30px; 
+              }
+              .button { 
+                display: inline-block; 
+                background-color: #4F46E5; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 4px; 
+                font-weight: bold;
+                margin: 10px;
+                transition: background-color 0.3s ease;
+              }
+              .button:hover {
+                background-color: #4338ca;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="error-icon">✗</div>
+              <h1>Verification Failed</h1>
+              <div class="message">
+                <p>The verification token is invalid or incomplete.</p>
+                <p>Please request a new verification email from your account settings.</p>
+              </div>
+              <div class="actions">
+                <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/auth" class="button">Go to Login Page</a>
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
       }
       
       const expiry = new Date(user.verificationExpiry);
@@ -236,7 +571,74 @@ export function setupAuth(app: Express) {
       
       if (expired) {
         console.log("Verification failed: Token has expired");
-        return res.status(400).json({ message: "Verification token has expired" });
+        return res.send(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Verification Expired - IraTech</title>
+            <style>
+              body { 
+                font-family: Arial, sans-serif; 
+                text-align: center; 
+                padding: 40px; 
+                line-height: 1.6; 
+                background-color: #f9fafb;
+                color: #111827;
+              }
+              .container { 
+                max-width: 600px; 
+                margin: 0 auto; 
+                background-color: white;
+                padding: 30px;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+              }
+              h1 { 
+                color: #f97316;
+                margin-bottom: 20px;
+              }
+              .warning-icon { 
+                font-size: 64px; 
+                color: #f97316;
+                margin-bottom: 20px; 
+              }
+              .message { 
+                margin-bottom: 30px; 
+              }
+              .button { 
+                display: inline-block; 
+                background-color: #4F46E5; 
+                color: white; 
+                padding: 12px 24px; 
+                text-decoration: none; 
+                border-radius: 4px; 
+                font-weight: bold;
+                margin: 10px;
+                transition: background-color 0.3s ease;
+              }
+              .button:hover {
+                background-color: #4338ca;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="warning-icon">⚠</div>
+              <h1>Verification Link Expired</h1>
+              <div class="message">
+                <p>The verification link for <strong>${user.email}</strong> has expired.</p>
+                <p>For security reasons, verification links expire after 24 hours.</p>
+                <p>Please log in to your account and request a new verification email.</p>
+              </div>
+              <div class="actions">
+                <a href="https://${process.env.REPL_ID}-00-${process.env.REPL_OWNER}.repl.co/auth" class="button">Go to Login Page</a>
+              </div>
+            </div>
+          </body>
+          </html>
+        `);
       }
 
       console.log("Verifying user account...");
@@ -256,7 +658,7 @@ export function setupAuth(app: Express) {
       console.log("Showing verification success page");
       
       // Send a complete HTML response with inline styles
-      res.send(`
+      return res.send(`
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -352,6 +754,8 @@ export function setupAuth(app: Express) {
         </body>
         </html>
       `);
+      
+
     } catch (error) {
       console.error("Error during email verification:", error);
       next(error);

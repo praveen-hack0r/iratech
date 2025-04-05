@@ -120,22 +120,56 @@ export async function sendVerificationEmail(
     }
   }
   
-  const verificationLink = `${baseUrl}/api/verify-email?token=${token}`;
+  const verificationLink = `${baseUrl}/api/verify-email?token=${token}&email=${encodeURIComponent(email)}`;
   
   // Create email content
   const emailContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2>Welcome to IraTech!</h2>
-      <p>Hello ${username},</p>
-      <p>Thank you for creating an account on IraTech. To complete your registration and gain full access to our courses, please verify your email address by clicking the button below:</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold;">Verify Email Address</a>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #4F46E5; margin-bottom: 5px;">Welcome to IraTech!</h1>
+        <p style="color: #6b7280; font-size: 16px;">Your Learning Journey Begins Now</p>
       </div>
-      <p>If the button doesn't work, copy and paste this link into your browser:</p>
-      <p><a href="${verificationLink}">${verificationLink}</a></p>
-      <p>This link will expire in 24 hours.</p>
-      <p>If you didn't create an account on IraTech, you can safely ignore this email.</p>
-      <p>Best regards,<br>The IraTech Team</p>
+      
+      <p style="font-size: 16px; line-height: 1.6;">Hello ${username},</p>
+      
+      <p style="font-size: 16px; line-height: 1.6;">Thank you for creating an account on IraTech. To complete your registration and gain full access to our premium courses, please verify your email address using one of the methods below:</p>
+      
+      <div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+        <h2 style="color: #4F46E5; font-size: 18px; margin-top: 0;">Method 1: One-Click Verification</h2>
+        <p style="margin-bottom: 20px;">Simply click the button below to instantly verify your email:</p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${verificationLink}" style="background-color: #4F46E5; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">Verify My Email</a>
+        </div>
+        
+        <p style="font-size: 14px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="background-color: #ffffff; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 14px;">
+          <a href="${verificationLink}" style="color: #4F46E5; text-decoration: none;">${verificationLink}</a>
+        </p>
+      </div>
+      
+      <div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+        <h2 style="color: #4F46E5; font-size: 18px; margin-top: 0;">Method 2: Manual Verification</h2>
+        <p style="margin-bottom: 15px;">If the link above doesn't work, you can manually verify your account:</p>
+        
+        <ol style="margin-left: 20px; line-height: 1.8;">
+          <li>Go to the <a href="${baseUrl}/auth" style="color: #4F46E5; font-weight: bold;">IraTech login page</a></li>
+          <li>Click on the "Verify Email" tab</li>
+          <li>Enter your email address: <strong>${email}</strong></li>
+          <li>Enter your verification token: <strong style="background-color: #ffffff; padding: 5px; border-radius: 4px; font-family: monospace;">${token}</strong></li>
+          <li>Click "Verify Email" to complete the process</li>
+        </ol>
+      </div>
+      
+      <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 25px 0; border-radius: 4px;">
+        <p style="margin: 0; font-size: 15px;"><strong>Important:</strong> This verification link and token will expire in 24 hours.</p>
+      </div>
+      
+      <p style="font-size: 16px; line-height: 1.6; color: #374151;">If you didn't create an account on IraTech, you can safely ignore this email.</p>
+      
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+        <p style="font-size: 16px; color: #374151;">Best regards,<br><strong>The IraTech Team</strong></p>
+      </div>
     </div>
   `;
   
@@ -216,18 +250,41 @@ export async function sendPasswordResetEmail(
   
   // Create email content
   const emailContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-      <h2>Reset Your Password</h2>
-      <p>We received a request to reset your password for your IraTech account.</p>
-      <p>To reset your password, click the button below:</p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: bold;">Reset Password</a>
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #4F46E5; margin-bottom: 5px;">Password Reset Request</h1>
+        <p style="color: #6b7280; font-size: 16px;">IraTech Account Security</p>
       </div>
-      <p>If the button doesn't work, copy and paste this link into your browser:</p>
-      <p><a href="${resetLink}">${resetLink}</a></p>
-      <p>This link will expire in 1 hour.</p>
-      <p>If you didn't request a password reset, you can safely ignore this email.</p>
-      <p>Best regards,<br>The IraTech Team</p>
+      
+      <p style="font-size: 16px; line-height: 1.6;">Hello,</p>
+      
+      <p style="font-size: 16px; line-height: 1.6;">We received a request to reset the password for your IraTech account associated with this email address (${email}). Follow the instructions below to reset your password:</p>
+      
+      <div style="background-color: #f3f4f6; border-radius: 8px; padding: 20px; margin: 25px 0;">
+        <h2 style="color: #4F46E5; font-size: 18px; margin-top: 0;">Reset Your Password</h2>
+        <p style="margin-bottom: 20px;">Click the button below to create a new secure password:</p>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${resetLink}" style="background-color: #4F46E5; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block;">Reset My Password</a>
+        </div>
+        
+        <p style="font-size: 14px; color: #6b7280;">If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="background-color: #ffffff; padding: 10px; border-radius: 4px; word-break: break-all; font-size: 14px;">
+          <a href="${resetLink}" style="color: #4F46E5; text-decoration: none;">${resetLink}</a>
+        </p>
+      </div>
+      
+      <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 25px 0; border-radius: 4px;">
+        <p style="margin: 0; font-size: 15px;"><strong>Important:</strong> This password reset link will expire in 24 hours for security reasons.</p>
+      </div>
+      
+      <div style="background-color: #fff7ed; border-left: 4px solid #f97316; padding: 15px; margin: 25px 0; border-radius: 4px;">
+        <p style="margin: 0; font-size: 15px;"><strong>Security Note:</strong> If you didn't request a password reset, please ignore this email or contact support if you have concerns about your account security.</p>
+      </div>
+      
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+        <p style="font-size: 16px; color: #374151;">Best regards,<br><strong>The IraTech Team</strong></p>
+      </div>
     </div>
   `;
   
