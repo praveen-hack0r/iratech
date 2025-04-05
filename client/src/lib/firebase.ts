@@ -19,11 +19,13 @@ const isReplitEnvironment = () => {
 const currentDomain = window.location.hostname;
 console.log("Current domain for Firebase:", currentDomain);
 
-// Firebase configuration
+// Firebase configuration - with special handling for Replit environments
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  // Use the Firebase project's domain for authDomain
-  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  // Use the Firebase project's domain for authDomain, but allow it to be overridden
+  authDomain: isReplitEnvironment()
+    ? window.location.hostname // Use current hostname to help with cross-origin issues
+    : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
@@ -185,37 +187,38 @@ export async function checkRedirectResult() {
   }
 }
 
-// Sign in with Google using redirect (more reliable in Replit than popup)
+// Sign in with Google using redirect
 export async function signInWithGoogle() {
   try {
-    // Set custom parameters based on environment
+    console.log("Starting Google sign-in process via Firebase...");
+    
+    // Clear any previous configurations
+    googleProvider = new GoogleAuthProvider();
+    
+    // Add these scopes to ensure we can get profile info
+    googleProvider.addScope('profile');
+    googleProvider.addScope('email');
+    
+    // Set custom parameters with a simpler approach
     const customParams: { [key: string]: string } = {
       prompt: 'select_account',
-      // Add these parameters to help with Replit's environment
-      hosted_domain: firebaseConfig.authDomain,
-      hd: firebaseConfig.authDomain
     };
     
-    // If we're in Replit, add more specific parameters for the Replit environment
+    // If we're in Replit, add more forgiving parameters
     if (isReplitEnvironment()) {
       console.log("Detected Replit environment, adding special parameters");
-      customParams.login_hint = currentDomain;
       
-      // Tell Google this is a trusted application
+      // Force OAuth to be more permissive with redirects
       customParams.include_granted_scopes = 'true';
       
-      // Set a specific OAuth flow that works better in Replit
-      customParams.flow = 'implicit';
+      // Use a more direct OAuth flow
+      customParams.response_type = 'token id_token';
       
-      // Force SSL to avoid mixed content issues
-      customParams.ssl = 'true';
+      // Make sure cross-origin is handled properly
+      customParams.origin = window.location.origin;
     }
     
     googleProvider.setCustomParameters(customParams);
-    
-    // Add this scope to ensure we can get basic profile info
-    googleProvider.addScope('profile');
-    googleProvider.addScope('email');
     
     console.log("Initiating Google sign-in redirect...");
     console.log("Using authDomain:", firebaseConfig.authDomain);
@@ -225,35 +228,22 @@ export async function signInWithGoogle() {
       // This will redirect the page to Google sign-in
       await signInWithRedirect(auth, googleProvider);
       
-      // The function won't return here because of the redirect
-      // The result will be handled by checkRedirectResult when the page loads again
+      // This code won't execute due to the redirect
+      return null;
     } catch (redirectError: any) {
-      console.error("Direct redirect failed, showing detailed error:", redirectError);
+      console.error("Google sign-in redirect failed:", redirectError);
       
+      // Handle specific error types with user-friendly messages
       let errorMessage = "Google sign-in failed. ";
       
       if (redirectError.code === 'auth/configuration-not-found') {
         errorMessage += `The domain "${currentDomain}" needs to be added to authorized domains in Firebase Console.`;
       } else if (redirectError.code === 'auth/operation-not-allowed') {
         errorMessage += "Google authentication may not be enabled in your Firebase project.";
-      } else if (redirectError.code === 'auth/operation-not-supported-in-this-environment') {
-        errorMessage += "This operation is not supported in this environment. Try a different browser.";
-      } else if (redirectError.code === 'auth/web-storage-unsupported') {
-        errorMessage += "Your browser doesn't support web storage or it's disabled. Try using a different browser.";
-      } else if (redirectError.code === 'auth/network-request-failed') {
-        errorMessage += "Network connection issue. Please check your internet connection and try again.";
-      } else if (redirectError.code === 'auth/internal-error') {
-        errorMessage += "An internal error occurred. Please try again later or use email/password login.";
-      } else if (redirectError.message && 
-                (redirectError.message.includes('accounts.google.com') || 
-                 redirectError.message.includes('refused to connect'))) {
-        errorMessage += "Could not connect to Google authentication servers. This is common in some environments. Please use email/password login instead.";
-      } else if (redirectError.message && 
-                (redirectError.message.includes('403') || 
-                 redirectError.message.includes('forbidden') || 
-                 redirectError.message.includes('Forbidden'))) {
-        console.error("403 Forbidden error from Google Auth servers");
-        errorMessage += "Access was forbidden (403 error). This commonly happens when the authentication service is restricted in certain environments. Please use email/password login instead.";
+      } else if (redirectError.message && redirectError.message.includes('403')) {
+        errorMessage += "Access was forbidden (403 error). This commonly happens in some environments.";
+      } else if (redirectError.message && redirectError.message.includes('refused to connect')) {
+        errorMessage += "Could not connect to Google authentication servers. This may be due to network restrictions.";
       } else {
         errorMessage += redirectError.message || "Unknown error occurred";
       }
@@ -261,7 +251,7 @@ export async function signInWithGoogle() {
       throw new Error(errorMessage);
     }
   } catch (error) {
-    console.error('Error starting Google sign-in', error);
+    console.error('Error in Google sign-in process:', error);
     throw error;
   }
 }

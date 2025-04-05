@@ -319,23 +319,15 @@ function LoginForm() {
     loginMutation.mutate(values);
   }
   
-  // Check if we're in a Replit environment
+  // Check if we're in a Replit environment (for informational purposes only)
   const isReplitEnv = window.location.hostname.includes('.repl.co') || 
                       window.location.hostname.includes('replit.dev') ||
                       window.location.hostname === 'localhost';
                       
   // Function to handle Google Sign-in attempt
   function handleGoogleSignIn() {
-    // First check if we're in Replit and block immediately with a clear message
-    if (isReplitEnv) {
-      toast({
-        title: "Google Sign-in Unavailable",
-        description: "Google authentication is not available in this environment. Please use email/password login instead.",
-        variant: "destructive",
-        duration: 5000,
-      });
-      return; // Stop execution here
-    }
+    // We'll attempt Google sign-in even in Replit environments
+    // but show a warning that there might be issues
     
     try {
       // Show a toast notification to inform the user about the redirect
@@ -491,17 +483,15 @@ function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className={`w-full flex items-center justify-center gap-2 ${isReplitEnv ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className="w-full flex items-center justify-center gap-2"
             onClick={handleGoogleSignIn}
-            disabled={googleSignInMutation.isPending || isReplitEnv}
-            title={isReplitEnv ? "Google Sign-in is not available in this environment" : "Sign in with your Google account"}
+            disabled={googleSignInMutation.isPending}
+            title="Sign in with your Google account"
           >
             <FaGoogle className="h-4 w-4 text-red-500" />
-            {googleSignInMutation.isPending 
-              ? "Connecting..." 
-              : isReplitEnv 
-                ? "Google Sign-in Unavailable" 
-                : "Sign in with Google"}
+            {googleSignInMutation.isPending
+              ? "Connecting..."
+              : "Sign in with Google"}
           </Button>
           
           {/* Information note about Google auth in Replit */}
@@ -512,12 +502,12 @@ function LoginForm() {
                 <line x1="12" y1="9" x2="12" y2="13"/>
                 <line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
-              <span className="font-medium">Important</span>
+              <span className="font-medium">Note</span>
             </div>
             <p>
-              Google authentication is restricted in this environment.
+              Google authentication might experience issues in some environments.
               <br />
-              Email/password login is recommended instead.
+              If sign-in fails, you can use email/password as a backup.
             </p>
           </div>
         </div>
