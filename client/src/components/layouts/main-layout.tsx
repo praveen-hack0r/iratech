@@ -33,6 +33,7 @@ import {
   FaLinkedin, 
   FaYoutubeSquare 
 } from "react-icons/fa";
+import logoSimple from "@/assets/iratech-logo-simple.svg";
 import {
   Sheet,
   SheetContent,
@@ -57,6 +58,7 @@ export function MainLayout({ children }: MainLayoutProps) {
           <div className="flex items-center space-x-4 sm:space-x-8">
             <Link href="/">
               <span className="flex items-center cursor-pointer">
+                <img src={logoSimple} alt="IraTech Logo" className="h-9 w-auto mr-2" />
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
                   IraTech
                 </span>
@@ -143,6 +145,13 @@ export function MainLayout({ children }: MainLayoutProps) {
               </SheetTrigger>
               <SheetContent side="right" className="w-[80vw] sm:w-[350px] pt-12">
                 <div className="flex flex-col space-y-6">
+                  {/* Logo in mobile menu */}
+                  <div className="flex items-center mb-2">
+                    <img src={logoSimple} alt="IraTech Logo" className="h-8 w-auto mr-2" />
+                    <span className="text-xl font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
+                      IraTech
+                    </span>
+                  </div>
                   <nav className="flex flex-col space-y-4">
                     <MobileNavLink href="/" active={location === "/"} icon={<Home size={16} />}>
                       Home
@@ -263,8 +272,16 @@ export function MainLayout({ children }: MainLayoutProps) {
       <footer className="border-t py-6">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              © {new Date().getFullYear()} IraTech. All rights reserved.
+            <div className="flex flex-col items-center md:items-start space-y-2">
+              <div className="flex items-center">
+                <img src={logoSimple} alt="IraTech Logo" className="h-7 w-auto mr-2" />
+                <span className="text-lg font-bold bg-gradient-to-r from-primary to-indigo-600 text-transparent bg-clip-text">
+                  IraTech
+                </span>
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                © {new Date().getFullYear()} IraTech. All rights reserved.
+              </div>
             </div>
             <div className="flex flex-col items-center md:items-end space-y-4 mt-4 md:mt-0">
               {/* Social Media Icons */}

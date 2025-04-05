@@ -18,6 +18,7 @@ import {
   Sun,
   User
 } from "lucide-react";
+import logoSimple from "@/assets/iratech-logo-simple.svg";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -101,10 +102,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <aside className="w-56 lg:w-64 border-r border-border bg-background hidden md:flex md:flex-col">
         <div className="p-4">
           <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary p-1.5 rounded">
-              <LayoutDashboard className="h-5 w-5 lg:h-6 lg:w-6" />
+            <img src={logoSimple} alt="IraTech Logo" className="h-8 w-auto" />
+            <div className="flex flex-col">
+              <h1 className="text-lg lg:text-xl font-bold">Admin Panel</h1>
+              <span className="text-xs text-muted-foreground">IraTech</span>
             </div>
-            <h1 className="text-lg lg:text-xl font-bold">Admin Panel</h1>
           </div>
         </div>
         
@@ -200,10 +202,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white dark:bg-gray-950 border-b z-10">
         <div className="p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="bg-primary/10 text-primary p-1 rounded">
-              <LayoutDashboard className="h-5 w-5" />
-            </div>
-            <h1 className="text-lg font-bold">Admin Panel</h1>
+            <img src={logoSimple} alt="IraTech Logo" className="h-7 w-auto" />
+            <h1 className="text-lg font-bold">Admin</h1>
           </div>
           
           <div className="flex gap-2">
