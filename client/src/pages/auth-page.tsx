@@ -319,19 +319,30 @@ function LoginForm() {
     loginMutation.mutate(values);
   }
   
+  // Check if we're in a Replit environment
+  const isReplitEnv = window.location.hostname.includes('.repl.co') || 
+                      window.location.hostname.includes('replit.dev') ||
+                      window.location.hostname === 'localhost';
+                      
   // Function to handle Google Sign-in attempt
   function handleGoogleSignIn() {
+    // First check if we're in Replit and block immediately with a clear message
+    if (isReplitEnv) {
+      toast({
+        title: "Google Sign-in Unavailable",
+        description: "Google authentication is not available in this environment. Please use email/password login instead.",
+        variant: "destructive",
+        duration: 5000,
+      });
+      return; // Stop execution here
+    }
+    
     try {
       // Show a toast notification to inform the user about the redirect
       toast({
         title: "Redirecting to Google",
         description: "You'll be redirected to Google for authentication. This might take a moment...",
       });
-      
-      // Open in a new tab if we're in a Replit environment
-      const isReplitEnv = window.location.hostname.includes('.repl.co') || 
-                          window.location.hostname.includes('replit.dev') ||
-                          window.location.hostname === 'localhost';
                           
       // Trigger the Google sign-in process via mutation
       googleSignInMutation.mutate(undefined, {
@@ -480,12 +491,17 @@ function LoginForm() {
           <Button
             type="button"
             variant="outline"
-            className="w-full flex items-center justify-center gap-2"
+            className={`w-full flex items-center justify-center gap-2 ${isReplitEnv ? 'opacity-60 cursor-not-allowed' : ''}`}
             onClick={handleGoogleSignIn}
-            disabled={googleSignInMutation.isPending}
+            disabled={googleSignInMutation.isPending || isReplitEnv}
+            title={isReplitEnv ? "Google Sign-in is not available in this environment" : "Sign in with your Google account"}
           >
             <FaGoogle className="h-4 w-4 text-red-500" />
-            {googleSignInMutation.isPending ? "Connecting..." : "Sign in with Google"}
+            {googleSignInMutation.isPending 
+              ? "Connecting..." 
+              : isReplitEnv 
+                ? "Google Sign-in Unavailable" 
+                : "Sign in with Google"}
           </Button>
           
           {/* Information note about Google auth in Replit */}
