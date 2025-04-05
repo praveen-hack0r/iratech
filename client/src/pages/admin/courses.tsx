@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { CourseWithCategory } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { AdminLayout } from "./components/admin-layout";
+import { AdminLayout } from "@/components/layouts/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";

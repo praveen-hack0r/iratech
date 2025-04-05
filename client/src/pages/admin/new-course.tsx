@@ -1,4 +1,4 @@
-import { AdminLayout } from "./components/admin-layout";
+import { AdminLayout } from "@/components/layouts/admin-layout";
 import { CourseForm } from "./components/course-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

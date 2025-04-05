@@ -10,7 +10,7 @@ interface EnhancedEnrollment extends Enrollment {
   // Note: TypeScript declaration for enrollmentDate is already included in the Enrollment type
   // But we're adding a comment here to make it clear that this field is expected in the API response
 }
-import { AdminLayout } from "./components/admin-layout";
+import { AdminLayout } from "@/components/layouts/admin-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
