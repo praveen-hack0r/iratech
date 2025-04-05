@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, Auth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, Auth } from "firebase/auth";
 
 // Declare our firebase initialization flag on window
 declare global {
@@ -8,13 +8,21 @@ declare global {
   }
 }
 
-// Get the current domain for authentication to work in Replit
-const currentDomain = window.location.hostname;
+// Helper function to check if we're in a Replit environment
+const isReplitEnvironment = () => {
+  return window.location.hostname.includes('.repl.co') || 
+         window.location.hostname.includes('replit.dev') ||
+         window.location.hostname === 'localhost';
+};
 
+// Get the current domain
+const currentDomain = window.location.hostname;
+console.log("Current domain for Firebase:", currentDomain);
+
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  // For Replit environments, we need to use the firebaseapp.com domain as authDomain
-  // but will still need to add the Replit domain to authorized domains in Firebase Console
+  // Use the Firebase project's domain for authDomain
   authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
@@ -43,71 +51,109 @@ let googleProvider: GoogleAuthProvider;
     googleProvider.setCustomParameters({
       prompt: 'select_account'
     });
+
+    // Check for redirect result on page load
+    checkRedirectResult();
   } catch (error) {
     console.error("Firebase initialization error:", error);
   }
 })();
 
-// Sign in with Google popup
-export async function signInWithGoogle() {
+// Check for redirect result when the page loads
+export async function checkRedirectResult() {
   try {
-    // Set custom parameters to ensure proper popup handling in Replit
-    googleProvider.setCustomParameters({
-      prompt: 'select_account',
-      // This opens login selection dialog even if user is already logged in
-      // Important for testing and when users have multiple accounts
-      login_hint: window.location.hostname
-    });
+    const result = await getRedirectResult(auth);
+    if (result) {
+      // User just logged in via redirect
+      console.log("Google sign-in redirect result received");
+      
+      // Extract user information from the result
+      const user = result.user;
+      const { displayName, email, photoURL, uid } = user;
+      const nameParts = displayName?.split(' ') || [''];
+      
+      console.log("Google sign-in successful, sending user data to backend...");
+      
+      // Send user data to our backend
+      const response = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          picture: photoURL || '',
+          firebaseUid: uid 
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server authentication error:", errorData);
+        throw new Error(errorData.message || 'Failed to authenticate with server');
+      }
+      
+      console.log("Server authentication successful");
+      
+      // Refresh the page after successful login to update UI
+      window.location.href = '/';
+      
+      return await response.json();
+    }
+    return null; // No redirect result
+  } catch (error) {
+    console.error('Error handling redirect result', error);
     
-    console.log("Initiating Google sign-in popup...");
-    console.log("Using authDomain:", firebaseConfig.authDomain);
-    
-    const result = await signInWithPopup(auth, googleProvider);
-    
-    // Extract user information from the result
-    const user = result.user;
-    const { displayName, email, photoURL, uid } = user;
-    const nameParts = displayName?.split(' ') || [''];
-    
-    // Instead of using Firebase Admin verification on backend (which requires service account),
-    // we'll send the user information directly to our backend after Firebase validates the auth
-    console.log("Google sign-in successful, sending user data to backend...");
-    
-    // Send user data directly to backend
-    const response = await fetch('/api/auth/google', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ 
-        email,
-        name: displayName || '',
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || '',
-        picture: photoURL || '',
-        firebaseUid: uid 
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Server authentication error:", errorData);
-      throw new Error(errorData.message || 'Failed to authenticate with server');
+    // Provide more user-friendly error messages for common errors
+    const firebaseError = error as { code?: string };
+    if (firebaseError?.code === 'auth/account-exists-with-different-credential') {
+      console.error('An account already exists with the same email address but different sign-in credentials.');
+    } else if (firebaseError?.code === 'auth/configuration-not-found') {
+      console.error('Firebase configuration error. The Replit domain may not be authorized in Firebase Console.');
     }
     
-    console.log("Server authentication successful");
-    return await response.json();
+    throw error;
+  }
+}
+
+// Sign in with Google using redirect (more reliable in Replit than popup)
+export async function signInWithGoogle() {
+  try {
+    // Set custom parameters based on environment
+    const customParams: { [key: string]: string } = {
+      prompt: 'select_account'
+    };
+    
+    // If we're in Replit, add some extra parameters that might help
+    if (isReplitEnvironment()) {
+      console.log("Detected Replit environment, adding special parameters");
+      customParams.login_hint = currentDomain;
+      // Tell Firebase this is a Replit environment
+      customParams.app_domain = currentDomain;
+    }
+    
+    googleProvider.setCustomParameters(customParams);
+    
+    console.log("Initiating Google sign-in redirect...");
+    console.log("Using authDomain:", firebaseConfig.authDomain);
+    console.log("Current hostname:", currentDomain);
+    
+    // This will redirect the page to Google sign-in
+    await signInWithRedirect(auth, googleProvider);
+    
+    // The function won't return here because of the redirect
+    // The result will be handled by checkRedirectResult when the page loads again
   } catch (error) {
-    console.error('Error signing in with Google', error);
+    console.error('Error starting Google sign-in', error);
     
     // Provide more user-friendly error messages
     const firebaseError = error as { code?: string };
-    if (firebaseError?.code === 'auth/popup-blocked') {
-      throw new Error('The sign-in popup was blocked by your browser. Please allow popups for this site.');
-    } else if (firebaseError?.code === 'auth/popup-closed-by-user') {
-      throw new Error('The sign-in popup was closed before completing authentication.');
-    } else if (firebaseError?.code === 'auth/configuration-not-found') {
-      throw new Error('Firebase configuration error. Please try again later or use email/password sign-in instead.');
+    if (firebaseError?.code === 'auth/configuration-not-found') {
+      throw new Error('Firebase configuration error. Make sure the domain "' + currentDomain + '" is added to the authorized domains in Firebase Console.');
+    } else if (firebaseError?.code === 'auth/operation-not-supported-in-this-environment') {
+      throw new Error('This authentication operation is not supported in this environment. Try using a different browser or device.');
     }
     
     throw error;

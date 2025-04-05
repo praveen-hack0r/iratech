@@ -14,7 +14,7 @@ type AuthContextType = {
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<User, Error, LoginData>;
-  googleSignInMutation: UseMutationResult<User, Error, void>;
+  googleSignInMutation: UseMutationResult<any, Error, void>; // Changed return type to any since redirects don't return
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
   resetPasswordMutation: UseMutationResult<void, Error, ResetPasswordData>;
@@ -84,20 +84,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const googleSignInMutation = useMutation({
     mutationFn: async () => {
       try {
-        // Call Firebase Google sign-in function
-        const userData = await firebaseSignInWithGoogle();
-        return userData;
+        // This will redirect to Google Sign-in page and won't return here
+        // The result will be handled by checkRedirectResult() in firebase.ts
+        await firebaseSignInWithGoogle();
+        
+        // This code won't execute because of the redirect
+        return null as any;
       } catch (error) {
         console.error("Google sign-in error:", error);
         throw error;
       }
-    },
-    onSuccess: (user: User) => {
-      queryClient.setQueryData(["/api/user"], user);
-      toast({
-        title: "Google Sign-in Successful",
-        description: `Welcome ${user.firstName || user.email}!`,
-      });
     },
     onError: (error: Error) => {
       toast({

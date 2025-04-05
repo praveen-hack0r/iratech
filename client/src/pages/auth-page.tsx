@@ -26,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { loginSchema, registerSchema, resetPasswordSchema, verifyEmailSchema } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Book, 
   Home, 
@@ -305,6 +306,7 @@ function FeatureItem({ text }: { text: string }) {
 
 function LoginForm() {
   const { loginMutation, googleSignInMutation } = useAuth();
+  const { toast } = useToast();
   const form = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -318,7 +320,23 @@ function LoginForm() {
   }
   
   function handleGoogleSignIn() {
-    googleSignInMutation.mutate();
+    try {
+      // Show a toast notification to inform the user about the redirect
+      toast({
+        title: "Redirecting to Google",
+        description: "You'll be redirected to Google for authentication",
+      });
+      
+      // Trigger the Google sign-in process
+      googleSignInMutation.mutate();
+    } catch (error) {
+      console.error("Failed to initiate Google sign-in:", error);
+      toast({
+        title: "Google Sign-in Failed",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive",
+      });
+    }
   }
 
   return (
