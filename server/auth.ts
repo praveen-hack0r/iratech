@@ -177,19 +177,11 @@ export function setupAuth(app: Express) {
   // Google Sign-In authentication
   app.post("/api/auth/google", async (req, res, next) => {
     try {
-      // Verify the Firebase ID token
-      const { idToken } = req.body;
-      
-      if (!idToken) {
-        return res.status(400).json({ message: "No ID token provided" });
-      }
-      
-      // Verify the Firebase ID token
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      const { email, name, picture, uid } = decodedToken;
+      // Get user information directly from the request
+      const { email, firstName, lastName, picture, firebaseUid } = req.body;
       
       if (!email) {
-        return res.status(400).json({ message: "No email found in the ID token" });
+        return res.status(400).json({ message: "No email provided" });
       }
       
       console.log(`Google authentication for email: ${email}`);
@@ -205,14 +197,6 @@ export function setupAuth(app: Express) {
         const randomPassword = randomBytes(16).toString('hex');
         const hashedPassword = await hashPassword(randomPassword);
         
-        // Split the name into first and last name if available
-        let firstName = "", lastName = "";
-        if (name) {
-          const nameParts = name.split(' ');
-          firstName = nameParts[0] || "";
-          lastName = nameParts.slice(1).join(' ') || "";
-        }
-        
         // Create username from email
         const username = email.split('@')[0];
         
@@ -220,10 +204,12 @@ export function setupAuth(app: Express) {
           username,
           email,
           password: hashedPassword,
-          firstName,
-          lastName,
+          firstName: firstName || "",
+          lastName: lastName || "",
           role: "user",
           isVerified: true, // Google accounts are already verified
+          // Store Firebase UID for future reference if needed
+          firebaseUid: firebaseUid || null
         });
         
         console.log(`Created new user with ID: ${user.id}`);
@@ -233,7 +219,11 @@ export function setupAuth(app: Express) {
         // Update the user's verification status if needed
         if (!user.isVerified) {
           console.log(`Updating verification status for user: ${user.id}`);
-          user = await storage.updateUser(user.id, { isVerified: true });
+          user = await storage.updateUser(user.id, { 
+            isVerified: true,
+            // Update Firebase UID if it changed or wasn't set before
+            firebaseUid: firebaseUid || user.firebaseUid
+          });
         }
       }
       

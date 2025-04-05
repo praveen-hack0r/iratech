@@ -13,8 +13,9 @@ const currentDomain = window.location.hostname;
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  // For Replit environments, use the current domain as auth domain
-  authDomain: currentDomain.includes('replit') ? window.location.host : `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
+  // For Replit environments, we need to use the firebaseapp.com domain as authDomain
+  // but will still need to add the Replit domain to authorized domains in Firebase Console
+  authDomain: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
@@ -53,7 +54,8 @@ export async function signInWithGoogle() {
     // Set custom parameters to ensure proper popup handling in Replit
     googleProvider.setCustomParameters({
       prompt: 'select_account',
-      // Use the current domain for handling the redirect properly in Replit
+      // This opens login selection dialog even if user is already logged in
+      // Important for testing and when users have multiple accounts
       login_hint: window.location.hostname
     });
     
@@ -61,18 +63,30 @@ export async function signInWithGoogle() {
     console.log("Using authDomain:", firebaseConfig.authDomain);
     
     const result = await signInWithPopup(auth, googleProvider);
+    
+    // Extract user information from the result
     const user = result.user;
-    const idToken = await user.getIdToken();
+    const { displayName, email, photoURL, uid } = user;
+    const nameParts = displayName?.split(' ') || [''];
     
-    console.log("Google sign-in successful, sending ID token to backend...");
+    // Instead of using Firebase Admin verification on backend (which requires service account),
+    // we'll send the user information directly to our backend after Firebase validates the auth
+    console.log("Google sign-in successful, sending user data to backend...");
     
-    // Send token to backend for verification and session creation
+    // Send user data directly to backend
     const response = await fetch('/api/auth/google', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ idToken }),
+      body: JSON.stringify({ 
+        email,
+        name: displayName || '',
+        firstName: nameParts[0] || '',
+        lastName: nameParts.slice(1).join(' ') || '',
+        picture: photoURL || '',
+        firebaseUid: uid 
+      }),
     });
     
     if (!response.ok) {

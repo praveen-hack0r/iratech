@@ -17,6 +17,7 @@ export const users = pgTable("users", {
   isVerified: boolean("is_verified").default(false),
   verificationToken: text("verification_token"),
   verificationExpiry: timestamp("verification_expiry"),
+  firebaseUid: text("firebase_uid"),  // Add Firebase UID for Google authentication
 });
 
 // Categories table
@@ -178,6 +179,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   isVerified: true,
   verificationToken: true,
   verificationExpiry: true,
+  firebaseUid: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).pick({
