@@ -22,8 +22,10 @@ type AuthContextType = {
   verifyEmailMutation: UseMutationResult<any, Error, VerifyEmailData>;
 };
 
-export const AuthContext = createContext<AuthContextType | null>(null);
+// Create context without exporting it directly
+const AuthContext = createContext<AuthContextType | null>(null);
 
+// Export a function component that provides the auth context
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
