@@ -62,56 +62,85 @@ let googleProvider: GoogleAuthProvider;
 // Check for redirect result when the page loads
 export async function checkRedirectResult() {
   try {
+    // Attempt to get result from Firebase redirect
+    console.log("Checking for Google sign-in redirect result...");
     const result = await getRedirectResult(auth);
+    
     if (result) {
       // User just logged in via redirect
-      console.log("Google sign-in redirect result received");
+      console.log("Google sign-in redirect result received successfully");
       
       // Extract user information from the result
       const user = result.user;
       const { displayName, email, photoURL, uid } = user;
+      
+      if (!email) {
+        throw new Error("No email received from Google authentication");
+      }
+      
       const nameParts = displayName?.split(' ') || [''];
       
       console.log("Google sign-in successful, sending user data to backend...");
       
-      // Send user data to our backend
-      const response = await fetch('/api/auth/google', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email,
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
-          picture: photoURL || '',
-          firebaseUid: uid 
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Server authentication error:", errorData);
-        throw new Error(errorData.message || 'Failed to authenticate with server');
+      try {
+        // Send user data to our backend
+        const response = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            email,
+            firstName: nameParts[0] || '',
+            lastName: nameParts.slice(1).join(' ') || '',
+            picture: photoURL || '',
+            firebaseUid: uid 
+          }),
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Server authentication error:", errorData);
+          throw new Error(errorData.message || 'Failed to authenticate with server');
+        }
+        
+        console.log("Server authentication successful");
+        
+        // Refresh the page after successful login to update UI
+        window.location.href = '/';
+        
+        return await response.json();
+      } catch (serverError) {
+        console.error("Error communicating with our server:", serverError);
+        throw new Error("Successfully authenticated with Google, but failed to connect to our server. Please try again.");
       }
-      
-      console.log("Server authentication successful");
-      
-      // Refresh the page after successful login to update UI
-      window.location.href = '/';
-      
-      return await response.json();
     }
+    
+    console.log("No redirect result found, user has not authenticated with Google yet");
     return null; // No redirect result
   } catch (error) {
     console.error('Error handling redirect result', error);
     
     // Provide more user-friendly error messages for common errors
     const firebaseError = error as { code?: string };
-    if (firebaseError?.code === 'auth/account-exists-with-different-credential') {
-      console.error('An account already exists with the same email address but different sign-in credentials.');
-    } else if (firebaseError?.code === 'auth/configuration-not-found') {
-      console.error('Firebase configuration error. The Replit domain may not be authorized in Firebase Console.');
+    
+    if (firebaseError?.code) {
+      switch(firebaseError.code) {
+        case 'auth/account-exists-with-different-credential':
+          console.error('An account already exists with the same email address but different sign-in credentials.');
+          throw new Error('An account already exists with this email. Try signing in with a different method.');
+          
+        case 'auth/configuration-not-found':
+          console.error('Firebase configuration error. The Replit domain may not be authorized in Firebase Console.');
+          throw new Error(`Authentication configuration error. The domain needs to be added to Firebase authorized domains.`);
+          
+        case 'auth/operation-not-allowed':
+          console.error('Google authentication may not be enabled in the Firebase project.');
+          throw new Error('Google sign-in is not enabled for this application. Please contact support.');
+          
+        default:
+          console.error(`Unhandled Firebase error code: ${firebaseError.code}`);
+      }
     }
     
     throw error;
@@ -130,8 +159,6 @@ export async function signInWithGoogle() {
     if (isReplitEnvironment()) {
       console.log("Detected Replit environment, adding special parameters");
       customParams.login_hint = currentDomain;
-      // Tell Firebase this is a Replit environment
-      customParams.app_domain = currentDomain;
     }
     
     googleProvider.setCustomParameters(customParams);
@@ -140,22 +167,31 @@ export async function signInWithGoogle() {
     console.log("Using authDomain:", firebaseConfig.authDomain);
     console.log("Current hostname:", currentDomain);
     
-    // This will redirect the page to Google sign-in
-    await signInWithRedirect(auth, googleProvider);
-    
-    // The function won't return here because of the redirect
-    // The result will be handled by checkRedirectResult when the page loads again
+    try {
+      // This will redirect the page to Google sign-in
+      await signInWithRedirect(auth, googleProvider);
+      
+      // The function won't return here because of the redirect
+      // The result will be handled by checkRedirectResult when the page loads again
+    } catch (redirectError: any) {
+      console.error("Direct redirect failed, showing detailed error:", redirectError);
+      
+      let errorMessage = "Google sign-in failed. ";
+      
+      if (redirectError.code === 'auth/configuration-not-found') {
+        errorMessage += `The domain "${currentDomain}" needs to be added to authorized domains in Firebase Console.`;
+      } else if (redirectError.code === 'auth/operation-not-allowed') {
+        errorMessage += "Google authentication may not be enabled in your Firebase project.";
+      } else if (redirectError.code === 'auth/operation-not-supported-in-this-environment') {
+        errorMessage += "This operation is not supported in this environment. Try a different browser.";
+      } else {
+        errorMessage += redirectError.message || "Unknown error occurred";
+      }
+      
+      throw new Error(errorMessage);
+    }
   } catch (error) {
     console.error('Error starting Google sign-in', error);
-    
-    // Provide more user-friendly error messages
-    const firebaseError = error as { code?: string };
-    if (firebaseError?.code === 'auth/configuration-not-found') {
-      throw new Error('Firebase configuration error. Make sure the domain "' + currentDomain + '" is added to the authorized domains in Firebase Console.');
-    } else if (firebaseError?.code === 'auth/operation-not-supported-in-this-environment') {
-      throw new Error('This authentication operation is not supported in this environment. Try using a different browser or device.');
-    }
-    
     throw error;
   }
 }

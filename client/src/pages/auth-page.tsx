@@ -319,6 +319,7 @@ function LoginForm() {
     loginMutation.mutate(values);
   }
   
+  // Function to handle Google Sign-in attempt
   function handleGoogleSignIn() {
     try {
       // Show a toast notification to inform the user about the redirect
@@ -327,10 +328,42 @@ function LoginForm() {
         description: "You'll be redirected to Google for authentication",
       });
       
-      // Trigger the Google sign-in process
-      googleSignInMutation.mutate();
+      // Trigger the Google sign-in process via mutation
+      googleSignInMutation.mutate(undefined, {
+        onError: (error) => {
+          // Error handling for Firebase errors
+          console.error("Failed to initiate Google sign-in:", error);
+          
+          let title = "Google Sign-in Failed";
+          let description = "";
+          
+          // Extract message from the error
+          if (error instanceof Error) {
+            // Check for Firebase specific error messages
+            if (error.message.includes("domain")) {
+              description = "This website domain is not authorized for Firebase authentication. Please contact support.";
+            } else if (error.message.includes("not enabled")) {
+              description = "Google authentication is not enabled for this application.";
+            } else if (error.message.includes("operation")) {
+              description = "This authentication operation is not supported in this environment.";
+            } else {
+              description = error.message;
+            }
+          } else {
+            description = "An unexpected error occurred";
+          }
+          
+          // Show error toast
+          toast({
+            title,
+            description,
+            variant: "destructive",
+          });
+        }
+      });
     } catch (error) {
-      console.error("Failed to initiate Google sign-in:", error);
+      // This catch handles synchronous errors (unlikely with the mutation approach)
+      console.error("Synchronous error in Google sign-in:", error);
       toast({
         title: "Google Sign-in Failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred",

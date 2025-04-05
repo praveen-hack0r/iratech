@@ -84,6 +84,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const googleSignInMutation = useMutation({
     mutationFn: async () => {
       try {
+        // Log to help debug Firebase configuration
+        console.log("Starting Google sign-in process via Firebase...");
+        
         // This will redirect to Google Sign-in page and won't return here
         // The result will be handled by checkRedirectResult() in firebase.ts
         await firebaseSignInWithGoogle();
@@ -92,15 +95,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null as any;
       } catch (error) {
         console.error("Google sign-in error:", error);
-        throw error;
+        
+        // Add more specific error information to help debugging
+        let errorMessage = "";
+        
+        if (error instanceof Error) {
+          const firebaseError = error as any;
+          
+          if (firebaseError.code) {
+            // Map Firebase error codes to user-friendly messages
+            switch (firebaseError.code) {
+              case 'auth/configuration-not-found':
+                errorMessage = `Firebase configuration error: The site domain is not authorized in Firebase Console.`;
+                break;
+              case 'auth/operation-not-allowed':
+                errorMessage = "Google authentication is not enabled in your Firebase project.";
+                break;
+              case 'auth/popup-blocked':
+                errorMessage = "Popup was blocked by your browser. Please allow popups for this site.";
+                break;
+              case 'auth/popup-closed-by-user':
+                errorMessage = "Authentication was cancelled. Please try again.";
+                break;
+              default:
+                errorMessage = firebaseError.message || "An error occurred during Google authentication.";
+            }
+          } else {
+            errorMessage = error.message;
+          }
+        } else {
+          errorMessage = "Unknown error during Google sign-in.";
+        }
+        
+        throw new Error(errorMessage);
       }
     },
     onError: (error: Error) => {
-      toast({
-        title: "Google Sign-in Failed",
-        description: error.message || "Unable to sign in with Google.",
-        variant: "destructive",
-      });
+      // The error display is now handled in the component to allow for custom formatting
+      console.error("Google sign-in mutation error:", error);
     },
   });
 
