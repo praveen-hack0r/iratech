@@ -122,7 +122,7 @@ export async function checkRedirectResult() {
     console.error('Error handling redirect result', error);
     
     // Provide more user-friendly error messages for common errors
-    const firebaseError = error as { code?: string };
+    const firebaseError = error as { code?: string, message?: string };
     
     if (firebaseError?.code) {
       switch(firebaseError.code) {
@@ -132,15 +132,44 @@ export async function checkRedirectResult() {
           
         case 'auth/configuration-not-found':
           console.error('Firebase configuration error. The Replit domain may not be authorized in Firebase Console.');
-          throw new Error(`Authentication configuration error. The domain needs to be added to Firebase authorized domains.`);
+          throw new Error(`Authentication configuration error. The domain "${currentDomain}" needs to be added to Firebase authorized domains.`);
           
         case 'auth/operation-not-allowed':
           console.error('Google authentication may not be enabled in the Firebase project.');
           throw new Error('Google sign-in is not enabled for this application. Please contact support.');
           
+        case 'auth/web-storage-unsupported':
+          console.error("Browser doesn't support web storage or it's disabled.");
+          throw new Error("Your browser doesn't support web storage or it's disabled. Try using a different browser.");
+          
+        case 'auth/network-request-failed':
+          console.error("Network error during Google authentication.");
+          throw new Error("Network connection issue. Please check your internet connection and try again.");
+          
+        case 'auth/popup-blocked':
+        case 'auth/popup-closed-by-user':
+          console.error("Popup was blocked or closed.");
+          throw new Error("Authentication popup was blocked or closed. Please enable popups for this site.");
+          
+        case 'auth/cancelled-popup-request':
+          console.error("Authentication popup request was cancelled.");
+          throw new Error("Authentication request was cancelled. Please try again.");
+          
+        case 'auth/internal-error':
+          console.error("Firebase internal error occurred.");
+          throw new Error("An internal error occurred. Please try again later or use email/password login.");
+        
         default:
           console.error(`Unhandled Firebase error code: ${firebaseError.code}`);
       }
+    }
+    
+    // Handle connection refused errors from Google servers (common in Replit)
+    if (firebaseError?.message && 
+        (firebaseError.message.includes('accounts.google.com') || 
+         firebaseError.message.includes('refused to connect'))) {
+      console.error("Google authentication server connection refused.");
+      throw new Error("Could not connect to Google authentication servers. This is common in some environments. Please use email/password login instead.");
     }
     
     throw error;
@@ -152,16 +181,32 @@ export async function signInWithGoogle() {
   try {
     // Set custom parameters based on environment
     const customParams: { [key: string]: string } = {
-      prompt: 'select_account'
+      prompt: 'select_account',
+      // Add these parameters to help with Replit's environment
+      hosted_domain: firebaseConfig.authDomain,
+      hd: firebaseConfig.authDomain
     };
     
-    // If we're in Replit, add some extra parameters that might help
+    // If we're in Replit, add more specific parameters for the Replit environment
     if (isReplitEnvironment()) {
       console.log("Detected Replit environment, adding special parameters");
       customParams.login_hint = currentDomain;
+      
+      // Tell Google this is a trusted application
+      customParams.include_granted_scopes = 'true';
+      
+      // Set a specific OAuth flow that works better in Replit
+      customParams.flow = 'implicit';
+      
+      // Force SSL to avoid mixed content issues
+      customParams.ssl = 'true';
     }
     
     googleProvider.setCustomParameters(customParams);
+    
+    // Add this scope to ensure we can get basic profile info
+    googleProvider.addScope('profile');
+    googleProvider.addScope('email');
     
     console.log("Initiating Google sign-in redirect...");
     console.log("Using authDomain:", firebaseConfig.authDomain);
@@ -184,6 +229,16 @@ export async function signInWithGoogle() {
         errorMessage += "Google authentication may not be enabled in your Firebase project.";
       } else if (redirectError.code === 'auth/operation-not-supported-in-this-environment') {
         errorMessage += "This operation is not supported in this environment. Try a different browser.";
+      } else if (redirectError.code === 'auth/web-storage-unsupported') {
+        errorMessage += "Your browser doesn't support web storage or it's disabled. Try using a different browser.";
+      } else if (redirectError.code === 'auth/network-request-failed') {
+        errorMessage += "Network connection issue. Please check your internet connection and try again.";
+      } else if (redirectError.code === 'auth/internal-error') {
+        errorMessage += "An internal error occurred. Please try again later or use email/password login.";
+      } else if (redirectError.message && 
+                (redirectError.message.includes('accounts.google.com') || 
+                 redirectError.message.includes('refused to connect'))) {
+        errorMessage += "Could not connect to Google authentication servers. This is common in some environments. Please use email/password login instead.";
       } else {
         errorMessage += redirectError.message || "Unknown error occurred";
       }

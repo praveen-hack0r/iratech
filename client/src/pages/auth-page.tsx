@@ -325,9 +325,14 @@ function LoginForm() {
       // Show a toast notification to inform the user about the redirect
       toast({
         title: "Redirecting to Google",
-        description: "You'll be redirected to Google for authentication",
+        description: "You'll be redirected to Google for authentication. This might take a moment...",
       });
       
+      // Open in a new tab if we're in a Replit environment
+      const isReplitEnv = window.location.hostname.includes('.repl.co') || 
+                          window.location.hostname.includes('replit.dev') ||
+                          window.location.hostname === 'localhost';
+                          
       // Trigger the Google sign-in process via mutation
       googleSignInMutation.mutate(undefined, {
         onError: (error) => {
@@ -339,18 +344,36 @@ function LoginForm() {
           
           // Extract message from the error
           if (error instanceof Error) {
+            // Check for connection refused errors (common in Replit)
+            if (error.message.includes("refused to connect") || 
+                error.message.includes("network") || 
+                error.message.includes("timeout")) {
+              
+              title = "Connection Issue with Google";
+              description = "Google authentication servers couldn't be reached. This is a common issue in some environments. Please try regular email/password login instead.";
+              
+              // Show in a more prominent way
+              setTimeout(() => {
+                toast({
+                  title: "Try Alternative Login",
+                  description: "You can use email/password login which works more reliably in this environment.",
+                  duration: 8000, // longer duration
+                });
+              }, 1500);
+              
+            }
             // Check for Firebase specific error messages
-            if (error.message.includes("domain")) {
+            else if (error.message.includes("domain")) {
               description = "This website domain is not authorized for Firebase authentication. Please contact support.";
             } else if (error.message.includes("not enabled")) {
-              description = "Google authentication is not enabled for this application.";
+              description = "Google authentication is not enabled for this application. Please use email/password login.";
             } else if (error.message.includes("operation")) {
-              description = "This authentication operation is not supported in this environment.";
+              description = "This authentication operation is not supported in this environment. Please use email/password login.";
             } else {
               description = error.message;
             }
           } else {
-            description = "An unexpected error occurred";
+            description = "An unexpected error occurred. Please try email/password login.";
           }
           
           // Show error toast
@@ -358,6 +381,7 @@ function LoginForm() {
             title,
             description,
             variant: "destructive",
+            duration: 6000, // longer duration for error messages
           });
         }
       });
@@ -366,8 +390,9 @@ function LoginForm() {
       console.error("Synchronous error in Google sign-in:", error);
       toast({
         title: "Google Sign-in Failed",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: "An unexpected error occurred with Google authentication. Please use email/password login instead.",
         variant: "destructive",
+        duration: 6000,
       });
     }
   }
@@ -434,16 +459,27 @@ function LoginForm() {
           </div>
         </div>
         
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full flex items-center justify-center gap-2"
-          onClick={handleGoogleSignIn}
-          disabled={googleSignInMutation.isPending}
-        >
-          <FaGoogle className="h-4 w-4 text-red-500" />
-          {googleSignInMutation.isPending ? "Connecting..." : "Sign in with Google"}
-        </Button>
+        <div className="space-y-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full flex items-center justify-center gap-2"
+            onClick={handleGoogleSignIn}
+            disabled={googleSignInMutation.isPending}
+          >
+            <FaGoogle className="h-4 w-4 text-red-500" />
+            {googleSignInMutation.isPending ? "Connecting..." : "Sign in with Google"}
+          </Button>
+          
+          {/* Information note about Google auth in Replit */}
+          <div className="text-xs text-muted-foreground text-center px-2">
+            <p>
+              Google authentication may not work in some environments.
+              <br />
+              Email/password login is more reliable.
+            </p>
+          </div>
+        </div>
       </form>
     </Form>
   );
