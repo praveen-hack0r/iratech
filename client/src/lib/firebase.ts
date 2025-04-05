@@ -108,8 +108,8 @@ export async function checkRedirectResult() {
         
         console.log("Server authentication successful");
         
-        // Refresh the page after successful login to update UI
-        window.location.href = '/';
+        // Redirect to the auth-redirect page to handle post-login state
+        window.location.href = '/auth-redirect';
         
         return await response.json();
       } catch (serverError) {

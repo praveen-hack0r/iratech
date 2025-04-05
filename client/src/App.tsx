@@ -29,12 +29,14 @@ import PrivacyPolicyPage from "@/pages/privacy-policy-page";
 import TermsPage from "@/pages/terms-page";
 import ContactPage from "@/pages/contact-page";
 import ServicesPage from "@/pages/services-page";
+import AuthRedirect from "@/pages/auth-redirect";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
       <Route path="/auth" component={AuthPage} />
+      <Route path="/auth-redirect" component={AuthRedirect} />
       <Route path="/courses" component={CoursesPage} />
       <Route path="/courses/:slug" component={CourseDetailPage} />
       <Route path="/verification-success" component={VerificationSuccessPage} />
